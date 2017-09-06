@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.5</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ShaderGen\ShaderGen.csproj" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
+    <PackageReference Include="CodeGeneration.Roslyn.BuildTime" Version="0.4.11" PrivateAssets="All" />
+    <DotNetCliToolReference Include="dotnet-codegen" Version="0.4.11" />
+  </ItemGroup>
+
+</Project>
