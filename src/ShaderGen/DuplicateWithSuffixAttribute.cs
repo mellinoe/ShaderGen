@@ -3,16 +3,19 @@ using System;
 using System.Diagnostics;
 using Validation;
 
-[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
-[CodeGenerationAttribute(typeof(DuplicateWithSuffixGenerator))]
-[Conditional("CodeGeneration")]
-public class DuplicateWithSuffixAttribute : Attribute
+namespace ShaderGen
 {
-    public DuplicateWithSuffixAttribute(string suffix)
+    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
+    [CodeGenerationAttribute(typeof(DuplicateWithSuffixGenerator))]
+    [Conditional("CodeGeneration")]
+    public class DuplicateWithSuffixAttribute : Attribute
     {
-        Requires.NotNullOrEmpty(suffix, nameof(suffix));
-        this.Suffix = suffix;
-    }
+        public DuplicateWithSuffixAttribute(string suffix)
+        {
+            Requires.NotNullOrEmpty(suffix, nameof(suffix));
+            this.Suffix = suffix;
+        }
 
-    public string Suffix { get; }
+        public string Suffix { get; }
+    }
 }

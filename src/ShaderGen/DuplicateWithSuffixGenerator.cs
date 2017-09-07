@@ -8,33 +8,35 @@ using System.Threading;
 using System.Threading.Tasks;
 using Validation;
 
-public class DuplicateWithSuffixGenerator : ICodeGenerator
+namespace ShaderGen
 {
-    private readonly string suffix;
-
-    public DuplicateWithSuffixGenerator(AttributeData attributeData)
+    public class DuplicateWithSuffixGenerator : ICodeGenerator
     {
-        Requires.NotNull(attributeData, nameof(attributeData));
-        this.suffix = (string)attributeData.ConstructorArguments[0].Value;
-    }
+        private readonly string suffix;
 
-    public Task<SyntaxList<MemberDeclarationSyntax>> GenerateAsync(TransformationContext context, IProgress<Diagnostic> progress, CancellationToken cancellationToken)
-    {
-        var results = SyntaxFactory.List<MemberDeclarationSyntax>();
+        public DuplicateWithSuffixGenerator(AttributeData attributeData)
+        {
+            Requires.NotNull(attributeData, nameof(attributeData));
+            this.suffix = (string)attributeData.ConstructorArguments[0].Value;
+        }
 
-        // Our generator is applied to any class that our attribute is applied to.
-        var applyToClass = (ClassDeclarationSyntax)context.ProcessingMember;
+        public Task<SyntaxList<MemberDeclarationSyntax>> GenerateAsync(TransformationContext context, IProgress<Diagnostic> progress, CancellationToken cancellationToken)
+        {
+            var results = SyntaxFactory.List<MemberDeclarationSyntax>();
 
-        // Apply a suffix to the name of a copy of the class.
-        var copy = applyToClass
-            .WithIdentifier(SyntaxFactory.Identifier(applyToClass.Identifier.ValueText + this.suffix));
+            // Our generator is applied to any class that our attribute is applied to.
+            var applyToClass = (ClassDeclarationSyntax)context.ProcessingMember;
 
-        ShaderSyntaxWalker walker = new ShaderSyntaxWalker();
-        walker.Visit(context.SemanticModel.SyntaxTree.GetRoot());
-        walker.WriteToFile(@"E:\outputtext.txt");
+            // Apply a suffix to the name of a copy of the class.
+            var copy = applyToClass
+                .WithIdentifier(SyntaxFactory.Identifier(applyToClass.Identifier.ValueText + this.suffix));
 
-        // Return our modified copy. It will be added to the user's project for compilation.
-        results = results.Add(copy);
-        return Task.FromResult<SyntaxList<MemberDeclarationSyntax>>(results);
+            ShaderSyntaxWalker walker = new ShaderSyntaxWalker(context);
+            walker.Visit(context.SemanticModel.SyntaxTree.GetRoot());
+            walker.WriteToFile("outputtext.hlsl");
+            // Return our modified copy. It will be added to the user's project for compilation.
+            results = results.Add(copy);
+            return Task.FromResult<SyntaxList<MemberDeclarationSyntax>>(results);
+        }
     }
 }
