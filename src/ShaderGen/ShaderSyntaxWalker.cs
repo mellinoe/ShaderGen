@@ -20,6 +20,7 @@ namespace ShaderGen
 
         private readonly List<StructDefinition> _structs = new List<StructDefinition>();
         private readonly List<UniformDefinition> _uniforms = new List<UniformDefinition>();
+        private readonly List<HlslMethodVisitor> _methods = new List<HlslMethodVisitor>();
 
         public ShaderSyntaxWalker(TransformationContext context) : base(Microsoft.CodeAnalysis.SyntaxWalkerDepth.Token)
         {
@@ -29,13 +30,9 @@ namespace ShaderGen
 
         public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
-            _sb.AppendLine($"Encountered method declaration: {node.Identifier.Text}");
-            if (node.AttributeLists.Any(als => als.Attributes.Any(attrSyntax => attrSyntax.GetText().ToString().Contains("EntryFunction"))))
-            {
-                _sb.AppendLine($"  - Is a shader method.");
-            }
-
-            VisitBlock(node.Body);
+            HlslMethodVisitor smv = new HlslMethodVisitor(_context);
+            smv.VisitMethodDeclaration(node);
+            _methods.Add(smv);
         }
 
         public override void VisitStructDeclaration(StructDeclarationSyntax node)
@@ -51,7 +48,7 @@ namespace ShaderGen
                     foreach (VariableDeclaratorSyntax vds in varDecl.Variables)
                     {
                         string fieldName = vds.Identifier.Text;
-                        TypeReference tr = new TypeReference(GetFullTypeName(varDecl.Type));
+                        TypeReference tr = new TypeReference(_context.GetFullTypeName(varDecl.Type));
                         fields.Add(new FieldDefinition(fieldName, tr));
                     }
                 }
@@ -91,32 +88,11 @@ namespace ShaderGen
                 {
                     string uniformName = vds.Identifier.Text;
                     TypeInfo typeInfo = _context.SemanticModel.GetTypeInfo(node.Type);
-                    string fullTypeName = GetFullTypeName(node.Type);
+                    string fullTypeName = _context.GetFullTypeName(node.Type);
                     TypeReference tr = new TypeReference(fullTypeName);
                     UniformDefinition ud = new UniformDefinition(uniformName, uniformBinding, tr);
                     _uniforms.Add(ud);
                 }
-            }
-        }
-
-        private string GetFullTypeName(TypeSyntax type)
-        {
-            TypeInfo typeInfo = _context.SemanticModel.GetTypeInfo(type);
-            string ns = GetFullNamespace(typeInfo.Type.ContainingNamespace);
-            return ns + "." + typeInfo.Type.Name;
-        }
-
-        private string GetFullNamespace(INamespaceSymbol ns)
-        {
-            Debug.Assert(ns != null);
-            string currentNamespace = ns.Name;
-            if (ns.ContainingNamespace != null && !ns.ContainingNamespace.IsGlobalNamespace)
-            {
-                return GetFullNamespace(ns.ContainingNamespace) + "." + currentNamespace;
-            }
-            else
-            {
-                return currentNamespace;
             }
         }
 
