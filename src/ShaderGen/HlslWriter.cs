@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CodeGeneration.Roslyn;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -8,11 +9,13 @@ namespace ShaderGen
     {
         private readonly List<StructDefinition> _structs;
         private readonly List<UniformDefinition> _uniforms;
+        private readonly HlslTypeTranslator _typeTranslator;
 
-        public HlslWriter(List<StructDefinition> structs, List<UniformDefinition> uniforms)
+        public HlslWriter(List<StructDefinition> structs, List<UniformDefinition> uniforms, TransformationContext context)
         {
             _structs = structs;
             _uniforms = uniforms;
+            _typeTranslator = new HlslTypeTranslator(context);
         }
 
         public string GetHlslText()
@@ -29,11 +32,11 @@ namespace ShaderGen
 
             foreach (StructDefinition sd in _structs)
             {
-                sb.AppendLine($"struct {sd.Name}");
+                sb.AppendLine($"struct {_typeTranslator.CSharpToShaderType(sd.Name)}");
                 sb.AppendLine("{");
                 foreach (FieldDefinition field in sd.Fields)
                 {
-                    sb.AppendLine($"    {HlslKnownTypes.GetMappedName(field.Type.Name.Trim())} {field.Name.Trim()};");
+                    sb.AppendLine($"    {_typeTranslator.CSharpToShaderType(field.Type.Name.Trim())} {field.Name.Trim()};");
                 }
                 sb.AppendLine("};");
                 sb.AppendLine();

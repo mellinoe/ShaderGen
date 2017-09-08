@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="CodeGeneration.Roslyn" Version="0.4.11" PrivateAssets="all" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
   </ItemGroup>
 
 </Project>

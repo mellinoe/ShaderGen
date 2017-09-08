@@ -1,5 +1,6 @@
 ﻿using ShaderGen;
 using System.Numerics;
+using static ShaderGen.ShaderBuiltins;
 
 namespace TestShaders
 {
@@ -22,9 +23,9 @@ namespace TestShaders
         public VertexOutput VS([VertexInput]PositionTexture input)
         {
             VertexOutput output;
-            Vector4 worldPosition = Vector4.Transform(input.Position, World);
-            Vector4 viewPosition = Vector4.Transform(worldPosition, View);
-            output.Position = Vector4.Transform(viewPosition, Projection);
+            Vector4 worldPosition = Mul(World, new Vector4(input.Position, 1));
+            Vector4 viewPosition = Mul(View, worldPosition);
+            output.Position = Mul(Projection, viewPosition);
             output.TextureCoord = input.TextureCoord;
             return output;
         }

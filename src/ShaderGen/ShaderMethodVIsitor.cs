@@ -4,12 +4,14 @@ using System.Text;
 using CodeGeneration.Roslyn;
 using System;
 using System.Linq;
+using System.IO;
 
 namespace ShaderGen
 {
     public class HlslMethodVisitor : CSharpSyntaxVisitor<string>
     {
         private readonly TransformationContext _context;
+        private readonly TypeTranslator _typeTranslator;
         private readonly ShaderFunction _shaderFunction;
         public string _value;
 
@@ -17,12 +19,13 @@ namespace ShaderGen
         {
             _context = context;
             _shaderFunction = shaderFunction;
+            _typeTranslator = new HlslTypeTranslator(context);
         }
 
         public override string VisitBlock(BlockSyntax node)
         {
             StringBuilder sb = new StringBuilder();
-            string returnType = HlslKnownTypes.GetMappedName(_shaderFunction.ReturnType.Name);
+            string returnType = _typeTranslator.CSharpToShaderType(_shaderFunction.ReturnType.Name);
             sb.AppendLine($"{returnType} {_shaderFunction.Name}({GetParameterDeclList()})");
             sb.AppendLine("{");
 
@@ -53,8 +56,7 @@ namespace ShaderGen
                 throw new NotImplementedException();
             }
 
-            string type = _context.GetFullTypeName(decl.Type);
-            string mappedType = HlslKnownTypes.GetMappedName(type);
+            string mappedType = _typeTranslator.CSharpToShaderType(decl.Type);
             return mappedType + " " + decl.Variables[0].Identifier + " " + Visit(decl.Variables[0].Initializer) + ";";
         }
 
@@ -92,7 +94,7 @@ namespace ShaderGen
 
         public override string VisitInvocationExpression(InvocationExpressionSyntax node)
         {
-            return $"CALL[{node.Expression.GetType()}]::" + Visit(node.Expression) + $"({Visit(node.ArgumentList)})";
+            return $"{Visit(node.Expression)}({Visit(node.ArgumentList)})";
         }
 
         public override string VisitArgumentList(ArgumentListSyntax node)
@@ -100,14 +102,30 @@ namespace ShaderGen
             return string.Join(", ", node.Arguments.Select(argSyntax => Visit(argSyntax)));
         }
 
+        public override string VisitArgument(ArgumentSyntax node)
+        {
+            string result = Visit(node.Expression);
+            return string.IsNullOrEmpty(result) ? ($"[Unhandled] {node.Expression.GetType()}") : result;
+        }
+
+        public override string VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
+        {
+            return _typeTranslator.CSharpToShaderType(node.Type) + "(" + Visit(node.ArgumentList) + ")";
+        }
+
         public override string VisitIdentifierName(IdentifierNameSyntax node)
         {
             return node.Identifier.ToFullString();
         }
 
+        public override string VisitLiteralExpression(LiteralExpressionSyntax node)
+        {
+            return node.ToFullString();
+        }
+
         private string GetParameterDeclList()
         {
-            return string.Join(", ", _shaderFunction.Parameters.Select(pd => $"{HlslKnownTypes.GetMappedName(pd.Type.Name)} {pd.Name}"));
+            return string.Join(", ", _shaderFunction.Parameters.Select(pd => $"{_typeTranslator.CSharpToShaderType(pd.Type.Name)} {pd.Name}"));
         }
     }
 }

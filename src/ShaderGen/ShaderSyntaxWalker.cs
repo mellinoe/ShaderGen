@@ -53,7 +53,12 @@ namespace ShaderGen
 
         public override void VisitStructDeclaration(StructDeclarationSyntax node)
         {
-            string structName = node.Identifier.Text;
+            string fullNamespace = Extensions.GetFullNamespace(node);
+            string structName = node.Identifier.ToFullString();
+            if (fullNamespace != null)
+            {
+                structName = fullNamespace + "." + structName;
+            }
 
             List<FieldDefinition> fields = new List<FieldDefinition>();
             foreach (MemberDeclarationSyntax member in node.Members)
@@ -107,7 +112,7 @@ namespace ShaderGen
         internal void WriteToFile(string file)
         {
             StringBuilder fullText = new StringBuilder();
-            HlslWriter hlslWriter = new HlslWriter(_structs, _uniforms);
+            HlslWriter hlslWriter = new HlslWriter(_structs, _uniforms, _context);
             fullText.Append(hlslWriter.GetHlslText());
             fullText.Append(_sb);
 
