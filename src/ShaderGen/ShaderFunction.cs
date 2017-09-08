@@ -18,6 +18,7 @@ namespace ShaderGen
             Name = name;
             ReturnType = returnType;
             Parameters = parameters;
+            BlockSyntax = blockSyntax;
         }
     }
 }

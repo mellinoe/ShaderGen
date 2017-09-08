@@ -16,7 +16,6 @@ namespace ShaderGen
     {
         private readonly StringBuilder _sb = new StringBuilder();
         private readonly TransformationContext _context;
-        private readonly ShaderFunctionWalker _functionWalker;
 
         private readonly List<StructDefinition> _structs = new List<StructDefinition>();
         private readonly List<UniformDefinition> _uniforms = new List<UniformDefinition>();
@@ -25,14 +24,31 @@ namespace ShaderGen
         public ShaderSyntaxWalker(TransformationContext context) : base(Microsoft.CodeAnalysis.SyntaxWalkerDepth.Token)
         {
             _context = context;
-            _functionWalker = new ShaderFunctionWalker(_sb);
         }
 
         public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
-            HlslMethodVisitor smv = new HlslMethodVisitor(_context);
-            smv.VisitMethodDeclaration(node);
+            string functionName = node.Identifier.ToFullString();
+            List<ParameterDefinition> parameters = new List<ParameterDefinition>();
+            foreach (ParameterSyntax ps in node.ParameterList.Parameters)
+            {
+                parameters.Add(GetParameterDefinition(ps));
+            }
+
+            TypeReference returnType = new TypeReference(_context.GetFullTypeName(node.ReturnType));
+
+            ShaderFunction sf = new ShaderFunction(functionName, returnType, parameters.ToArray(), node.Body);
+
+            HlslMethodVisitor smv = new HlslMethodVisitor(_context, sf);
+            smv.VisitBlock(node.Body);
             _methods.Add(smv);
+        }
+
+        private ParameterDefinition GetParameterDefinition(ParameterSyntax ps)
+        {
+            string fullType = _context.GetFullTypeName(ps.Type);
+            string name = ps.Identifier.ToFullString();
+            return new ParameterDefinition(name, new TypeReference(fullType));
         }
 
         public override void VisitStructDeclaration(StructDeclarationSyntax node)
@@ -55,21 +71,6 @@ namespace ShaderGen
             }
 
             _structs.Add(new StructDefinition(structName, fields.ToArray()));
-        }
-
-        public override void VisitAssignmentExpression(AssignmentExpressionSyntax node)
-        {
-            _sb.AppendLine($"  * Assignment: [[ {node.ToFullString()} ]]");
-        }
-
-        public override void VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
-        {
-            _sb.AppendLine($"  * Member access: [[ {node.ToFullString()} ]]");
-        }
-
-        public override void VisitInvocationExpression(InvocationExpressionSyntax node)
-        {
-            _sb.AppendLine($"  * Invocation: {node.ToFullString()}");
         }
 
         public override void VisitVariableDeclaration(VariableDeclarationSyntax node)
@@ -109,17 +110,13 @@ namespace ShaderGen
             HlslWriter hlslWriter = new HlslWriter(_structs, _uniforms);
             fullText.Append(hlslWriter.GetHlslText());
             fullText.Append(_sb);
+
+            foreach (HlslMethodVisitor method in _methods)
+            {
+                fullText.Append(method._value);
+            }
+
             File.WriteAllText(file, fullText.ToString());
-        }
-    }
-
-    public class ShaderFunctionWalker : CSharpSyntaxWalker
-    {
-        private readonly StringBuilder _sb;
-
-        public ShaderFunctionWalker(StringBuilder sb)
-        {
-            _sb = sb;
         }
     }
 }
