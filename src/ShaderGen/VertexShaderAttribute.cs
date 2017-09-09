@@ -3,7 +3,5 @@
 namespace ShaderGen
 {
     [AttributeUsage(AttributeTargets.Method)]
-    public class EntryFunctionAttribute : Attribute
-    {
-    }
+    public class VertexShaderAttribute : Attribute { }
 }

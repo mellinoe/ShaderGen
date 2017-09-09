@@ -7,23 +7,24 @@ namespace ShaderGen
         public string Name { get; }
         public TypeReference ReturnType { get; }
         public ParameterDefinition[] Parameters { get; }
-        public bool IsEntryPoint { get; }
+        public bool IsEntryPoint => Type != ShaderFunctionType.Normal;
+        public ShaderFunctionType Type { get; }
 
         public ShaderFunction(
             string name,
             TypeReference returnType,
             ParameterDefinition[] parameters,
-            bool isEntryPoint)
+            ShaderFunctionType type)
         {
             Name = name;
             ReturnType = returnType;
             Parameters = parameters;
-            IsEntryPoint = isEntryPoint;
+            Type = type;
         }
 
         public ShaderFunction WithReturnType(TypeReference returnType)
         {
-            return new ShaderFunction(Name, returnType, Parameters, IsEntryPoint);
+            return new ShaderFunction(Name, returnType, Parameters, Type);
         }
     }
 }

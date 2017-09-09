@@ -1,4 +1,6 @@
-﻿namespace ShaderGen
+﻿using System.Linq;
+
+namespace ShaderGen
 {
     public class ShaderModel
     {
@@ -11,6 +13,12 @@
             Structures = structures;
             Uniforms = uniforms;
             EntryFunction = entryFunction;
+        }
+
+        public StructureDefinition GetStructureDefinition(TypeReference typeRef) => GetStructureDefinition(typeRef.Name);
+        public StructureDefinition GetStructureDefinition(string typeName)
+        {
+            return Structures.FirstOrDefault(sd => sd.Name == typeName);
         }
     }
 }

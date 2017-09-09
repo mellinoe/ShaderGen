@@ -4,7 +4,7 @@ using static ShaderGen.ShaderBuiltins;
 
 namespace TestShaders
 {
-    public class TestVertexShader
+    public class TestFragmentShader
     {
         [Uniform(0)]
         public Matrix4x4 World;

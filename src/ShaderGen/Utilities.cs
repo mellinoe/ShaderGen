@@ -1,9 +1,11 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace ShaderGen
 {
@@ -33,14 +35,14 @@ namespace ShaderGen
                 {
                     throw new InvalidOperationException("Unable to resolve type: " + type + " at " + type.GetLocation());
                 }
-                if (typeInfo.Type != null)
-                {
-                    return type.ToFullString();
-                }
             }
 
-            string ns = GetFullNamespace(typeInfo.Type.ContainingNamespace);
-            return ns + "." + typeInfo.Type.Name;
+            return GetFullTypeName(typeInfo.Type);
+        }
+
+        private static string GetFullTypeName(ITypeSymbol type)
+        {
+            return type.ToDisplayString();
         }
 
         private static SemanticModel GetSemanticModel(Compilation compilation, SyntaxTree syntaxTree)
@@ -73,6 +75,34 @@ namespace ShaderGen
             return namespaceName;
         }
 
+        public static string GetFullNestedTypePrefix(SyntaxNode node)
+        {
+            string ns = GetFullNamespace(node);
+            List<string> nestedTypeParts = new List<string>();
+            while (SyntaxNodeHelper.TryGetParentSyntax(node, out ClassDeclarationSyntax cds))
+            {
+                nestedTypeParts.Add(cds.Identifier.ToFullString().Trim());
+                node = cds;
+            }
+
+            string nestedTypeStr = string.Join(".", nestedTypeParts);
+            if (string.IsNullOrEmpty(ns))
+            {
+                return nestedTypeStr;
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(nestedTypeStr))
+                {
+                    return ns;
+                }
+                else
+                {
+                    return ns + "." + nestedTypeStr;
+                }
+            }
+        }
+
         private static readonly HashSet<string> s_basicNumericTypes = new HashSet<string>()
         {
             "System.Numerics.Vector2",
@@ -84,6 +114,12 @@ namespace ShaderGen
         public static bool IsBasicNumericType(string fullName)
         {
             return s_basicNumericTypes.Contains(fullName);
+        }
+
+        public static AttributeSyntax[] GetMemberAttributes(CSharpSyntaxNode vds, string name)
+        {
+            return vds.Parent.Parent.DescendantNodes().OfType<AttributeSyntax>()
+                .Where(attrSyntax => attrSyntax.Name.ToString().Contains(name)).ToArray();
         }
     }
 }

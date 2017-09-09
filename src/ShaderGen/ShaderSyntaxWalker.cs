@@ -32,8 +32,18 @@ namespace ShaderGen
 
             TypeReference returnType = new TypeReference(_model.GetFullTypeName(node.ReturnType));
 
-            bool isEntryPoint = true; // TODO: FIX THAT
-            ShaderFunction sf = new ShaderFunction(functionName, returnType, parameters.ToArray(), isEntryPoint);
+            bool isVertexShader, isFragmentShader = false;
+            isVertexShader = Utilities.GetMemberAttributes(node, "VertexShader").Any();
+            if (!isVertexShader)
+            {
+                isFragmentShader = Utilities.GetMemberAttributes(node, "FragmentShader").Any();
+            }
+
+            ShaderFunctionType type = isVertexShader
+                ? ShaderFunctionType.VertexEntryPoint : isFragmentShader
+                ? ShaderFunctionType.FragmentEntryPoint : ShaderFunctionType.Normal;
+
+            ShaderFunction sf = new ShaderFunction(functionName, returnType, parameters.ToArray(), type);
             ShaderFunctionAndBlockSyntax sfab = new ShaderFunctionAndBlockSyntax(sf, node.Body);
             HlslMethodVisitor hmv = new HlslMethodVisitor(_model, sf);
             hmv.VisitBlock(node.Body);
@@ -55,9 +65,9 @@ namespace ShaderGen
 
         public static bool TryGetStructDefinition(SemanticModel model, StructDeclarationSyntax node, out StructureDefinition sd)
         {
-            string fullNamespace = Utilities.GetFullNamespace(node);
-            string structName = node.Identifier.ToFullString();
-            if (fullNamespace != null)
+            string fullNamespace = Utilities.GetFullNestedTypePrefix(node);
+            string structName = node.Identifier.ToFullString().Trim();
+            if (!string.IsNullOrEmpty(fullNamespace))
             {
                 structName = fullNamespace + "." + structName;
             }
@@ -85,8 +95,7 @@ namespace ShaderGen
 
         private static SemanticType GetSemanticType(VariableDeclaratorSyntax vds)
         {
-            AttributeSyntax[] attrs = vds.Parent.Parent.DescendantNodes().OfType<AttributeSyntax>()
-                .Where(attrSyntax => attrSyntax.Name.ToString().Contains("VertexSemantic")).ToArray();
+            AttributeSyntax[] attrs = Utilities.GetMemberAttributes(vds, "VertexSemantic");
             if (attrs.Length == 1)
             {
                 AttributeSyntax semanticTypeAttr = attrs[0];
@@ -101,8 +110,12 @@ namespace ShaderGen
                 }
                 else
                 {
-                    throw new InvalidOperationException("Incorrectly formatted attribute: " + semanticTypeAttr.ToFullString());
+                    throw new ShaderGenerationException("Incorrectly formatted attribute: " + semanticTypeAttr.ToFullString());
                 }
+            }
+            else if (attrs.Length > 1)
+            {
+                throw new ShaderGenerationException("Too many vertex semantics applied to field: " + vds.ToFullString());
             }
 
             return SemanticType.None;
@@ -115,7 +128,7 @@ namespace ShaderGen
                 ExpressionSyntax uniformBindingExpr = uniformAttr.ArgumentList.Arguments[0].Expression;
                 if (!(uniformBindingExpr is LiteralExpressionSyntax les))
                 {
-                    throw new InvalidOperationException("Must use a literal parameter in UniformAttribute ctor.");
+                    throw new ShaderGenerationException("Must use a literal parameter in UniformAttribute ctor.");
                 }
 
                 int uniformBinding = int.Parse(les.ToFullString());
