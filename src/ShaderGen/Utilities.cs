@@ -1,12 +1,13 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
 namespace ShaderGen
 {
-    internal static class Extensions
+    internal static class Utilities
     {
         public static string GetFullTypeName(this SemanticModel model, TypeSyntax type)
         {
@@ -70,6 +71,19 @@ namespace ShaderGen
 
             string namespaceName = namespaceDeclarationSyntax.Name.ToString();
             return namespaceName;
+        }
+
+        private static readonly HashSet<string> s_basicNumericTypes = new HashSet<string>()
+        {
+            "System.Numerics.Vector2",
+            "System.Numerics.Vector3",
+            "System.Numerics.Vector4",
+            "System.Numerics.Matrix4x4",
+        };
+
+        public static bool IsBasicNumericType(string fullName)
+        {
+            return s_basicNumericTypes.Contains(fullName);
         }
     }
 }

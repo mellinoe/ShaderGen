@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace ShaderGen
@@ -14,11 +15,19 @@ namespace ShaderGen
 
         public List<StructureDefinition> Structures { get; } = new List<StructureDefinition>();
         public List<UniformDefinition> Uniforms { get; } = new List<UniformDefinition>();
-        public List<ShaderFunction> Functions { get; } = new List<ShaderFunction>();
+        public List<ShaderFunctionAndBlockSyntax> Functions { get; } = new List<ShaderFunctionAndBlockSyntax>();
 
         public LanguageBackend(SemanticModel model)
         {
             _model = model;
+        }
+
+        public ShaderModel GetShaderModel()
+        {
+            return new ShaderModel(
+                Structures.ToArray(),
+                Uniforms.ToArray(),
+                Functions.FirstOrDefault()?.Function);
         }
 
         public string CSharpToShaderType(string fullType)
@@ -57,7 +66,7 @@ namespace ShaderGen
             Uniforms.Add(ud);
         }
 
-        public virtual void AddFunction(ShaderFunction sf)
+        public virtual void AddFunction(ShaderFunctionAndBlockSyntax sf)
         {
             if (sf == null)
             {

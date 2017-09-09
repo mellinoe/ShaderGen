@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace ShaderGen.Tests
@@ -34,7 +36,18 @@ namespace ShaderGen.Tests
 
         private static string FindFxcExe()
         {
-            return @"C:\Program Files (x86)\Windows Kits\10\bin\x86\fxc.exe";
+            const string WindowsKitsFolder = @"C:\Program Files (x86)\Windows Kits";
+            IEnumerable<string> paths = Directory.EnumerateFiles(
+                WindowsKitsFolder,
+                "fxc.exe",
+                SearchOption.AllDirectories);
+            string path = paths.FirstOrDefault(s => !s.Contains("arm"));
+            if (path == null)
+            {
+                throw new InvalidOperationException("Couldn't locate fxc.exe.");
+            }
+
+            return path;
         }
     }
 

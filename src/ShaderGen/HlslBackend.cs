@@ -9,6 +9,8 @@ namespace ShaderGen
 {
     public class HlslBackend : LanguageBackend
     {
+        private readonly List<StructureDefinition> _synthesizedStructures = new List<StructureDefinition>();
+
         private const string OutSemanticsSuffix = "__OUTSEMANTICS";
         public HlslBackend(SemanticModel model) : base(model)
         {
@@ -97,14 +99,18 @@ namespace ShaderGen
 
             StringBuilder sb = new StringBuilder();
 
-            ShaderFunction entryPoint = Functions[0];
-            StructureDefinition input = GetRequiredStructureType(Structures, entryPoint.Parameters[0].Type);
-            StructureDefinition output = CreateOutputStructure(GetRequiredStructureType(Structures, entryPoint.ReturnType));
+            ShaderFunctionAndBlockSyntax entryPoint = Functions[0];
+            StructureDefinition input = GetRequiredStructureType(entryPoint.Function.Parameters[0].Type);
+            StructureDefinition output = CreateOutputStructure(GetRequiredStructureType(entryPoint.Function.ReturnType));
             Functions.Remove(entryPoint);
             entryPoint = entryPoint.WithReturnType(new TypeReference(output.Name));
             Functions.Add(entryPoint);
 
             foreach (StructureDefinition sd in Structures)
+            {
+                WriteStructure(sb, sd);
+            }
+            foreach (StructureDefinition sd in _synthesizedStructures)
             {
                 WriteStructure(sb, sd);
             }
@@ -114,9 +120,9 @@ namespace ShaderGen
                 WriteUniform(sb, ud);
             }
 
-            foreach (ShaderFunction sf in Functions)
+            foreach (ShaderFunctionAndBlockSyntax sf in Functions)
             {
-                HlslMethodVisitor visitor = new HlslMethodVisitor(Model, sf);
+                HlslMethodVisitor visitor = new HlslMethodVisitor(Model, sf.Function);
                 visitor.VisitBlock(sf.BlockSyntax);
                 sb.AppendLine(visitor._value);
             }
@@ -124,14 +130,18 @@ namespace ShaderGen
             return sb.ToString();
         }
 
-        private StructureDefinition GetRequiredStructureType(List<StructureDefinition> structures, TypeReference type)
+        private StructureDefinition GetRequiredStructureType(TypeReference type)
         {
-            StructureDefinition result = structures.SingleOrDefault(sd => sd.Name == type.Name);
+            StructureDefinition result = Structures.SingleOrDefault(sd => sd.Name == type.Name);
             if (result == null)
             {
-                if (!TryDiscoverStructure(type.Name))
+                result = _synthesizedStructures.SingleOrDefault(sd => sd.Name == type.Name);
+                if (result == null)
                 {
-                    throw new InvalidOperationException("Type referred by was not discovered: " + type.Name);
+                    if (!TryDiscoverStructure(type.Name))
+                    {
+                        throw new InvalidOperationException("Type referred by was not discovered: " + type.Name);
+                    }
                 }
             }
 
@@ -157,7 +167,7 @@ namespace ShaderGen
         private StructureDefinition CreateOutputStructure(StructureDefinition sd)
         {
             StructureDefinition clone = new StructureDefinition(sd.Name + OutSemanticsSuffix, sd.Fields);
-            Structures.Add(clone);
+            _synthesizedStructures.Add(clone);
             return clone;
         }
 

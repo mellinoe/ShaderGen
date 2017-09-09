@@ -7,7 +7,7 @@ namespace ShaderGen.Tests
     public class BasicTests
     {
         [Fact]
-        public void Translates()
+        public void TestVertexToHlsl()
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             SyntaxTree tree = TestUtil.GetSyntaxTree(compilation, "TestVertexShader.cs");
@@ -16,7 +16,7 @@ namespace ShaderGen.Tests
         }
 
         [Fact]
-        public void TranslatesAndCompiles()
+        public void FxcCompilesTestVertex()
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             SyntaxTree tree = TestUtil.GetSyntaxTree(compilation, "TestVertexShader.cs");

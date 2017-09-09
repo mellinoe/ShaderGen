@@ -33,11 +33,11 @@ namespace ShaderGen
             TypeReference returnType = new TypeReference(_model.GetFullTypeName(node.ReturnType));
 
             bool isEntryPoint = true; // TODO: FIX THAT
-            ShaderFunction sf = new ShaderFunction(functionName, returnType, parameters.ToArray(), isEntryPoint, node.Body);
-
+            ShaderFunction sf = new ShaderFunction(functionName, returnType, parameters.ToArray(), isEntryPoint);
+            ShaderFunctionAndBlockSyntax sfab = new ShaderFunctionAndBlockSyntax(sf, node.Body);
             HlslMethodVisitor hmv = new HlslMethodVisitor(_model, sf);
             hmv.VisitBlock(node.Body);
-            _backend.AddFunction(sf);
+            _backend.AddFunction(sfab);
         }
 
         private ParameterDefinition GetParameterDefinition(ParameterSyntax ps)
@@ -55,7 +55,7 @@ namespace ShaderGen
 
         public static bool TryGetStructDefinition(SemanticModel model, StructDeclarationSyntax node, out StructureDefinition sd)
         {
-            string fullNamespace = Extensions.GetFullNamespace(node);
+            string fullNamespace = Utilities.GetFullNamespace(node);
             string structName = node.Identifier.ToFullString();
             if (fullNamespace != null)
             {
@@ -143,6 +143,11 @@ namespace ShaderGen
         {
             string fullText = _backend.GenerateFullText();
             File.WriteAllText(file, fullText);
+        }
+
+        public ShaderModel GetShaderModel()
+        {
+            return _backend.GetShaderModel();
         }
     }
 }

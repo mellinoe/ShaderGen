@@ -37,7 +37,7 @@ namespace ShaderGen
                 }
                 else
                 {
-                    sb.AppendLine(statementResult);
+                    sb.AppendLine("    " + statementResult);
                 }
             }
 
@@ -56,7 +56,15 @@ namespace ShaderGen
             }
 
             string mappedType = _backend.CSharpToShaderType(decl.Type);
-            return mappedType + " " + decl.Variables[0].Identifier + " " + Visit(decl.Variables[0].Initializer) + ";";
+            string initializerStr = Visit(decl.Variables[0].Initializer);
+            string result = mappedType + " " + decl.Variables[0].Identifier;
+            if (!string.IsNullOrEmpty(initializerStr))
+            {
+                result += " " + initializerStr;
+            }
+
+            result += ";";
+            return result;
         }
 
         public override string VisitEqualsValueClause(EqualsValueClauseSyntax node)
@@ -67,6 +75,7 @@ namespace ShaderGen
         public override string VisitAssignmentExpression(AssignmentExpressionSyntax node)
         {
             return Visit(node.Left)
+                + " "
                 + node.OperatorToken.ToFullString()
                 + Visit(node.Right)
                 + ";";
@@ -133,17 +142,24 @@ namespace ShaderGen
             {
                 fullName = ns + "." + fullName;
             }
+
+            if (!Utilities.IsBasicNumericType(fullName))
+            {
+                throw new ShaderGenerationException(
+                    "Constructors can only be called on basic numeric types.");
+            }
+
             return _backend.CSharpToShaderType(fullName) + "(" + Visit(node.ArgumentList) + ")";
         }
 
         public override string VisitIdentifierName(IdentifierNameSyntax node)
         {
-            return node.Identifier.ToFullString();
+            return node.Identifier.ToFullString().Trim();
         }
 
         public override string VisitLiteralExpression(LiteralExpressionSyntax node)
         {
-            return node.ToFullString();
+            return node.ToFullString().Trim();
         }
 
         private string GetParameterDeclList()

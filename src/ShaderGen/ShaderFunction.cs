@@ -8,25 +8,22 @@ namespace ShaderGen
         public TypeReference ReturnType { get; }
         public ParameterDefinition[] Parameters { get; }
         public bool IsEntryPoint { get; }
-        public BlockSyntax BlockSyntax { get; }
 
         public ShaderFunction(
             string name,
             TypeReference returnType,
             ParameterDefinition[] parameters,
-            bool isEntryPoint,
-            BlockSyntax blockSyntax)
+            bool isEntryPoint)
         {
             Name = name;
             ReturnType = returnType;
             Parameters = parameters;
             IsEntryPoint = isEntryPoint;
-            BlockSyntax = blockSyntax;
         }
 
         public ShaderFunction WithReturnType(TypeReference returnType)
         {
-            return new ShaderFunction(Name, returnType, Parameters, IsEntryPoint, BlockSyntax);
+            return new ShaderFunction(Name, returnType, Parameters, IsEntryPoint);
         }
     }
 }
