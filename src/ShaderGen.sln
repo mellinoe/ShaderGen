@@ -4,7 +4,7 @@ VisualStudioVersion = 15.0.26730.12
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShaderGen", "ShaderGen\ShaderGen.csproj", "{89E900C2-3DCF-434B-B807-AEB9F55BF6F1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestShaders", "TestShaders\TestShaders.csproj", "{D8820C61-72BD-4B08-820E-1F2FE6B3499E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShaderGen.Tests", "ShaderGen.Tests\ShaderGen.Tests.csproj", "{89E28D46-2CD2-4C3D-82DA-738A62F8385B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -16,10 +16,10 @@ Global
 		{89E900C2-3DCF-434B-B807-AEB9F55BF6F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89E900C2-3DCF-434B-B807-AEB9F55BF6F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89E900C2-3DCF-434B-B807-AEB9F55BF6F1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D8820C61-72BD-4B08-820E-1F2FE6B3499E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D8820C61-72BD-4B08-820E-1F2FE6B3499E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D8820C61-72BD-4B08-820E-1F2FE6B3499E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D8820C61-72BD-4B08-820E-1F2FE6B3499E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89E28D46-2CD2-4C3D-82DA-738A62F8385B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89E28D46-2CD2-4C3D-82DA-738A62F8385B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89E28D46-2CD2-4C3D-82DA-738A62F8385B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89E28D46-2CD2-4C3D-82DA-738A62F8385B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

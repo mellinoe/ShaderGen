@@ -1,31 +1,30 @@
 ﻿using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Text;
-using CodeGeneration.Roslyn;
 using System;
 using System.Linq;
-using System.IO;
+using Microsoft.CodeAnalysis;
 
 namespace ShaderGen
 {
     public class HlslMethodVisitor : CSharpSyntaxVisitor<string>
     {
-        private readonly TransformationContext _context;
-        private readonly TypeTranslator _typeTranslator;
+        private readonly SemanticModel _model;
+        private readonly LanguageBackend _backend;
         private readonly ShaderFunction _shaderFunction;
         public string _value;
 
-        public HlslMethodVisitor(TransformationContext context, ShaderFunction shaderFunction)
+        public HlslMethodVisitor(SemanticModel model, ShaderFunction shaderFunction)
         {
-            _context = context;
+            _model = model;
             _shaderFunction = shaderFunction;
-            _typeTranslator = new HlslTypeTranslator(context);
+            _backend = new HlslBackend(model);
         }
 
         public override string VisitBlock(BlockSyntax node)
         {
             StringBuilder sb = new StringBuilder();
-            string returnType = _typeTranslator.CSharpToShaderType(_shaderFunction.ReturnType.Name);
+            string returnType = _backend.CSharpToShaderType(_shaderFunction.ReturnType.Name);
             sb.AppendLine($"{returnType} {_shaderFunction.Name}({GetParameterDeclList()})");
             sb.AppendLine("{");
 
@@ -34,7 +33,7 @@ namespace ShaderGen
                 string statementResult = Visit(ss);
                 if (string.IsNullOrEmpty(statementResult))
                 {
-                    sb.AppendLine(ss.GetType().ToString() + " (Unhandled)");
+                    throw new NotImplementedException($"{ss.GetType()} statements are not implemented.");
                 }
                 else
                 {
@@ -56,7 +55,7 @@ namespace ShaderGen
                 throw new NotImplementedException();
             }
 
-            string mappedType = _typeTranslator.CSharpToShaderType(decl.Type);
+            string mappedType = _backend.CSharpToShaderType(decl.Type);
             return mappedType + " " + decl.Variables[0].Identifier + " " + Visit(decl.Variables[0].Initializer) + ";";
         }
 
@@ -94,7 +93,17 @@ namespace ShaderGen
 
         public override string VisitInvocationExpression(InvocationExpressionSyntax node)
         {
-            return $"{Visit(node.Expression)}({Visit(node.ArgumentList)})";
+            IdentifierNameSyntax ins = node.Expression as IdentifierNameSyntax;
+            if (ins == null)
+            {
+                throw new NotImplementedException("Function calls must be made through an IdentifierNameSyntax.");
+            }
+
+            SymbolInfo symbolInfo = _model.GetSymbolInfo(ins);
+            string type = symbolInfo.Symbol.ContainingType.ToDisplayString();
+            string method = symbolInfo.Symbol.Name;
+            string functionName = _backend.CSharpToShaderFunctionName(type, method);
+            return $"{functionName}({Visit(node.ArgumentList)})";
         }
 
         public override string VisitArgumentList(ArgumentListSyntax node)
@@ -105,12 +114,26 @@ namespace ShaderGen
         public override string VisitArgument(ArgumentSyntax node)
         {
             string result = Visit(node.Expression);
-            return string.IsNullOrEmpty(result) ? ($"[Unhandled] {node.Expression.GetType()}") : result;
+            if (string.IsNullOrEmpty(result))
+            {
+                throw new NotImplementedException($"{node.Expression.GetType()} arguments are not implemented.");
+            }
+            else
+            {
+                return result;
+            }
         }
 
         public override string VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
         {
-            return _typeTranslator.CSharpToShaderType(node.Type) + "(" + Visit(node.ArgumentList) + ")";
+            SymbolInfo symbolInfo = _model.GetSymbolInfo(node.Type);
+            string fullName = symbolInfo.Symbol.Name;
+            string ns = symbolInfo.Symbol.ContainingNamespace.ToDisplayString();
+            if (!string.IsNullOrEmpty(ns))
+            {
+                fullName = ns + "." + fullName;
+            }
+            return _backend.CSharpToShaderType(fullName) + "(" + Visit(node.ArgumentList) + ")";
         }
 
         public override string VisitIdentifierName(IdentifierNameSyntax node)
@@ -125,7 +148,7 @@ namespace ShaderGen
 
         private string GetParameterDeclList()
         {
-            return string.Join(", ", _shaderFunction.Parameters.Select(pd => $"{_typeTranslator.CSharpToShaderType(pd.Type.Name)} {pd.Name}"));
+            return string.Join(", ", _shaderFunction.Parameters.Select(pd => $"{_backend.CSharpToShaderType(pd.Type.Name)} {pd.Name}"));
         }
     }
 }

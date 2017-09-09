@@ -1,5 +1,4 @@
-﻿using CodeGeneration.Roslyn;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Diagnostics;
@@ -9,22 +8,26 @@ namespace ShaderGen
 {
     internal static class Extensions
     {
-        public static string GetFullTypeName(this TransformationContext context, TypeSyntax type)
+        public static string GetFullTypeName(this SemanticModel model, TypeSyntax type)
         {
-            if (context == null)
+            if (model == null)
             {
-                throw new System.ArgumentNullException(nameof(context));
+                throw new ArgumentNullException(nameof(model));
             }
 
             if (type == null)
             {
-                throw new System.ArgumentNullException(nameof(type));
+                throw new ArgumentNullException(nameof(type));
             }
 
-            TypeInfo typeInfo = context.SemanticModel.GetTypeInfo(type);
+            TypeInfo typeInfo = model.GetTypeInfo(type);
             if (typeInfo.Type == null)
             {
-                typeInfo = context.SemanticModel.GetSpeculativeTypeInfo(0, type, SpeculativeBindingOption.BindAsTypeOrNamespace);
+                typeInfo = model.GetSpeculativeTypeInfo(0, type, SpeculativeBindingOption.BindAsTypeOrNamespace);
+                if (typeInfo.Type == null || typeInfo.Type is IErrorTypeSymbol)
+                {
+                    throw new InvalidOperationException("Unable to resolve type: " + type + " at " + type.GetLocation());
+                }
                 if (typeInfo.Type != null)
                 {
                     return type.ToFullString();

@@ -4,26 +4,23 @@ using System.Text;
 using System.Linq;
 using System;
 using System.IO;
-using ShaderGen;
 using System.Collections.Generic;
-using CodeGeneration.Roslyn;
 using Microsoft.CodeAnalysis;
-using System.Diagnostics;
 
 namespace ShaderGen
 {
     public class ShaderSyntaxWalker : CSharpSyntaxWalker
     {
         private readonly StringBuilder _sb = new StringBuilder();
-        private readonly TransformationContext _context;
+        private readonly SemanticModel _model;
 
         private readonly List<StructDefinition> _structs = new List<StructDefinition>();
         private readonly List<UniformDefinition> _uniforms = new List<UniformDefinition>();
         private readonly List<HlslMethodVisitor> _methods = new List<HlslMethodVisitor>();
 
-        public ShaderSyntaxWalker(TransformationContext context) : base(Microsoft.CodeAnalysis.SyntaxWalkerDepth.Token)
+        public ShaderSyntaxWalker(SemanticModel model) : base(SyntaxWalkerDepth.Token)
         {
-            _context = context;
+            _model = model;
         }
 
         public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
@@ -35,18 +32,18 @@ namespace ShaderGen
                 parameters.Add(GetParameterDefinition(ps));
             }
 
-            TypeReference returnType = new TypeReference(_context.GetFullTypeName(node.ReturnType));
+            TypeReference returnType = new TypeReference(_model.GetFullTypeName(node.ReturnType));
 
             ShaderFunction sf = new ShaderFunction(functionName, returnType, parameters.ToArray(), node.Body);
 
-            HlslMethodVisitor smv = new HlslMethodVisitor(_context, sf);
-            smv.VisitBlock(node.Body);
-            _methods.Add(smv);
+            HlslMethodVisitor hmv = new HlslMethodVisitor(_model, sf);
+            hmv.VisitBlock(node.Body);
+            _methods.Add(hmv);
         }
 
         private ParameterDefinition GetParameterDefinition(ParameterSyntax ps)
         {
-            string fullType = _context.GetFullTypeName(ps.Type);
+            string fullType = _model.GetFullTypeName(ps.Type);
             string name = ps.Identifier.ToFullString();
             return new ParameterDefinition(name, new TypeReference(fullType));
         }
@@ -69,13 +66,40 @@ namespace ShaderGen
                     foreach (VariableDeclaratorSyntax vds in varDecl.Variables)
                     {
                         string fieldName = vds.Identifier.Text;
-                        TypeReference tr = new TypeReference(_context.GetFullTypeName(varDecl.Type));
-                        fields.Add(new FieldDefinition(fieldName, tr));
+                        TypeReference tr = new TypeReference(_model.GetFullTypeName(varDecl.Type));
+                        SemanticType semanticType = GetSemanticType(vds);
+
+                        fields.Add(new FieldDefinition(fieldName, tr, semanticType));
                     }
                 }
             }
 
             _structs.Add(new StructDefinition(structName, fields.ToArray()));
+        }
+
+        private SemanticType GetSemanticType(VariableDeclaratorSyntax vds)
+        {
+            AttributeSyntax[] attrs = vds.Parent.Parent.DescendantNodes().OfType<AttributeSyntax>()
+                .Where(attrSyntax => attrSyntax.Name.ToString().Contains("SemanticType")).ToArray();
+            if (attrs.Length == 1)
+            {
+                AttributeSyntax semanticTypeAttr = attrs[0];
+                string fullArg0 = semanticTypeAttr.ArgumentList.Arguments[0].ToFullString();
+                if (fullArg0.Contains("."))
+                {
+                    fullArg0 = fullArg0.Substring(fullArg0.LastIndexOf('.') + 1);
+                }
+                if (Enum.TryParse(fullArg0, out SemanticType ret))
+                {
+                    return ret;
+                }
+                else
+                {
+                    throw new InvalidOperationException("Incorrectly formatted attribute: " + semanticTypeAttr.ToFullString());
+                }
+            }
+
+            return SemanticType.None;
         }
 
         public override void VisitVariableDeclaration(VariableDeclarationSyntax node)
@@ -93,8 +117,8 @@ namespace ShaderGen
                 foreach (VariableDeclaratorSyntax vds in node.Variables)
                 {
                     string uniformName = vds.Identifier.Text;
-                    TypeInfo typeInfo = _context.SemanticModel.GetTypeInfo(node.Type);
-                    string fullTypeName = _context.GetFullTypeName(node.Type);
+                    TypeInfo typeInfo = _model.GetTypeInfo(node.Type);
+                    string fullTypeName = _model.GetFullTypeName(node.Type);
                     TypeReference tr = new TypeReference(fullTypeName);
                     UniformDefinition ud = new UniformDefinition(uniformName, uniformBinding, tr);
                     _uniforms.Add(ud);
@@ -109,12 +133,12 @@ namespace ShaderGen
             return attr != null;
         }
 
-        internal void WriteToFile(string file)
+        public void WriteToFile(string file)
         {
             StringBuilder fullText = new StringBuilder();
-            HlslWriter hlslWriter = new HlslWriter(_structs, _uniforms, _context);
-            fullText.Append(hlslWriter.GetHlslText());
-            fullText.Append(_sb);
+            HlslBackend backend = new HlslBackend(_model);
+            backend.WriteStructures(fullText, _structs.ToArray());
+            backend.WriteUniforms(fullText, _uniforms.ToArray());
 
             foreach (HlslMethodVisitor method in _methods)
             {

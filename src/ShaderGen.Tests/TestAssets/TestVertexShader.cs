@@ -4,7 +4,6 @@ using static ShaderGen.ShaderBuiltins;
 
 namespace TestShaders
 {
-    [DuplicateWithSuffix("LOLOLOLUL")]
     public class TestVertexShader : VertexShader
     {
         [Uniform(0)]
@@ -32,14 +31,18 @@ namespace TestShaders
 
         public struct VertexOutput
         {
+            [SemanticType(SemanticType.Position)]
             public Vector4 Position;
+            [SemanticType(SemanticType.TextureCoordinate)]
             public Vector2 TextureCoord;
         }
     }
 
     public struct PositionTexture
     {
+        [SemanticType(SemanticType.Position)]
         public Vector3 Position;
+        [SemanticType(SemanticType.TextureCoordinate)]
         public Vector2 TextureCoord;
     }
 }
