@@ -2,11 +2,11 @@
 {
     public class ShaderModel
     {
-        public StructDefinition[] Structures { get; }
+        public StructureDefinition[] Structures { get; }
         public UniformDefinition[] Uniforms { get; }
         public ShaderFunction EntryFunction { get; }
 
-        public ShaderModel(StructDefinition[] structures, UniformDefinition[] uniforms, ShaderFunction entryFunction)
+        public ShaderModel(StructureDefinition[] structures, UniformDefinition[] uniforms, ShaderFunction entryFunction)
         {
             Structures = structures;
             Uniforms = uniforms;

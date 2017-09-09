@@ -106,9 +106,10 @@ namespace ShaderGen.Tests
     {
         public readonly string FilePath;
 
-        public TempFile()
+        public TempFile() : this(Path.GetTempFileName()) { }
+        public TempFile(string path)
         {
-            FilePath = Path.GetTempFileName();
+            FilePath = path;
         }
 
         public void Dispose()

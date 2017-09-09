@@ -13,14 +13,12 @@ namespace ShaderGen
     {
         private readonly StringBuilder _sb = new StringBuilder();
         private readonly SemanticModel _model;
+        private readonly LanguageBackend _backend;
 
-        private readonly List<StructDefinition> _structs = new List<StructDefinition>();
-        private readonly List<UniformDefinition> _uniforms = new List<UniformDefinition>();
-        private readonly List<HlslMethodVisitor> _methods = new List<HlslMethodVisitor>();
-
-        public ShaderSyntaxWalker(SemanticModel model) : base(SyntaxWalkerDepth.Token)
+        public ShaderSyntaxWalker(SemanticModel model, LanguageBackend backend) : base(SyntaxWalkerDepth.Token)
         {
             _model = model;
+            _backend = backend;
         }
 
         public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
@@ -34,11 +32,12 @@ namespace ShaderGen
 
             TypeReference returnType = new TypeReference(_model.GetFullTypeName(node.ReturnType));
 
-            ShaderFunction sf = new ShaderFunction(functionName, returnType, parameters.ToArray(), node.Body);
+            bool isEntryPoint = true; // TODO: FIX THAT
+            ShaderFunction sf = new ShaderFunction(functionName, returnType, parameters.ToArray(), isEntryPoint, node.Body);
 
             HlslMethodVisitor hmv = new HlslMethodVisitor(_model, sf);
             hmv.VisitBlock(node.Body);
-            _methods.Add(hmv);
+            _backend.AddFunction(sf);
         }
 
         private ParameterDefinition GetParameterDefinition(ParameterSyntax ps)
@@ -49,6 +48,12 @@ namespace ShaderGen
         }
 
         public override void VisitStructDeclaration(StructDeclarationSyntax node)
+        {
+            TryGetStructDefinition(_model, node, out var sd);
+            _backend.AddStructure(sd);
+        }
+
+        public static bool TryGetStructDefinition(SemanticModel model, StructDeclarationSyntax node, out StructureDefinition sd)
         {
             string fullNamespace = Extensions.GetFullNamespace(node);
             string structName = node.Identifier.ToFullString();
@@ -65,8 +70,8 @@ namespace ShaderGen
                     VariableDeclarationSyntax varDecl = fds.Declaration;
                     foreach (VariableDeclaratorSyntax vds in varDecl.Variables)
                     {
-                        string fieldName = vds.Identifier.Text;
-                        TypeReference tr = new TypeReference(_model.GetFullTypeName(varDecl.Type));
+                        string fieldName = vds.Identifier.Text.Trim();
+                        TypeReference tr = new TypeReference(model.GetFullTypeName(varDecl.Type));
                         SemanticType semanticType = GetSemanticType(vds);
 
                         fields.Add(new FieldDefinition(fieldName, tr, semanticType));
@@ -74,13 +79,14 @@ namespace ShaderGen
                 }
             }
 
-            _structs.Add(new StructDefinition(structName, fields.ToArray()));
+            sd = new StructureDefinition(structName.Trim(), fields.ToArray());
+            return true;
         }
 
-        private SemanticType GetSemanticType(VariableDeclaratorSyntax vds)
+        private static SemanticType GetSemanticType(VariableDeclaratorSyntax vds)
         {
             AttributeSyntax[] attrs = vds.Parent.Parent.DescendantNodes().OfType<AttributeSyntax>()
-                .Where(attrSyntax => attrSyntax.Name.ToString().Contains("SemanticType")).ToArray();
+                .Where(attrSyntax => attrSyntax.Name.ToString().Contains("VertexSemantic")).ToArray();
             if (attrs.Length == 1)
             {
                 AttributeSyntax semanticTypeAttr = attrs[0];
@@ -121,7 +127,7 @@ namespace ShaderGen
                     string fullTypeName = _model.GetFullTypeName(node.Type);
                     TypeReference tr = new TypeReference(fullTypeName);
                     UniformDefinition ud = new UniformDefinition(uniformName, uniformBinding, tr);
-                    _uniforms.Add(ud);
+                    _backend.AddUniform(ud);
                 }
             }
         }
@@ -135,17 +141,8 @@ namespace ShaderGen
 
         public void WriteToFile(string file)
         {
-            StringBuilder fullText = new StringBuilder();
-            HlslBackend backend = new HlslBackend(_model);
-            backend.WriteStructures(fullText, _structs.ToArray());
-            backend.WriteUniforms(fullText, _uniforms.ToArray());
-
-            foreach (HlslMethodVisitor method in _methods)
-            {
-                fullText.Append(method._value);
-            }
-
-            File.WriteAllText(file, fullText.ToString());
+            string fullText = _backend.GenerateFullText();
+            File.WriteAllText(file, fullText);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace ShaderGen
@@ -10,6 +11,10 @@ namespace ShaderGen
         private readonly SemanticModel _model;
 
         public SemanticModel Model => _model;
+
+        public List<StructureDefinition> Structures { get; } = new List<StructureDefinition>();
+        public List<UniformDefinition> Uniforms { get; } = new List<UniformDefinition>();
+        public List<ShaderFunction> Functions { get; } = new List<ShaderFunction>();
 
         public LanguageBackend(SemanticModel model)
         {
@@ -31,20 +36,35 @@ namespace ShaderGen
             return CSharpToShaderTypeCore(_model.GetFullTypeName(typeSyntax));
         }
 
-        public void WriteStructures(StringBuilder sb, StructDefinition[] structs)
+
+        public virtual void AddStructure(StructureDefinition sd)
         {
-            foreach (StructDefinition sd in structs)
+            if (sd == null)
             {
-                WriteStructure(sb, sd);
+                throw new ArgumentNullException(nameof(sd));
             }
+
+            Structures.Add(sd);
         }
 
-        public void WriteUniforms(StringBuilder sb, UniformDefinition[] uniforms)
+        public virtual void AddUniform(UniformDefinition ud)
         {
-            foreach (UniformDefinition ud in uniforms)
+            if (ud == null)
             {
-                WriteUniform(sb, ud);
+                throw new ArgumentNullException(nameof(ud));
             }
+
+            Uniforms.Add(ud);
+        }
+
+        public virtual void AddFunction(ShaderFunction sf)
+        {
+            if (sf == null)
+            {
+                throw new ArgumentNullException(nameof(sf));
+            }
+
+            Functions.Add(sf);
         }
 
         public string CSharpToShaderFunctionName(string type, string method)
@@ -61,9 +81,9 @@ namespace ShaderGen
             return CSharpToShaderFunctionNameCore(type, method);
         }
 
+        public string GenerateFullText() => GenerateFullTextCore();
         protected abstract string CSharpToShaderTypeCore(string fullType);
-        protected abstract void WriteStructure(StringBuilder sb, StructDefinition sd);
-        protected abstract void WriteUniform(StringBuilder sb, UniformDefinition ud);
         protected abstract string CSharpToShaderFunctionNameCore(string type, string method);
+        protected abstract string GenerateFullTextCore();
     }
 }

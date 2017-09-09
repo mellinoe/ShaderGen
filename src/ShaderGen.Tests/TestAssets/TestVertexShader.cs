@@ -31,19 +31,11 @@ namespace TestShaders
 
         public struct VertexOutput
         {
-            [SemanticType(SemanticType.Position)]
+            [VertexSemantic(SemanticType.Position)]
             public Vector4 Position;
-            [SemanticType(SemanticType.TextureCoordinate)]
+            [VertexSemantic(SemanticType.TextureCoordinate)]
             public Vector2 TextureCoord;
         }
-    }
-
-    public struct PositionTexture
-    {
-        [SemanticType(SemanticType.Position)]
-        public Vector3 Position;
-        [SemanticType(SemanticType.TextureCoordinate)]
-        public Vector2 TextureCoord;
     }
 }
 

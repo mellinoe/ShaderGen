@@ -9,7 +9,7 @@ namespace ShaderGen
     {
         public static void GenerateHlsl(SemanticModel model, SyntaxTree tree, string outputPath)
         {
-            ShaderSyntaxWalker walker = new ShaderSyntaxWalker(model);
+            ShaderSyntaxWalker walker = new ShaderSyntaxWalker(model, new HlslBackend(model));
             walker.Visit(tree.GetRoot());
             walker.WriteToFile(outputPath);
         }

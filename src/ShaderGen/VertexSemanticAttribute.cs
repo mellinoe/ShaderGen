@@ -3,10 +3,10 @@
 namespace ShaderGen
 {
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
-    public class SemanticTypeAttribute : Attribute
+    public class VertexSemanticAttribute : Attribute
     {
         public SemanticType Type { get; }
-        public SemanticTypeAttribute(SemanticType type)
+        public VertexSemanticAttribute(SemanticType type)
         {
             Type = type;
         }

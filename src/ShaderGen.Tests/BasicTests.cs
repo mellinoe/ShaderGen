@@ -7,7 +7,16 @@ namespace ShaderGen.Tests
     public class BasicTests
     {
         [Fact]
-        public void BasicTest()
+        public void Translates()
+        {
+            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            SyntaxTree tree = TestUtil.GetSyntaxTree(compilation, "TestVertexShader.cs");
+            SemanticModel model = compilation.GetSemanticModel(tree);
+            ShaderGeneration.GenerateHlsl(model, tree, "testoutput.hlsl");
+        }
+
+        [Fact]
+        public void TranslatesAndCompiles()
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             SyntaxTree tree = TestUtil.GetSyntaxTree(compilation, "TestVertexShader.cs");

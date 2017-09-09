@@ -14,11 +14,15 @@ namespace ShaderGen
             {
                 throw new ArgumentNullException(nameof(model));
             }
-
             if (type == null)
             {
                 throw new ArgumentNullException(nameof(type));
             }
+            if (type.SyntaxTree != model.SyntaxTree)
+            {
+                model = GetSemanticModel(model.Compilation, type.SyntaxTree);
+            }
+
 
             TypeInfo typeInfo = model.GetTypeInfo(type);
             if (typeInfo.Type == null)
@@ -36,6 +40,11 @@ namespace ShaderGen
 
             string ns = GetFullNamespace(typeInfo.Type.ContainingNamespace);
             return ns + "." + typeInfo.Type.Name;
+        }
+
+        private static SemanticModel GetSemanticModel(Compilation compilation, SyntaxTree syntaxTree)
+        {
+            return compilation.GetSemanticModel(syntaxTree);
         }
 
         public static string GetFullNamespace(INamespaceSymbol ns)
