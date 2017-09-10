@@ -154,7 +154,9 @@ namespace ShaderGen
 
         public override string VisitIdentifierName(IdentifierNameSyntax node)
         {
-            return node.Identifier.ToFullString().Trim();
+            SymbolInfo symbolInfo = _model.GetSymbolInfo(node);
+            string mapped = _backend.CSharpToShaderIdentifierName(symbolInfo);
+            return mapped;
         }
 
         public override string VisitLiteralExpression(LiteralExpressionSyntax node)

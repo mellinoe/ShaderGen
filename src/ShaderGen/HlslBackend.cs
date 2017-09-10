@@ -186,7 +186,14 @@ namespace ShaderGen
                 return sd;
             }
 
-            StructureDefinition clone = new StructureDefinition(sd.Name + FragmentSemanticsSuffix, sd.Fields);
+            string newName = sd.Name + FragmentSemanticsSuffix;
+            StructureDefinition existing = _synthesizedStructures.SingleOrDefault(ssd => ssd.Name == newName);
+            if (existing != null)
+            {
+                return existing;
+            }
+
+            StructureDefinition clone = new StructureDefinition(newName, sd.Fields);
             _synthesizedStructures.Add(clone);
             return clone;
         }

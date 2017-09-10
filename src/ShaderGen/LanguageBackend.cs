@@ -109,6 +109,14 @@ namespace ShaderGen
             return CSharpToShaderFunctionNameCore(type, method);
         }
 
+        internal virtual string CSharpToShaderIdentifierName(SymbolInfo symbolInfo)
+        {
+            string typeName = symbolInfo.Symbol.ContainingType.ToDisplayString();
+            string identifier = symbolInfo.Symbol.Name;
+
+            return HlslKnownIdentifiers.GetMappedIdentifier(typeName, identifier);
+        }
+
         protected abstract string CSharpToShaderTypeCore(string fullType);
         protected abstract string CSharpToShaderFunctionNameCore(string type, string method);
         protected abstract string GenerateFullTextCore(ShaderFunction function);

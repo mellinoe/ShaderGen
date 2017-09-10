@@ -121,5 +121,11 @@ namespace ShaderGen
             return vds.Parent.Parent.DescendantNodes().OfType<AttributeSyntax>()
                 .Where(attrSyntax => attrSyntax.Name.ToString().Contains(name)).ToArray();
         }
+
+        public static AttributeSyntax[] GetMethodAttributes(MethodDeclarationSyntax mds, string name)
+        {
+            return mds.DescendantNodes().OfType<AttributeSyntax>()
+            .Where(attrSyntax => attrSyntax.Name.ToString().Contains(name)).ToArray();
+        }
     }
 }

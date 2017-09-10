@@ -43,10 +43,10 @@ namespace ShaderGen
             TypeReference returnType = new TypeReference(_model.GetFullTypeName(node.ReturnType));
 
             bool isVertexShader, isFragmentShader = false;
-            isVertexShader = Utilities.GetMemberAttributes(node, "VertexShader").Any();
+            isVertexShader = Utilities.GetMethodAttributes(node, "VertexShader").Any();
             if (!isVertexShader)
             {
-                isFragmentShader = Utilities.GetMemberAttributes(node, "FragmentShader").Any();
+                isFragmentShader = Utilities.GetMethodAttributes(node, "FragmentShader").Any();
             }
 
             ShaderFunctionType type = isVertexShader
