@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+﻿using System;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ShaderGen
 {
@@ -25,6 +26,13 @@ namespace ShaderGen
         public ShaderFunction WithReturnType(TypeReference returnType)
         {
             return new ShaderFunction(Name, returnType, Parameters, Type);
+        }
+
+        public ShaderFunction WithParameter(int index, TypeReference typeReference)
+        {
+            ParameterDefinition[] parameters = (ParameterDefinition[])Parameters.Clone();
+            parameters[index] = new ParameterDefinition(parameters[index].Name, typeReference);
+            return new ShaderFunction(Name, ReturnType, parameters, Type);
         }
     }
 }

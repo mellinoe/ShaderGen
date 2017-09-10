@@ -14,18 +14,19 @@ namespace ShaderGen
         private readonly ShaderFunction _shaderFunction;
         public string _value;
 
-        public HlslMethodVisitor(SemanticModel model, ShaderFunction shaderFunction)
+        public HlslMethodVisitor(SemanticModel model, ShaderFunction shaderFunction, HlslBackend backend)
         {
             _model = model;
             _shaderFunction = shaderFunction;
-            _backend = new HlslBackend(model);
+            _backend = backend;
         }
 
         public override string VisitBlock(BlockSyntax node)
         {
             StringBuilder sb = new StringBuilder();
             string returnType = _backend.CSharpToShaderType(_shaderFunction.ReturnType.Name);
-            sb.AppendLine($"{returnType} {_shaderFunction.Name}({GetParameterDeclList()})");
+            string suffix = _shaderFunction.Type == ShaderFunctionType.FragmentEntryPoint ? " : SV_Target" : string.Empty;
+            sb.AppendLine($"{returnType} {_shaderFunction.Name}({GetParameterDeclList()}){suffix}");
             sb.AppendLine("{");
 
             foreach (StatementSyntax ss in node.Statements)
@@ -43,7 +44,6 @@ namespace ShaderGen
 
             sb.AppendLine("}");
 
-            _value = sb.ToString();
             return sb.ToString();
         }
 

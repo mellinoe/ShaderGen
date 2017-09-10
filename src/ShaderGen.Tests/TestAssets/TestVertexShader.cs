@@ -19,7 +19,7 @@ namespace TestShaders
         public Matrix4x4 NotARealUniformField;
 
         [VertexShader]
-        public VertexOutput VS([VertexInput]PositionTexture input)
+        public VertexOutput VS(PositionTexture input)
         {
             VertexOutput output;
             Vector4 worldPosition = Mul(World, new Vector4(input.Position, 1));

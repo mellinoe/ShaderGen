@@ -6,19 +6,24 @@ namespace ShaderGen
     {
         public StructureDefinition[] Structures { get; }
         public UniformDefinition[] Uniforms { get; }
-        public ShaderFunction EntryFunction { get; }
+        public ShaderFunction[] Functions { get; }
 
-        public ShaderModel(StructureDefinition[] structures, UniformDefinition[] uniforms, ShaderFunction entryFunction)
+        public ShaderModel(StructureDefinition[] structures, UniformDefinition[] uniforms, ShaderFunction[] functions)
         {
             Structures = structures;
             Uniforms = uniforms;
-            EntryFunction = entryFunction;
+            Functions = functions;
         }
 
         public StructureDefinition GetStructureDefinition(TypeReference typeRef) => GetStructureDefinition(typeRef.Name);
-        public StructureDefinition GetStructureDefinition(string typeName)
+        public StructureDefinition GetStructureDefinition(string name)
         {
-            return Structures.FirstOrDefault(sd => sd.Name == typeName);
+            return Structures.FirstOrDefault(sd => sd.Name == name);
+        }
+
+        public ShaderFunction GetFunction(string name)
+        {
+            return Functions.FirstOrDefault(sf => sf.Name == name);
         }
     }
 }

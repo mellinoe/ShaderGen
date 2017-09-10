@@ -4,6 +4,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.IO;
 
 namespace ShaderGen
 {
@@ -11,7 +12,7 @@ namespace ShaderGen
     {
         private readonly List<StructureDefinition> _synthesizedStructures = new List<StructureDefinition>();
 
-        private const string OutSemanticsSuffix = "__OUTSEMANTICS";
+        private const string FragmentSemanticsSuffix = "__FRAGSEMANTICS";
         public HlslBackend(SemanticModel model) : base(model)
         {
         }
@@ -24,26 +25,26 @@ namespace ShaderGen
 
         protected void WriteStructure(StringBuilder sb, StructureDefinition sd)
         {
-            bool outSemantics = sd.Name.EndsWith(OutSemanticsSuffix);
+            bool fragmentSemantics = sd.Name.EndsWith(FragmentSemanticsSuffix);
             sb.AppendLine($"struct {CSharpToShaderType(sd.Name)}");
             sb.AppendLine("{");
             HlslSemanticTracker tracker = new HlslSemanticTracker();
             foreach (FieldDefinition field in sd.Fields)
             {
-                sb.AppendLine($"    {CSharpToShaderType(field.Type.Name.Trim())} {field.Name.Trim()} {HlslSemantic(field.SemanticType, outSemantics, ref tracker)};");
+                sb.AppendLine($"    {CSharpToShaderType(field.Type.Name.Trim())} {field.Name.Trim()} {HlslSemantic(field.SemanticType, fragmentSemantics, ref tracker)};");
             }
             sb.AppendLine("};");
             sb.AppendLine();
         }
 
-        private string HlslSemantic(SemanticType semanticType, bool outSemantics, ref HlslSemanticTracker tracker)
+        private string HlslSemantic(SemanticType semanticType, bool fragmentSemantics, ref HlslSemanticTracker tracker)
         {
             switch (semanticType)
             {
                 case SemanticType.None:
                     return string.Empty;
                 case SemanticType.Position:
-                    if (outSemantics)
+                    if (fragmentSemantics)
                     {
                         return ": SV_POSITION";
                     }
@@ -90,21 +91,36 @@ namespace ShaderGen
             return HlslKnownFunctions.GetMappedFunctionName(type, method);
         }
 
-        protected override string GenerateFullTextCore()
+        protected override string GenerateFullTextCore(ShaderFunction function)
         {
-            if (Functions.Count > 1)
-            {
-                throw new NotImplementedException();
-            }
-
             StringBuilder sb = new StringBuilder();
 
-            ShaderFunctionAndBlockSyntax entryPoint = Functions[0];
+            ShaderFunctionAndBlockSyntax entryPoint = Functions.SingleOrDefault(
+                sfabs => sfabs.Function.Name == function.Name);
+            if (entryPoint == null)
+            {
+                throw new ShaderGenerationException("Couldn't find given function: " + function.Name);
+            }
+
             StructureDefinition input = GetRequiredStructureType(entryPoint.Function.Parameters[0].Type);
-            StructureDefinition output = CreateOutputStructure(GetRequiredStructureType(entryPoint.Function.ReturnType));
-            Functions.Remove(entryPoint);
-            entryPoint = entryPoint.WithReturnType(new TypeReference(output.Name));
-            Functions.Add(entryPoint);
+
+            if (function.Type == ShaderFunctionType.VertexEntryPoint)
+            {
+                // HLSL vertex outputs needs to have semantics applied to the structure fields.
+                StructureDefinition output = CreateOutputStructure(GetRequiredStructureType(entryPoint.Function.ReturnType));
+                Functions.Remove(entryPoint);
+                entryPoint = entryPoint.WithReturnType(new TypeReference(output.Name));
+                Functions.Add(entryPoint);
+            }
+
+            if (function.Type == ShaderFunctionType.FragmentEntryPoint)
+            {
+                // HLSL pixel shader inputs also need these semantics.
+                StructureDefinition modifiedInput = CreateOutputStructure(input);
+                Functions.Remove(entryPoint);
+                entryPoint = entryPoint.WithParameter(0, new TypeReference(modifiedInput.Name));
+                Functions.Add(entryPoint);
+            }
 
             foreach (StructureDefinition sd in Structures)
             {
@@ -122,9 +138,8 @@ namespace ShaderGen
 
             foreach (ShaderFunctionAndBlockSyntax sf in Functions)
             {
-                HlslMethodVisitor visitor = new HlslMethodVisitor(Model, sf.Function);
-                visitor.VisitBlock(sf.BlockSyntax);
-                sb.AppendLine(visitor._value);
+                string result = new HlslMethodVisitor(Model, sf.Function, this).Visit(sf.Block);
+                sb.AppendLine(result);
             }
 
             return sb.ToString();
@@ -166,7 +181,12 @@ namespace ShaderGen
 
         private StructureDefinition CreateOutputStructure(StructureDefinition sd)
         {
-            StructureDefinition clone = new StructureDefinition(sd.Name + OutSemanticsSuffix, sd.Fields);
+            if (sd.Name.EndsWith(FragmentSemanticsSuffix))
+            {
+                return sd;
+            }
+
+            StructureDefinition clone = new StructureDefinition(sd.Name + FragmentSemanticsSuffix, sd.Fields);
             _synthesizedStructures.Add(clone);
             return clone;
         }

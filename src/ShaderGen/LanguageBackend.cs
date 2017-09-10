@@ -3,34 +3,53 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ShaderGen
 {
     public abstract class LanguageBackend
     {
-        private readonly SemanticModel _model;
+        protected readonly SemanticModel Model;
 
-        public SemanticModel Model => _model;
+        internal List<StructureDefinition> Structures { get; } = new List<StructureDefinition>();
+        internal List<UniformDefinition> Uniforms { get; } = new List<UniformDefinition>();
+        internal List<ShaderFunctionAndBlockSyntax> Functions { get; } = new List<ShaderFunctionAndBlockSyntax>();
 
-        public List<StructureDefinition> Structures { get; } = new List<StructureDefinition>();
-        public List<UniformDefinition> Uniforms { get; } = new List<UniformDefinition>();
-        public List<ShaderFunctionAndBlockSyntax> Functions { get; } = new List<ShaderFunctionAndBlockSyntax>();
+        private readonly Dictionary<ShaderFunction, string> _fullTextShaders = new Dictionary<ShaderFunction, string>();
 
-        public LanguageBackend(SemanticModel model)
+        internal LanguageBackend(SemanticModel model)
         {
-            _model = model;
+            Model = model;
         }
 
-        public ShaderModel GetShaderModel()
+        internal ShaderModel GetShaderModel()
         {
             return new ShaderModel(
                 Structures.ToArray(),
                 Uniforms.ToArray(),
-                Functions.FirstOrDefault()?.Function);
+                Functions.Select(sfabs => sfabs.Function).ToArray());
         }
 
-        public string CSharpToShaderType(string fullType)
+        public string GetCode(ShaderFunction entryFunction)
+        {
+            if (entryFunction == null)
+            {
+                throw new ArgumentNullException(nameof(entryFunction));
+            }
+            if (!entryFunction.IsEntryPoint)
+            {
+                throw new ArgumentException($"IsEntryPoint must be true for parameter {nameof(entryFunction)}");
+            }
+
+            if (!_fullTextShaders.TryGetValue(entryFunction, out string result))
+            {
+                result = GenerateFullTextCore(entryFunction);
+                _fullTextShaders.Add(entryFunction, result);
+            }
+
+            return result;
+        }
+
+        internal string CSharpToShaderType(string fullType)
         {
             if (fullType == null)
             {
@@ -40,13 +59,13 @@ namespace ShaderGen
             return CSharpToShaderTypeCore(fullType);
         }
 
-        public string CSharpToShaderType(TypeSyntax typeSyntax)
+        internal string CSharpToShaderType(TypeSyntax typeSyntax)
         {
-            return CSharpToShaderTypeCore(_model.GetFullTypeName(typeSyntax));
+            return CSharpToShaderTypeCore(Model.GetFullTypeName(typeSyntax));
         }
 
 
-        public virtual void AddStructure(StructureDefinition sd)
+        internal virtual void AddStructure(StructureDefinition sd)
         {
             if (sd == null)
             {
@@ -56,7 +75,7 @@ namespace ShaderGen
             Structures.Add(sd);
         }
 
-        public virtual void AddUniform(UniformDefinition ud)
+        internal virtual void AddUniform(UniformDefinition ud)
         {
             if (ud == null)
             {
@@ -66,7 +85,7 @@ namespace ShaderGen
             Uniforms.Add(ud);
         }
 
-        public virtual void AddFunction(ShaderFunctionAndBlockSyntax sf)
+        internal virtual void AddFunction(ShaderFunctionAndBlockSyntax sf)
         {
             if (sf == null)
             {
@@ -76,7 +95,7 @@ namespace ShaderGen
             Functions.Add(sf);
         }
 
-        public string CSharpToShaderFunctionName(string type, string method)
+        internal string CSharpToShaderFunctionName(string type, string method)
         {
             if (type == null)
             {
@@ -90,9 +109,8 @@ namespace ShaderGen
             return CSharpToShaderFunctionNameCore(type, method);
         }
 
-        public string GenerateFullText() => GenerateFullTextCore();
         protected abstract string CSharpToShaderTypeCore(string fullType);
         protected abstract string CSharpToShaderFunctionNameCore(string type, string method);
-        protected abstract string GenerateFullTextCore();
+        protected abstract string GenerateFullTextCore(ShaderFunction function);
     }
 }

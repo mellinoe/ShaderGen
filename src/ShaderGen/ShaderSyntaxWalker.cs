@@ -3,17 +3,27 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Text;
 using System.Linq;
 using System;
-using System.IO;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
 namespace ShaderGen
 {
-    public class ShaderSyntaxWalker : CSharpSyntaxWalker
+    internal class ShaderSyntaxWalker : CSharpSyntaxWalker
     {
         private readonly StringBuilder _sb = new StringBuilder();
         private readonly SemanticModel _model;
         private readonly LanguageBackend _backend;
+
+        internal ShaderModel GetShaderModel(SyntaxTree tree)
+        {
+            Visit(tree.GetRoot());
+            // HACK: Discover all method input structures.
+            foreach (ShaderFunctionAndBlockSyntax sf in _backend.Functions.ToArray())
+            {
+                _backend.GetCode(sf.Function);
+            }
+            return _backend.GetShaderModel();
+        }
 
         public ShaderSyntaxWalker(SemanticModel model, LanguageBackend backend) : base(SyntaxWalkerDepth.Token)
         {
@@ -44,9 +54,8 @@ namespace ShaderGen
                 ? ShaderFunctionType.FragmentEntryPoint : ShaderFunctionType.Normal;
 
             ShaderFunction sf = new ShaderFunction(functionName, returnType, parameters.ToArray(), type);
+            HlslMethodVisitor hmv = new HlslMethodVisitor(_model, sf, (HlslBackend)_backend);
             ShaderFunctionAndBlockSyntax sfab = new ShaderFunctionAndBlockSyntax(sf, node.Body);
-            HlslMethodVisitor hmv = new HlslMethodVisitor(_model, sf);
-            hmv.VisitBlock(node.Body);
             _backend.AddFunction(sfab);
         }
 
@@ -150,12 +159,6 @@ namespace ShaderGen
             attr = (node.Parent.DescendantNodes().OfType<AttributeSyntax>().FirstOrDefault(
                 attrSyntax => attrSyntax.ToString().Contains("Uniform")));
             return attr != null;
-        }
-
-        public void WriteToFile(string file)
-        {
-            string fullText = _backend.GenerateFullText();
-            File.WriteAllText(file, fullText);
         }
 
         public ShaderModel GetShaderModel()

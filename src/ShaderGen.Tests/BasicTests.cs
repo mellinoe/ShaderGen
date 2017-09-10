@@ -1,5 +1,7 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Emit;
 using System;
+using System.IO;
 using Xunit;
 
 namespace ShaderGen.Tests
@@ -11,8 +13,23 @@ namespace ShaderGen.Tests
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             SyntaxTree tree = TestUtil.GetSyntaxTree(compilation, "TestVertexShader.cs");
-            SemanticModel model = compilation.GetSemanticModel(tree);
-            ShaderGeneration.GenerateHlsl(model, tree, "testoutput.hlsl");
+            SemanticModel semanticModel = compilation.GetSemanticModel(tree);
+            HlslBackend backend = new HlslBackend(semanticModel);
+            ShaderModel shaderModel = ShaderGeneration.GetShaderModel(semanticModel, tree, backend);
+            string code = backend.GetCode(shaderModel.GetFunction("VS"));
+            File.WriteAllText("testoutput_vertex.hlsl", code);
+        }
+
+        [Fact]
+        public void TestFragmentToHlsl()
+        {
+            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            SyntaxTree tree = TestUtil.GetSyntaxTree(compilation, "TestFragmentShader.cs");
+            SemanticModel semanticModel = compilation.GetSemanticModel(tree);
+            HlslBackend backend = new HlslBackend(semanticModel);
+            ShaderModel shaderModel = ShaderGeneration.GetShaderModel(semanticModel, tree, backend);
+            string code = backend.GetCode(shaderModel.GetFunction("FS"));
+            File.WriteAllText("testoutput_fragment.hlsl", code);
         }
 
         [Fact]
@@ -20,12 +37,16 @@ namespace ShaderGen.Tests
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             SyntaxTree tree = TestUtil.GetSyntaxTree(compilation, "TestVertexShader.cs");
-            SemanticModel model = compilation.GetSemanticModel(tree);
-            compilation.Emit("testfile.il");
+            SemanticModel semanticModel = compilation.GetSemanticModel(tree);
+            EmitResult result = compilation.Emit("testfile.il");
+            Assert.True(result.Success);
 
             using (TempFile tempFile = new TempFile())
             {
-                ShaderGeneration.GenerateHlsl(model, tree, tempFile.FilePath);
+                HlslBackend backend = new HlslBackend(semanticModel);
+                ShaderModel shaderModel = ShaderGeneration.GetShaderModel(semanticModel, tree, backend);
+                string code = backend.GetCode(shaderModel.GetFunction("VS"));
+                File.WriteAllText(tempFile.FilePath, code);
                 AssertHlslCompiler(tempFile.FilePath, "vs_5_0", "VS", tempFile.FilePath + ".bytes");
             }
         }
