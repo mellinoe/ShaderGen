@@ -136,11 +136,8 @@ namespace ShaderGen
                 WriteUniform(sb, ud);
             }
 
-            foreach (ShaderFunctionAndBlockSyntax sf in Functions)
-            {
-                string result = new HlslMethodVisitor(Model, sf.Function, this).Visit(sf.Block);
-                sb.AppendLine(result);
-            }
+            string result = new HlslMethodVisitor(Model, entryPoint.Function, this).Visit(entryPoint.Block);
+            sb.AppendLine(result);
 
             return sb.ToString();
         }
