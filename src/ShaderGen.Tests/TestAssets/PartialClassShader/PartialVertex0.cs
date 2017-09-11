@@ -5,7 +5,7 @@ namespace TestShaders
 {
     public partial class PartialVertex
     {
-        struct VertexInput
+        public struct VertexInput
         {
             [VertexSemantic(SemanticType.Position)] public Vector3 Position;
             [VertexSemantic(SemanticType.Color)] public Vector4 Color;
