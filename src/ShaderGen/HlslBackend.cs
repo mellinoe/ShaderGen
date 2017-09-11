@@ -79,6 +79,35 @@ namespace ShaderGen
 
         protected void WriteResource(StringBuilder sb, ResourceDefinition rd)
         {
+            switch (rd.ResourceKind)
+            {
+                case ShaderResourceKind.Uniform:
+                    WriteUniform(sb, rd);
+                    break;
+                case ShaderResourceKind.Texture2D:
+                    WriteTexture2D(sb, rd);
+                    break;
+                case ShaderResourceKind.Sampler:
+                    WriteSampler(sb, rd);
+                    break;
+                default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
+            }
+        }
+
+        private void WriteSampler(StringBuilder sb, ResourceDefinition rd)
+        {
+            sb.AppendLine($"SamplerState {rd.Name} : register(s{rd.Binding});");
+            sb.AppendLine();
+        }
+
+        private void WriteTexture2D(StringBuilder sb, ResourceDefinition rd)
+        {
+            sb.AppendLine($"Texture2D {rd.Name} : register(t{rd.Binding});");
+            sb.AppendLine();
+        }
+
+        private static void WriteUniform(StringBuilder sb, ResourceDefinition rd)
+        {
             sb.AppendLine($"cbuffer {rd.Name}Buffer : register(b{rd.Binding})");
             sb.AppendLine("{");
             sb.AppendLine($"    {HlslKnownTypes.GetMappedName(rd.ValueType.Name.Trim())} {rd.Name.Trim()};");
