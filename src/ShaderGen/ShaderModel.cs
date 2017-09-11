@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace ShaderGen
 {
@@ -23,6 +24,16 @@ namespace ShaderGen
 
         public ShaderFunction GetFunction(string name)
         {
+            if (name.EndsWith("."))
+            {
+                throw new ArgumentException($"{nameof(name)} must be a valid function name.");
+            }
+
+            if (name.Contains("."))
+            {
+                name = name.Split(new[] { '.' }).Last();
+            }
+
             return Functions.FirstOrDefault(sf => sf.Name == name);
         }
     }

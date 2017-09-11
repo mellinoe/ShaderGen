@@ -42,7 +42,7 @@ namespace ShaderGen
                 throw new ShaderGenerationException(
                     $"The name passed to {nameof(vertexFunctionName)} must be a fully-qualified type and method.");
             }
-            if (_fragmentFunctionName != null && !GetTypeAndMethodName(fragmentFunctionName, out _fragmentFunctionName))
+            if (fragmentFunctionName != null && !GetTypeAndMethodName(fragmentFunctionName, out _fragmentFunctionName))
             {
                 throw new ShaderGenerationException(
                     $"The name passed to {nameof(fragmentFunctionName)} must be a fully-qualified type and method.");
