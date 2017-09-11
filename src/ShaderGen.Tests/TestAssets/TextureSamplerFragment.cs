@@ -15,15 +15,19 @@ namespace TestShaders
         }
 
         [Resource(0)]
-        public Texture2DResource Texture;
+        public Texture2DResource Tex2D;
 
         [Resource(1)]
+        public TextureCubeResource TexCube;
+
+        [Resource(2)]
         public SamplerResource Sampler;
 
         [FragmentShader]
         public Vector4 FS(FragmentInput input)
         {
-            return Sample(Texture, Sampler, input.TextureCoordinate);
+            Vector4 cubeSample = Sample(TexCube, Sampler, new Vector3(1, 2, 3));
+            return Sample(Tex2D, Sampler, input.TextureCoordinate);
         }
     }
 }

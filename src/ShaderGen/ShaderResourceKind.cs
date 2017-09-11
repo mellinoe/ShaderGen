@@ -4,6 +4,7 @@
     {
         Uniform,
         Texture2D,
+        TextureCube,
         Sampler,
     }
 }

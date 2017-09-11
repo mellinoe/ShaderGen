@@ -89,6 +89,12 @@ namespace ShaderGen
             sb.AppendLine();
         }
 
+        private void WriteTextureCube(StringBuilder sb, ResourceDefinition rd, int binding)
+        {
+            sb.AppendLine($"TextureCube {rd.Name} : register(t{binding});");
+            sb.AppendLine();
+        }
+
         private void WriteUniform(StringBuilder sb, ResourceDefinition rd, int binding)
         {
             sb.AppendLine($"cbuffer {rd.Name}Buffer : register(b{binding})");
@@ -148,6 +154,9 @@ namespace ShaderGen
                         break;
                     case ShaderResourceKind.Texture2D:
                         WriteTexture2D(sb, rd, textureBinding++);
+                        break;
+                    case ShaderResourceKind.TextureCube:
+                        WriteTextureCube(sb, rd, textureBinding++);
                         break;
                     case ShaderResourceKind.Sampler:
                         WriteSampler(sb, rd, samplerBinding++);

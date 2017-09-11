@@ -165,6 +165,10 @@ namespace ShaderGen
             {
                 return ShaderResourceKind.Texture2D;
             }
+            if (fullTypeName == "ShaderGen.TextureCubeResource")
+            {
+                return ShaderResourceKind.TextureCube;
+            }
             else if (fullTypeName == "ShaderGen.SamplerResource")
             {
                 return ShaderResourceKind.Sampler;
