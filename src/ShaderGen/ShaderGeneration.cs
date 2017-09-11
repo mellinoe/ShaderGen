@@ -10,8 +10,9 @@ namespace ShaderGen
     {
         public static ShaderModel GetShaderModel(SemanticModel model, SyntaxTree tree, LanguageBackend backend)
         {
-            ShaderSyntaxWalker walker = new ShaderSyntaxWalker(model.Compilation, backend);
-            ShaderModel ret = walker.GetShaderModel(tree);
+            ShaderSyntaxWalker walker = new ShaderSyntaxWalker(model.Compilation, new LanguageBackend[] { backend });
+            walker.Visit(tree.GetRoot());
+            ShaderModel ret = walker.GetShaderModel();
             return ret;
         }
     }

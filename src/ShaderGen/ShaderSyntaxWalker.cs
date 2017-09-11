@@ -12,25 +12,23 @@ namespace ShaderGen
     {
         private readonly StringBuilder _sb = new StringBuilder();
         private readonly Compilation _compilation;
-        private readonly LanguageBackend _backend;
+        private readonly LanguageBackend[] _backends;
         private int _lastResourceBinding;
 
-        public ShaderSyntaxWalker(Compilation compilation, LanguageBackend backend) : base(SyntaxWalkerDepth.Token)
+        public ShaderSyntaxWalker(Compilation compilation, LanguageBackend[] backends) : base(SyntaxWalkerDepth.Token)
         {
             _compilation = compilation;
-            _backend = backend;
+            _backends = backends;
         }
 
-
-        internal ShaderModel GetShaderModel(SyntaxTree tree)
+        public ShaderModel GetShaderModel()
         {
-            Visit(tree.GetRoot());
             // HACK: Discover all method input structures.
-            foreach (ShaderFunctionAndBlockSyntax sf in _backend.Functions.ToArray())
+            foreach (ShaderFunctionAndBlockSyntax sf in _backends[0].Functions.ToArray())
             {
-                _backend.GetCode(sf.Function);
+                foreach (LanguageBackend b in _backends) { b.GetCode(sf.Function); }
             }
-            return _backend.GetShaderModel();
+            return _backends[0].GetShaderModel(); // HACK
         }
 
         private SemanticModel GetModel(SyntaxNode node) => _compilation.GetSemanticModel(node.SyntaxTree);
@@ -58,9 +56,8 @@ namespace ShaderGen
                 ? ShaderFunctionType.FragmentEntryPoint : ShaderFunctionType.Normal;
 
             ShaderFunction sf = new ShaderFunction(functionName, returnType, parameters.ToArray(), type);
-            HlslMethodVisitor hmv = new HlslMethodVisitor(GetModel(node), sf, (HlslBackend)_backend);
             ShaderFunctionAndBlockSyntax sfab = new ShaderFunctionAndBlockSyntax(sf, node.Body);
-            _backend.AddFunction(sfab);
+            foreach (LanguageBackend b in _backends) { b.AddFunction(sfab); }
         }
 
         private ParameterDefinition GetParameterDefinition(ParameterSyntax ps)
@@ -73,7 +70,7 @@ namespace ShaderGen
         public override void VisitStructDeclaration(StructDeclarationSyntax node)
         {
             TryGetStructDefinition(GetModel(node), node, out var sd);
-            _backend.AddStructure(sd);
+            foreach (var b in _backends) { b.AddStructure(sd); }
         }
 
         public static bool TryGetStructDefinition(SemanticModel model, StructDeclarationSyntax node, out StructureDefinition sd)
@@ -153,7 +150,7 @@ namespace ShaderGen
                 TypeReference tr = new TypeReference(fullTypeName);
                 ShaderResourceKind kind = ClassifyResourceKind(fullTypeName);
                 ResourceDefinition rd = new ResourceDefinition(resourceName, resourceBinding, tr, kind);
-                _backend.AddResource(rd);
+                foreach (LanguageBackend b in _backends) { b.AddResource(rd); }
             }
         }
 
@@ -182,11 +179,6 @@ namespace ShaderGen
             attr = (node.Parent.DescendantNodes().OfType<AttributeSyntax>().FirstOrDefault(
                 attrSyntax => attrSyntax.ToString().Contains("Resource")));
             return attr != null;
-        }
-
-        public ShaderModel GetShaderModel()
-        {
-            return _backend.GetShaderModel();
         }
     }
 }

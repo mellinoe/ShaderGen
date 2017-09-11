@@ -14,7 +14,7 @@ namespace ShaderGen.Tests
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             SyntaxTree tree = TestUtil.GetSyntaxTree(compilation, "TestVertexShader.cs");
             SemanticModel semanticModel = compilation.GetSemanticModel(tree);
-            HlslBackend backend = new HlslBackend(semanticModel);
+            HlslBackend backend = new HlslBackend(compilation);
             ShaderModel shaderModel = ShaderGeneration.GetShaderModel(semanticModel, tree, backend);
             string code = backend.GetCode(shaderModel.GetFunction("VS"));
             File.WriteAllText("testoutput_vertex.hlsl", code);
@@ -26,7 +26,7 @@ namespace ShaderGen.Tests
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             SyntaxTree tree = TestUtil.GetSyntaxTree(compilation, "TestFragmentShader.cs");
             SemanticModel semanticModel = compilation.GetSemanticModel(tree);
-            HlslBackend backend = new HlslBackend(semanticModel);
+            HlslBackend backend = new HlslBackend(compilation);
             ShaderModel shaderModel = ShaderGeneration.GetShaderModel(semanticModel, tree, backend);
             string code = backend.GetCode(shaderModel.GetFunction("FS"));
             File.WriteAllText("testoutput_fragment.hlsl", code);
@@ -43,11 +43,11 @@ namespace ShaderGen.Tests
 
             using (TempFile tempFile = new TempFile())
             {
-                HlslBackend backend = new HlslBackend(semanticModel);
+                HlslBackend backend = new HlslBackend(compilation);
                 ShaderModel shaderModel = ShaderGeneration.GetShaderModel(semanticModel, tree, backend);
                 string code = backend.GetCode(shaderModel.GetFunction("VS"));
                 File.WriteAllText(tempFile.FilePath, code);
-                AssertHlslCompiler(tempFile.FilePath, "vs_5_0", "VS", tempFile.FilePath + ".bytes");
+                FxcTool.AssertCompilesFile(tempFile.FilePath, "vs_5_0", "VS");
             }
         }
 
@@ -61,20 +61,20 @@ namespace ShaderGen.Tests
             using (TempFile vsOut = new TempFile())
             using (TempFile fsOut = new TempFile())
             {
-                HlslBackend backend = new HlslBackend(semanticModel);
+                HlslBackend backend = new HlslBackend(compilation);
                 ShaderModel shaderModel = ShaderGeneration.GetShaderModel(semanticModel, tree, backend);
 
                 ShaderFunction vsFunc = shaderModel.GetFunction("VS");
                 Assert.Equal(ShaderFunctionType.VertexEntryPoint, vsFunc.Type);
                 string vs = backend.GetCode(vsFunc);
                 File.WriteAllText(vsOut.FilePath, vs);
-                AssertHlslCompiler(vsOut.FilePath, "vs_5_0", "VS", vsOut.FilePath + ".bytes");
+                FxcTool.AssertCompilesFile(vsOut.FilePath, "vs_5_0", "VS");
 
                 ShaderFunction fsFunc = shaderModel.GetFunction("FS");
                 Assert.Equal(ShaderFunctionType.FragmentEntryPoint, fsFunc.Type);
                 string fs = backend.GetCode(fsFunc);
                 File.WriteAllText(fsOut.FilePath, fs);
-                AssertHlslCompiler(fsOut.FilePath, "ps_5_0", "FS", fsOut.FilePath + ".bytes");
+                FxcTool.AssertCompilesFile(fsOut.FilePath, "ps_5_0", "FS");
             }
         }
 
@@ -86,7 +86,7 @@ namespace ShaderGen.Tests
             using (TempFile tf = new TempFile())
             {
                 File.WriteAllText(tf, code);
-                AssertHlslCompiler(tf, "ps_5_0", "FS", tf.FilePath + ".bytes");
+                FxcTool.AssertCompilesFile(tf, "ps_5_0", "FS");
             }
         }
 
@@ -98,7 +98,7 @@ namespace ShaderGen.Tests
             using (TempFile tf = new TempFile())
             {
                 File.WriteAllText(tf, code);
-                AssertHlslCompiler(tf, "ps_5_0", "FS", tf.FilePath + ".bytes");
+                FxcTool.AssertCompilesFile(tf, "ps_5_0", "FS");
             }
         }
 
@@ -112,19 +112,9 @@ namespace ShaderGen.Tests
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             SyntaxTree tree = TestUtil.GetSyntaxTree(compilation, sourceFile);
             SemanticModel semanticModel = compilation.GetSemanticModel(tree);
-            backend = new HlslBackend(semanticModel);
+            backend = new HlslBackend(compilation);
             shaderModel = ShaderGeneration.GetShaderModel(semanticModel, tree, backend);
             function = shaderModel.GetFunction(entryFunctionName);
-        }
-
-        private void AssertHlslCompiler(string file, string profile, string entryPoint, string output)
-        {
-            FxcToolResult result = FxcTool.Compile(file, profile, entryPoint, output);
-            if (result.ExitCode != 0)
-            {
-                string message = result.StdError;
-                throw new InvalidOperationException("HLSL compilation failed: " + message);
-            }
         }
     }
 }

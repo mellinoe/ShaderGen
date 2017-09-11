@@ -9,7 +9,7 @@ namespace ShaderGen
 {
     public abstract class LanguageBackend
     {
-        protected readonly SemanticModel Model;
+        protected readonly Compilation Compilation;
 
         internal List<StructureDefinition> Structures { get; } = new List<StructureDefinition>();
         internal List<ResourceDefinition> Resources { get; } = new List<ResourceDefinition>();
@@ -17,9 +17,9 @@ namespace ShaderGen
 
         private readonly Dictionary<ShaderFunction, string> _fullTextShaders = new Dictionary<ShaderFunction, string>();
 
-        internal LanguageBackend(SemanticModel model)
+        internal LanguageBackend(Compilation compilation)
         {
-            Model = model;
+            Compilation = compilation;
         }
 
         internal ShaderModel GetShaderModel()
@@ -62,7 +62,7 @@ namespace ShaderGen
 
         internal string CSharpToShaderType(TypeSyntax typeSyntax)
         {
-            return CSharpToShaderTypeCore(Model.GetFullTypeName(typeSyntax));
+            return CSharpToShaderTypeCore(Compilation.GetSemanticModel(typeSyntax.SyntaxTree).GetFullTypeName(typeSyntax));
         }
 
 

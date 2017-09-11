@@ -13,7 +13,7 @@ namespace ShaderGen
         private readonly List<StructureDefinition> _synthesizedStructures = new List<StructureDefinition>();
 
         private const string FragmentSemanticsSuffix = "__FRAGSEMANTICS";
-        public HlslBackend(SemanticModel model) : base(model)
+        public HlslBackend(Compilation compilation) : base(compilation)
         {
         }
 
@@ -165,7 +165,7 @@ namespace ShaderGen
                 }
             }
 
-            string result = new HlslMethodVisitor(Model, entryPoint.Function, this).Visit(entryPoint.Block);
+            string result = new HlslMethodVisitor(Compilation, entryPoint.Function, this).Visit(entryPoint.Block);
             sb.AppendLine(result);
 
             return sb.ToString();
@@ -191,11 +191,11 @@ namespace ShaderGen
 
         private bool TryDiscoverStructure(string name)
         {
-            INamedTypeSymbol type = Model.Compilation.GetTypeByMetadataName(name);
+            INamedTypeSymbol type = Compilation.GetTypeByMetadataName(name);
             SyntaxNode declaringSyntax = type.OriginalDefinition.DeclaringSyntaxReferences[0].GetSyntax();
             if (declaringSyntax is StructDeclarationSyntax sds)
             {
-                if (ShaderSyntaxWalker.TryGetStructDefinition(Model, sds, out StructureDefinition sd))
+                if (ShaderSyntaxWalker.TryGetStructDefinition(Compilation.GetSemanticModel(sds.SyntaxTree), sds, out StructureDefinition sd))
                 {
                     Structures.Add(sd);
                     return true;

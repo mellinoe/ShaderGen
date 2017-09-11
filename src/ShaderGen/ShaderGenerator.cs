@@ -7,8 +7,8 @@ namespace ShaderGen
     public class ShaderGenerator
     {
         private readonly Compilation _compilation;
-        private readonly string _vertexFunctionName;
-        private readonly string _fragmentFunctionName;
+        private readonly TypeAndMethodName _vertexFunctionName;
+        private readonly TypeAndMethodName _fragmentFunctionName;
         private readonly List<LanguageBackend> _languages;
 
         public ShaderGenerator(
@@ -17,19 +17,93 @@ namespace ShaderGen
             string fragmentFunctionName,
             params LanguageBackend[] languages)
         {
+            if (compilation == null)
+            {
+                throw new ArgumentNullException(nameof(compilation));
+            }
+            if (vertexFunctionName == null)
+            {
+                throw new ArgumentNullException(nameof(vertexFunctionName));
+            }
+            if (fragmentFunctionName == null)
+            {
+                throw new ArgumentNullException(nameof(fragmentFunctionName));
+            }
+            if (languages == null)
+            {
+                throw new ArgumentNullException(nameof(languages));
+            }
+            if (languages.Length == 0)
+            {
+                throw new ArgumentException("At least one LanguageBackend must be provided.");
+            }
+
             _compilation = compilation;
             _languages = new List<LanguageBackend>(languages);
-            _vertexFunctionName = vertexFunctionName;
-            _fragmentFunctionName = fragmentFunctionName;
+            if (!GetTypeAndMethodName(vertexFunctionName, out _vertexFunctionName))
+            {
+                throw new ShaderGenerationException(
+                    $"The name passed to {nameof(vertexFunctionName)} must be a fully-qualified type and method.");
+            }
+            if (!GetTypeAndMethodName(fragmentFunctionName, out _fragmentFunctionName))
+            {
+                throw new ShaderGenerationException(
+                    $"The name passed to {nameof(fragmentFunctionName)} must be a fully-qualified type and method.");
+            }
         }
 
         public ShaderModel GenerateShaders()
         {
-            foreach (LanguageBackend backend in _languages)
+            HashSet<SyntaxTree> treesToVisit = new HashSet<SyntaxTree>();
+            GetTrees(treesToVisit, _vertexFunctionName.TypeName);
+            if (_fragmentFunctionName != null)
             {
+                GetTrees(treesToVisit, _fragmentFunctionName.TypeName);
             }
 
-            throw new NotImplementedException();
+            ShaderSyntaxWalker walker = null;
+            walker = new ShaderSyntaxWalker(_compilation, _languages.ToArray());
+            foreach (SyntaxTree tree in treesToVisit)
+            {
+                walker.Visit(tree.GetRoot());
+            }
+
+            return walker.GetShaderModel();
+        }
+
+        private void GetTrees(HashSet<SyntaxTree> treesToVisit, string typeName)
+        {
+            INamedTypeSymbol typeSymbol = _compilation.GetTypeByMetadataName(typeName);
+            foreach (SyntaxReference syntaxRef in typeSymbol.DeclaringSyntaxReferences)
+            {
+                treesToVisit.Add(syntaxRef.SyntaxTree);
+            }
+        }
+
+        private static bool GetTypeAndMethodName(string fullName, out TypeAndMethodName typeAndMethodName)
+        {
+            string[] parts = fullName.Split(new[] { '.' });
+            if (parts.Length < 2)
+            {
+                typeAndMethodName = default(TypeAndMethodName);
+                return false;
+            }
+            string typeName = parts[0];
+            for (int i = 1; i < parts.Length - 1; i++)
+            {
+                typeName += "." + parts[i];
+            }
+
+            typeAndMethodName = new TypeAndMethodName { TypeName = typeName, MethodName = parts[parts.Length - 1] };
+            return true;
+        }
+
+        public class TypeAndMethodName
+        {
+            public string TypeName;
+            public string MethodName;
+
+            public string ToFullname => TypeName + "." + MethodName;
         }
     }
 }

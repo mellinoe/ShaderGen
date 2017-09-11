@@ -9,17 +9,19 @@ namespace ShaderGen
 {
     public partial class HlslMethodVisitor : CSharpSyntaxVisitor<string>
     {
-        private readonly SemanticModel _model;
+        private readonly Compilation _compilation;
         private readonly LanguageBackend _backend;
         private readonly ShaderFunction _shaderFunction;
         public string _value;
 
-        public HlslMethodVisitor(SemanticModel model, ShaderFunction shaderFunction, HlslBackend backend)
+        public HlslMethodVisitor(Compilation compilation, ShaderFunction shaderFunction, HlslBackend backend)
         {
-            _model = model;
+            _compilation = compilation;
             _shaderFunction = shaderFunction;
             _backend = backend;
         }
+
+        private SemanticModel GetModel(SyntaxNode node) => _compilation.GetSemanticModel(node.SyntaxTree);
 
         public override string VisitBlock(BlockSyntax node)
         {
@@ -109,7 +111,7 @@ namespace ShaderGen
             }
 
             InvocationParameterInfo[] parameterInfos = GetParameterInfos(node.ArgumentList);
-            SymbolInfo symbolInfo = _model.GetSymbolInfo(ins);
+            SymbolInfo symbolInfo = GetModel(node).GetSymbolInfo(ins);
             string type = symbolInfo.Symbol.ContainingType.ToDisplayString();
             string method = symbolInfo.Symbol.Name;
 
@@ -150,7 +152,7 @@ namespace ShaderGen
 
         public override string VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
         {
-            SymbolInfo symbolInfo = _model.GetSymbolInfo(node.Type);
+            SymbolInfo symbolInfo = GetModel(node).GetSymbolInfo(node.Type);
             string fullName = symbolInfo.Symbol.Name;
             string ns = symbolInfo.Symbol.ContainingNamespace.ToDisplayString();
             if (!string.IsNullOrEmpty(ns))
@@ -169,7 +171,7 @@ namespace ShaderGen
 
         public override string VisitIdentifierName(IdentifierNameSyntax node)
         {
-            SymbolInfo symbolInfo = _model.GetSymbolInfo(node);
+            SymbolInfo symbolInfo = GetModel(node).GetSymbolInfo(node);
             string mapped = _backend.CSharpToShaderIdentifierName(symbolInfo);
             return mapped;
         }

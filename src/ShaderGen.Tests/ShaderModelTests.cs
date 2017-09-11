@@ -13,7 +13,7 @@ namespace ShaderGen.Tests
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             SyntaxTree tree = TestUtil.GetSyntaxTree(compilation, "TestVertexShader.cs");
             SemanticModel model = compilation.GetSemanticModel(tree);
-            HlslBackend backend = new HlslBackend(model);
+            HlslBackend backend = new HlslBackend(compilation);
             ShaderModel shaderModel = ShaderGeneration.GetShaderModel(model, tree, backend);
             Assert.Equal(2, shaderModel.Structures.Length);
             Assert.Equal(3, shaderModel.Resources.Length);
@@ -30,7 +30,7 @@ namespace ShaderGen.Tests
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             SyntaxTree tree = TestUtil.GetSyntaxTree(compilation, "TestVertexShader.cs");
             SemanticModel model = compilation.GetSemanticModel(tree);
-            ShaderModel shaderModel = ShaderGeneration.GetShaderModel(model, tree, new HlslBackend(model));
+            ShaderModel shaderModel = ShaderGeneration.GetShaderModel(model, tree, new HlslBackend(compilation));
 
             StructureDefinition vsInput = shaderModel.GetStructureDefinition(nameof(TestShaders) + "." + nameof(PositionTexture));
             Assert.Equal(SemanticType.Position, vsInput.Fields[0].SemanticType);
