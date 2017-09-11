@@ -132,32 +132,53 @@ namespace ShaderGen
 
         public override void VisitVariableDeclaration(VariableDeclarationSyntax node)
         {
-            if (GetUniformDecl(node, out AttributeSyntax uniformAttr))
+            if (GetResourceDecl(node, out AttributeSyntax uniformAttr))
             {
                 ExpressionSyntax uniformBindingExpr = uniformAttr.ArgumentList.Arguments[0].Expression;
                 if (!(uniformBindingExpr is LiteralExpressionSyntax les))
                 {
-                    throw new ShaderGenerationException("Must use a literal parameter in UniformAttribute ctor.");
+                    throw new ShaderGenerationException("Must use a literal parameter in ResourceAttribute ctor.");
                 }
 
                 int uniformBinding = int.Parse(les.ToFullString());
 
-                foreach (VariableDeclaratorSyntax vds in node.Variables)
+                if (node.Variables.Count != 1)
                 {
-                    string uniformName = vds.Identifier.Text;
-                    TypeInfo typeInfo = _model.GetTypeInfo(node.Type);
-                    string fullTypeName = _model.GetFullTypeName(node.Type);
-                    TypeReference tr = new TypeReference(fullTypeName);
-                    UniformDefinition ud = new UniformDefinition(uniformName, uniformBinding, tr);
-                    _backend.AddUniform(ud);
+                    throw new ShaderGenerationException("Cannot declare multiple ResourceAttribute variables together.");
                 }
+
+                VariableDeclaratorSyntax vds = node.Variables[0];
+
+                string resourceName = vds.Identifier.Text;
+                TypeInfo typeInfo = _model.GetTypeInfo(node.Type);
+                string fullTypeName = _model.GetFullTypeName(node.Type);
+                TypeReference tr = new TypeReference(fullTypeName);
+                ShaderResourceKind kind = ClassifyResourceKind(fullTypeName);
+                ResourceDefinition rd = new ResourceDefinition(resourceName, uniformBinding, tr, kind);
+                _backend.AddResource(rd);
             }
         }
 
-        private bool GetUniformDecl(VariableDeclarationSyntax node, out AttributeSyntax attr)
+        private ShaderResourceKind ClassifyResourceKind(string fullTypeName)
+        {
+            if (fullTypeName == "ShaderGen.Texture2DResource")
+            {
+                return ShaderResourceKind.Texture2D;
+            }
+            else if (fullTypeName == "ShaderGen.SamplerResource")
+            {
+                return ShaderResourceKind.Sampler;
+            }
+            else
+            {
+                return ShaderResourceKind.Uniform;
+            }
+        }
+
+        private bool GetResourceDecl(VariableDeclarationSyntax node, out AttributeSyntax attr)
         {
             attr = (node.Parent.DescendantNodes().OfType<AttributeSyntax>().FirstOrDefault(
-                attrSyntax => attrSyntax.ToString().Contains("Uniform")));
+                attrSyntax => attrSyntax.ToString().Contains("Resource")));
             return attr != null;
         }
 

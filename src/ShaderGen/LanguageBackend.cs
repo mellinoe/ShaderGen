@@ -11,7 +11,7 @@ namespace ShaderGen
         protected readonly SemanticModel Model;
 
         internal List<StructureDefinition> Structures { get; } = new List<StructureDefinition>();
-        internal List<UniformDefinition> Uniforms { get; } = new List<UniformDefinition>();
+        internal List<ResourceDefinition> Resources { get; } = new List<ResourceDefinition>();
         internal List<ShaderFunctionAndBlockSyntax> Functions { get; } = new List<ShaderFunctionAndBlockSyntax>();
 
         private readonly Dictionary<ShaderFunction, string> _fullTextShaders = new Dictionary<ShaderFunction, string>();
@@ -25,7 +25,7 @@ namespace ShaderGen
         {
             return new ShaderModel(
                 Structures.ToArray(),
-                Uniforms.ToArray(),
+                Resources.ToArray(),
                 Functions.Select(sfabs => sfabs.Function).ToArray());
         }
 
@@ -75,14 +75,14 @@ namespace ShaderGen
             Structures.Add(sd);
         }
 
-        internal virtual void AddUniform(UniformDefinition ud)
+        internal virtual void AddResource(ResourceDefinition ud)
         {
             if (ud == null)
             {
                 throw new ArgumentNullException(nameof(ud));
             }
 
-            Uniforms.Add(ud);
+            Resources.Add(ud);
         }
 
         internal virtual void AddFunction(ShaderFunctionAndBlockSyntax sf)

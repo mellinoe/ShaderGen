@@ -112,6 +112,8 @@ namespace ShaderGen.Tests
             FilePath = path;
         }
 
+        public static implicit operator string(TempFile tf) => tf.FilePath;
+
         public void Dispose()
         {
             File.Delete(FilePath);

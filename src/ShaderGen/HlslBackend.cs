@@ -77,11 +77,11 @@ namespace ShaderGen
             }
         }
 
-        protected void WriteUniform(StringBuilder sb, UniformDefinition ud)
+        protected void WriteUniform(StringBuilder sb, ResourceDefinition ud)
         {
             sb.AppendLine($"cbuffer {ud.Name}Buffer : register(b{ud.Binding})");
             sb.AppendLine("{");
-            sb.AppendLine($"    {HlslKnownTypes.GetMappedName(ud.Type.Name.Trim())} {ud.Name.Trim()};");
+            sb.AppendLine($"    {HlslKnownTypes.GetMappedName(ud.ValueType.Name.Trim())} {ud.Name.Trim()};");
             sb.AppendLine("}");
             sb.AppendLine();
         }
@@ -131,7 +131,7 @@ namespace ShaderGen
                 WriteStructure(sb, sd);
             }
 
-            foreach (UniformDefinition ud in Uniforms)
+            foreach (ResourceDefinition ud in Resources)
             {
                 WriteUniform(sb, ud);
             }

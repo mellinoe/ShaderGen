@@ -78,12 +78,39 @@ namespace ShaderGen.Tests
             }
         }
 
+        [Fact]
+        public void FragmentWithTextureAndSampler()
+        {
+            GetModels("TextureSamplerFragment.cs", "FS", out LanguageBackend backend, out ShaderModel shaderModel, out ShaderFunction function);
+            string code = backend.GetCode(function);
+            using (TempFile tf = new TempFile())
+            {
+                File.WriteAllText(tf, code);
+                AssertHlslCompiler(tf, "ps_5_0", "FS", tf.FilePath + ".bytes");
+            }
+        }
+
+        private void GetModels(
+            string sourceFile,
+            string entryFunctionName,
+            out LanguageBackend backend,
+            out ShaderModel shaderModel,
+            out ShaderFunction function)
+        {
+            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            SyntaxTree tree = TestUtil.GetSyntaxTree(compilation, sourceFile);
+            SemanticModel semanticModel = compilation.GetSemanticModel(tree);
+            backend = new HlslBackend(semanticModel);
+            shaderModel = ShaderGeneration.GetShaderModel(semanticModel, tree, backend);
+            function = shaderModel.GetFunction(entryFunctionName);
+        }
+
         private void AssertHlslCompiler(string file, string profile, string entryPoint, string output)
         {
             FxcToolResult result = FxcTool.Compile(file, profile, entryPoint, output);
             if (result.ExitCode != 0)
             {
-                string message = result.StdOut + Environment.NewLine + result.StdError;
+                string message = result.StdError;
                 throw new InvalidOperationException("HLSL compilation failed: " + message);
             }
         }

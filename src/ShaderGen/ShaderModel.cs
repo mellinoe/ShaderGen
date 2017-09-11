@@ -5,10 +5,10 @@ namespace ShaderGen
     public class ShaderModel
     {
         public StructureDefinition[] Structures { get; }
-        public UniformDefinition[] Uniforms { get; }
+        public ResourceDefinition[] Uniforms { get; }
         public ShaderFunction[] Functions { get; }
 
-        public ShaderModel(StructureDefinition[] structures, UniformDefinition[] uniforms, ShaderFunction[] functions)
+        public ShaderModel(StructureDefinition[] structures, ResourceDefinition[] uniforms, ShaderFunction[] functions)
         {
             Structures = structures;
             Uniforms = uniforms;
