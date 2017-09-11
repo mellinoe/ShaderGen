@@ -90,6 +90,18 @@ namespace ShaderGen.Tests
             }
         }
 
+        [Fact]
+        public void ComplexExpression()
+        {
+            GetModels("ComplexExpression.cs", "FS", out LanguageBackend backend, out ShaderModel shaderModel, out ShaderFunction function);
+            string code = backend.GetCode(function);
+            using (TempFile tf = new TempFile())
+            {
+                File.WriteAllText(tf, code);
+                AssertHlslCompiler(tf, "ps_5_0", "FS", tf.FilePath + ".bytes");
+            }
+        }
+
         private void GetModels(
             string sourceFile,
             string entryFunctionName,

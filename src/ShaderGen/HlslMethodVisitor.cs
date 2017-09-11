@@ -116,6 +116,20 @@ namespace ShaderGen
             return _backend.FormatInvocation(type, method, parameterInfos);
         }
 
+        public override string VisitBinaryExpression(BinaryExpressionSyntax node)
+        {
+            return Visit(node.Left) + " "
+                + node.OperatorToken + " "
+                + Visit(node.Right);
+        }
+
+        public override string VisitParenthesizedExpression(ParenthesizedExpressionSyntax node)
+        {
+            return node.OpenParenToken
+                + Visit(node.Expression)
+                + node.CloseParenToken;
+        }
+
         public override string VisitArgumentList(ArgumentListSyntax node)
         {
             return string.Join(", ", node.Arguments.Select(argSyntax => Visit(argSyntax)));

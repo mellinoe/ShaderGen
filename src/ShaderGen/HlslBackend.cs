@@ -31,7 +31,7 @@ namespace ShaderGen
             HlslSemanticTracker tracker = new HlslSemanticTracker();
             foreach (FieldDefinition field in sd.Fields)
             {
-                sb.AppendLine($"    {CSharpToShaderType(field.Type.Name.Trim())} {field.Name.Trim()} {HlslSemantic(field.SemanticType, fragmentSemantics, ref tracker)};");
+                sb.AppendLine($"    {CSharpToShaderType(field.Type.Name.Trim())} {field.Name.Trim()}{HlslSemantic(field.SemanticType, fragmentSemantics, ref tracker)};");
             }
             sb.AppendLine("};");
             sb.AppendLine();
@@ -46,71 +46,54 @@ namespace ShaderGen
                 case SemanticType.Position:
                     if (fragmentSemantics)
                     {
-                        return ": SV_POSITION";
+                        return " : SV_POSITION";
                     }
                     else
                     {
                         int val = tracker.Position++;
-                        return ": POSITION" + val.ToString();
+                        return " : POSITION" + val.ToString();
                     }
                 case SemanticType.Normal:
                     {
                         int val = tracker.Normal++;
-                        return ": NORMAL" + val.ToString();
+                        return " : NORMAL" + val.ToString();
                     }
                 case SemanticType.TextureCoordinate:
                     {
                         int val = tracker.TexCoord++;
-                        return ": TEXCOORD" + val.ToString();
+                        return " : TEXCOORD" + val.ToString();
                     }
                 case SemanticType.Color:
                     {
                         int val = tracker.Color++;
-                        return ": COLOR" + val.ToString();
+                        return " : COLOR" + val.ToString();
                     }
                 case SemanticType.Tangent:
                     {
                         int val = tracker.Tangent++;
-                        return ": TANGENT" + val.ToString();
+                        return " : TANGENT" + val.ToString();
                     }
                 default: throw new InvalidOperationException("Invalid semantic type: " + semanticType);
             }
         }
 
-        protected void WriteResource(StringBuilder sb, ResourceDefinition rd)
+        private void WriteSampler(StringBuilder sb, ResourceDefinition rd, int binding)
         {
-            switch (rd.ResourceKind)
-            {
-                case ShaderResourceKind.Uniform:
-                    WriteUniform(sb, rd);
-                    break;
-                case ShaderResourceKind.Texture2D:
-                    WriteTexture2D(sb, rd);
-                    break;
-                case ShaderResourceKind.Sampler:
-                    WriteSampler(sb, rd);
-                    break;
-                default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
-            }
-        }
-
-        private void WriteSampler(StringBuilder sb, ResourceDefinition rd)
-        {
-            sb.AppendLine($"SamplerState {rd.Name} : register(s{rd.Binding});");
+            sb.AppendLine($"SamplerState {rd.Name} : register(s{binding});");
             sb.AppendLine();
         }
 
-        private void WriteTexture2D(StringBuilder sb, ResourceDefinition rd)
+        private void WriteTexture2D(StringBuilder sb, ResourceDefinition rd, int binding)
         {
-            sb.AppendLine($"Texture2D {rd.Name} : register(t{rd.Binding});");
+            sb.AppendLine($"Texture2D {rd.Name} : register(t{binding});");
             sb.AppendLine();
         }
 
-        private static void WriteUniform(StringBuilder sb, ResourceDefinition rd)
+        private void WriteUniform(StringBuilder sb, ResourceDefinition rd, int binding)
         {
-            sb.AppendLine($"cbuffer {rd.Name}Buffer : register(b{rd.Binding})");
+            sb.AppendLine($"cbuffer {rd.Name}Buffer : register(b{binding})");
             sb.AppendLine("{");
-            sb.AppendLine($"    {HlslKnownTypes.GetMappedName(rd.ValueType.Name.Trim())} {rd.Name.Trim()};");
+            sb.AppendLine($"    {CSharpToShaderType(rd.ValueType.Name)} {rd.Name.Trim()};");
             sb.AppendLine("}");
             sb.AppendLine();
         }
@@ -155,9 +138,22 @@ namespace ShaderGen
                 WriteStructure(sb, sd);
             }
 
+            int uniformBinding = 0, textureBinding = 0, samplerBinding = 0;
             foreach (ResourceDefinition rd in Resources)
             {
-                WriteResource(sb, rd);
+                switch (rd.ResourceKind)
+                {
+                    case ShaderResourceKind.Uniform:
+                        WriteUniform(sb, rd, uniformBinding++);
+                        break;
+                    case ShaderResourceKind.Texture2D:
+                        WriteTexture2D(sb, rd, textureBinding++);
+                        break;
+                    case ShaderResourceKind.Sampler:
+                        WriteSampler(sb, rd, samplerBinding++);
+                        break;
+                    default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
+                }
             }
 
             string result = new HlslMethodVisitor(Model, entryPoint.Function, this).Visit(entryPoint.Block);

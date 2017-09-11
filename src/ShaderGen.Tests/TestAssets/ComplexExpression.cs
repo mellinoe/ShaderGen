@@ -4,7 +4,7 @@ using static ShaderGen.ShaderBuiltins;
 
 namespace TestShaders
 {
-    public class TextureSamplerFragment
+    public class ComplexExpression
     {
         public struct FragmentInput
         {
@@ -14,16 +14,27 @@ namespace TestShaders
             public Vector2 TextureCoordinate;
         }
 
+        public struct TintInfo
+        {
+            public Vector3 Color;
+            public float Factor;
+        }
+
         [Resource(0)]
-        public Texture2DResource Texture;
+        public TintInfo Tint;
 
         [Resource(1)]
+        public Texture2DResource Texture;
+
+        [Resource(2)]
         public SamplerResource Sampler;
 
         [FragmentShader]
         public Vector4 FS(FragmentInput input)
         {
-            return Sample(Texture, Sampler, input.TextureCoordinate);
+            Vector4 tintValue = new Vector4(Tint.Color, 1);
+            Vector4 textureValue = Sample(Texture, Sampler, input.TextureCoordinate);
+            return (tintValue * Tint.Factor) + (textureValue * (1 - Tint.Factor));
         }
     }
 }
