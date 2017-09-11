@@ -57,7 +57,8 @@ namespace ShaderGen
                 throw new NotImplementedException();
             }
 
-            string mappedType = _backend.CSharpToShaderType(decl.Type);
+            string csName = _compilation.GetSemanticModel(decl.Type.SyntaxTree).GetFullTypeName(decl.Type);
+            string mappedType = _backend.CSharpToShaderType(csName);
             string initializerStr = Visit(decl.Variables[0].Initializer);
             string result = mappedType + " " + decl.Variables[0].Identifier;
             if (!string.IsNullOrEmpty(initializerStr))

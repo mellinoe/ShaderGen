@@ -229,6 +229,11 @@ namespace ShaderGen
             return HlslKnownFunctions.TranslateInvocation(type, method, parameterInfos);
         }
 
+        protected override string CSharpToIdentifierNameCore(string typeName, string identifier)
+        {
+            return HlslKnownIdentifiers.GetMappedIdentifier(typeName, identifier);
+        }
+
         private struct HlslSemanticTracker
         {
             public int Position;
