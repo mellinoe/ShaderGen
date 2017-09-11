@@ -21,13 +21,10 @@ namespace ShaderGen
             {
                 throw new ArgumentNullException(nameof(compilation));
             }
-            if (vertexFunctionName == null)
+            if (vertexFunctionName == null && fragmentFunctionName == null)
             {
-                throw new ArgumentNullException(nameof(vertexFunctionName));
-            }
-            if (fragmentFunctionName == null)
-            {
-                throw new ArgumentNullException(nameof(fragmentFunctionName));
+                throw new ArgumentException(
+                    $"One of {nameof(vertexFunctionName)} or {nameof(fragmentFunctionName)} must be non-null.");
             }
             if (languages == null)
             {
@@ -40,12 +37,12 @@ namespace ShaderGen
 
             _compilation = compilation;
             _languages = new List<LanguageBackend>(languages);
-            if (!GetTypeAndMethodName(vertexFunctionName, out _vertexFunctionName))
+            if (vertexFunctionName != null && !GetTypeAndMethodName(vertexFunctionName, out _vertexFunctionName))
             {
                 throw new ShaderGenerationException(
                     $"The name passed to {nameof(vertexFunctionName)} must be a fully-qualified type and method.");
             }
-            if (!GetTypeAndMethodName(fragmentFunctionName, out _fragmentFunctionName))
+            if (_fragmentFunctionName != null && !GetTypeAndMethodName(fragmentFunctionName, out _fragmentFunctionName))
             {
                 throw new ShaderGenerationException(
                     $"The name passed to {nameof(fragmentFunctionName)} must be a fully-qualified type and method.");
@@ -55,7 +52,10 @@ namespace ShaderGen
         public ShaderModel GenerateShaders()
         {
             HashSet<SyntaxTree> treesToVisit = new HashSet<SyntaxTree>();
-            GetTrees(treesToVisit, _vertexFunctionName.TypeName);
+            if (_vertexFunctionName != null)
+            {
+                GetTrees(treesToVisit, _vertexFunctionName.TypeName);
+            }
             if (_fragmentFunctionName != null)
             {
                 GetTrees(treesToVisit, _fragmentFunctionName.TypeName);

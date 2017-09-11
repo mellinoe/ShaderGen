@@ -83,7 +83,7 @@ namespace ShaderGen.Tests
 
         private static string[] GetCompileItems()
         {
-            return Directory.EnumerateFiles(ProjectBasePath, "*.cs").ToArray();
+            return Directory.EnumerateFiles(ProjectBasePath, "*.cs", SearchOption.AllDirectories).ToArray();
         }
 
         private static string[] GetReferenceItems()

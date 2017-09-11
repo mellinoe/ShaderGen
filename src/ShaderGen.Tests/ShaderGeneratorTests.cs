@@ -25,5 +25,22 @@ namespace ShaderGen.Tests
             string fsCode = backend.GetCode(shaderModel.GetFunction("FS"));
             FxcTool.AssertCompilesCode(fsCode, "ps_5_0", "FS");
         }
+
+        [Fact]
+        public void PartialFiles()
+        {
+            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            HlslBackend backend = new HlslBackend(compilation);
+            ShaderGenerator sg = new ShaderGenerator(
+                compilation,
+                "TestShaders.PartialVertex.VertexShader",
+                null,
+                backend);
+
+            ShaderModel shaderModel = sg.GenerateShaders();
+            ShaderFunction entryFunction = shaderModel.GetFunction("VertexShaderFunc");
+            string vsCode = backend.GetCode(entryFunction);
+            FxcTool.AssertCompilesCode(vsCode, "vs_5_0", entryFunction.Name);
+        }
     }
 }
