@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace ShaderGen
@@ -117,8 +118,19 @@ namespace ShaderGen
             return HlslKnownIdentifiers.GetMappedIdentifier(typeName, identifier);
         }
 
+        internal string FormatInvocation(string type, string method, HlslMethodVisitor.InvocationParameterInfo[] parameterInfos)
+        {
+            Debug.Assert(type != null);
+            Debug.Assert(method != null);
+            Debug.Assert(parameterInfos != null);
+
+            return FormatInvocationCore(type, method, parameterInfos);
+        }
+
+
         protected abstract string CSharpToShaderTypeCore(string fullType);
         protected abstract string CSharpToShaderFunctionNameCore(string type, string method);
         protected abstract string GenerateFullTextCore(ShaderFunction function);
+        protected abstract string FormatInvocationCore(string type, string method, HlslMethodVisitor.InvocationParameterInfo[] parameterInfos);
     }
 }

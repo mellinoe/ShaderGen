@@ -108,11 +108,12 @@ namespace ShaderGen
                 throw new NotImplementedException("Function calls must be made through an IdentifierNameSyntax.");
             }
 
+            InvocationParameterInfo[] parameterInfos = GetParameterInfos(node.ArgumentList);
             SymbolInfo symbolInfo = _model.GetSymbolInfo(ins);
             string type = symbolInfo.Symbol.ContainingType.ToDisplayString();
             string method = symbolInfo.Symbol.Name;
-            string functionName = _backend.CSharpToShaderFunctionName(type, method);
-            return $"{functionName}({Visit(node.ArgumentList)})";
+
+            return _backend.FormatInvocation(type, method, parameterInfos);
         }
 
         public override string VisitArgumentList(ArgumentListSyntax node)
@@ -167,6 +168,21 @@ namespace ShaderGen
         private string GetParameterDeclList()
         {
             return string.Join(", ", _shaderFunction.Parameters.Select(pd => $"{_backend.CSharpToShaderType(pd.Type.Name)} {pd.Name}"));
+        }
+
+        private InvocationParameterInfo[] GetParameterInfos(ArgumentListSyntax argumentList)
+        {
+            return argumentList.Arguments.Select(argSyntax => new InvocationParameterInfo
+            {
+                FullTypeName = null, // TODO
+                Identifier = Visit(argSyntax.Expression)
+            }).ToArray();
+        }
+
+        public struct InvocationParameterInfo
+        {
+            public string FullTypeName;
+            public string Identifier;
         }
     }
 }

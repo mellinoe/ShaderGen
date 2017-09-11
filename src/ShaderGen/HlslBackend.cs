@@ -195,6 +195,13 @@ namespace ShaderGen
             return clone;
         }
 
+        protected override string FormatInvocationCore(string type, string method, HlslMethodVisitor.InvocationParameterInfo[] parameterInfos)
+        {
+            string functionName = HlslKnownFunctions.GetMappedFunctionName(type, method);
+            string invocationList = string.Join(", ", parameterInfos.Select(pi => pi.Identifier));
+            return $"{functionName}({invocationList});";
+        }
+
         private struct HlslSemanticTracker
         {
             public int Position;
