@@ -96,20 +96,6 @@ namespace ShaderGen
             Functions.Add(sf);
         }
 
-        internal string CSharpToShaderFunctionName(string type, string method)
-        {
-            if (type == null)
-            {
-                throw new ArgumentNullException(nameof(type));
-            }
-            if (method == null)
-            {
-                throw new ArgumentNullException(nameof(method));
-            }
-
-            return CSharpToShaderFunctionNameCore(type, method);
-        }
-
         internal virtual string CSharpToShaderIdentifierName(SymbolInfo symbolInfo)
         {
             string typeName = symbolInfo.Symbol.ContainingType.ToDisplayString();
@@ -118,7 +104,7 @@ namespace ShaderGen
             return HlslKnownIdentifiers.GetMappedIdentifier(typeName, identifier);
         }
 
-        internal string FormatInvocation(string type, string method, HlslMethodVisitor.InvocationParameterInfo[] parameterInfos)
+        internal string FormatInvocation(string type, string method, InvocationParameterInfo[] parameterInfos)
         {
             Debug.Assert(type != null);
             Debug.Assert(method != null);
@@ -129,8 +115,7 @@ namespace ShaderGen
 
 
         protected abstract string CSharpToShaderTypeCore(string fullType);
-        protected abstract string CSharpToShaderFunctionNameCore(string type, string method);
         protected abstract string GenerateFullTextCore(ShaderFunction function);
-        protected abstract string FormatInvocationCore(string type, string method, HlslMethodVisitor.InvocationParameterInfo[] parameterInfos);
+        protected abstract string FormatInvocationCore(string type, string method, InvocationParameterInfo[] parameterInfos);
     }
 }

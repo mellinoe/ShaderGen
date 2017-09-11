@@ -86,11 +86,6 @@ namespace ShaderGen
             sb.AppendLine();
         }
 
-        protected override string CSharpToShaderFunctionNameCore(string type, string method)
-        {
-            return HlslKnownFunctions.GetMappedFunctionName(type, method);
-        }
-
         protected override string GenerateFullTextCore(ShaderFunction function)
         {
             StringBuilder sb = new StringBuilder();
@@ -195,11 +190,9 @@ namespace ShaderGen
             return clone;
         }
 
-        protected override string FormatInvocationCore(string type, string method, HlslMethodVisitor.InvocationParameterInfo[] parameterInfos)
+        protected override string FormatInvocationCore(string type, string method, InvocationParameterInfo[] parameterInfos)
         {
-            string functionName = HlslKnownFunctions.GetMappedFunctionName(type, method);
-            string invocationList = string.Join(", ", parameterInfos.Select(pi => pi.Identifier));
-            return $"{functionName}({invocationList});";
+            return HlslKnownFunctions.TranslateInvocation(type, method, parameterInfos);
         }
 
         private struct HlslSemanticTracker

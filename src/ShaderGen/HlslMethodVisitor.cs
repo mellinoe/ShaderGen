@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis;
 
 namespace ShaderGen
 {
-    public class HlslMethodVisitor : CSharpSyntaxVisitor<string>
+    public partial class HlslMethodVisitor : CSharpSyntaxVisitor<string>
     {
         private readonly SemanticModel _model;
         private readonly LanguageBackend _backend;
@@ -177,12 +177,6 @@ namespace ShaderGen
                 FullTypeName = null, // TODO
                 Identifier = Visit(argSyntax.Expression)
             }).ToArray();
-        }
-
-        public struct InvocationParameterInfo
-        {
-            public string FullTypeName;
-            public string Identifier;
         }
     }
 }
