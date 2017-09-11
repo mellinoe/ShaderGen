@@ -20,13 +20,13 @@ namespace TestShaders
             public float Factor;
         }
 
-        [Resource(0)]
+        [Resource]
         public TintInfo Tint;
 
-        [Resource(1)]
+        [Resource]
         public Texture2DResource Texture;
 
-        [Resource(2)]
+        [Resource]
         public SamplerResource Sampler;
 
         [FragmentShader]

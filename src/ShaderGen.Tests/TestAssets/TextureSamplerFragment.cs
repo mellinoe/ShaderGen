@@ -14,13 +14,13 @@ namespace TestShaders
             public Vector2 TextureCoordinate;
         }
 
-        [Resource(0)]
+        [Resource]
         public Texture2DResource Tex2D;
 
-        [Resource(1)]
+        [Resource]
         public TextureCubeResource TexCube;
 
-        [Resource(2)]
+        [Resource]
         public SamplerResource Sampler;
 
         [FragmentShader]

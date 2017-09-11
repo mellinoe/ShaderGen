@@ -6,13 +6,13 @@ namespace TestShaders
 {
     public class TestVertexShader
     {
-        [Resource(0)]
+        [Resource]
         public Matrix4x4 World;
 
-        [Resource(1)]
+        [Resource]
         public Matrix4x4 View;
 
-        [Resource(2)]
+        [Resource]
         public Matrix4x4 Projection;
 
         // Not a real uniform.

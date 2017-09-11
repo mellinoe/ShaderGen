@@ -13,6 +13,7 @@ namespace ShaderGen
         private readonly StringBuilder _sb = new StringBuilder();
         private readonly SemanticModel _model;
         private readonly LanguageBackend _backend;
+        private int _lastResourceBinding;
 
         internal ShaderModel GetShaderModel(SyntaxTree tree)
         {
@@ -134,13 +135,7 @@ namespace ShaderGen
         {
             if (GetResourceDecl(node, out AttributeSyntax resourceAttr))
             {
-                ExpressionSyntax bindingExpr = resourceAttr.ArgumentList.Arguments[0].Expression;
-                if (!(bindingExpr is LiteralExpressionSyntax les))
-                {
-                    throw new ShaderGenerationException("Must use a literal parameter in ResourceAttribute ctor.");
-                }
-
-                int resourceBinding = int.Parse(les.ToFullString());
+                int resourceBinding = _lastResourceBinding++;
 
                 if (node.Variables.Count != 1)
                 {
