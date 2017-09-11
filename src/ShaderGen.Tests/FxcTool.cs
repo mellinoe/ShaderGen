@@ -22,7 +22,7 @@ namespace ShaderGen.Tests
 
         public static void AssertCompilesFile(string file, string profile, string entryPoint, string output = null)
         {
-            FxcToolResult result = Compile(file, profile, entryPoint, output);
+            ToolResult result = Compile(file, profile, entryPoint, output);
             if (result.ExitCode != 0)
             {
                 string message = result.StdError;
@@ -30,7 +30,7 @@ namespace ShaderGen.Tests
             }
         }
 
-        public static FxcToolResult Compile(string file, string profile, string entryPoint, string output = null)
+        public static ToolResult Compile(string file, string profile, string entryPoint, string output = null)
         {
             ProcessStartInfo psi = new ProcessStartInfo()
             {
@@ -45,7 +45,7 @@ namespace ShaderGen.Tests
 
             string stdOut = p.StandardOutput.ReadToEnd();
             string stdError = p.StandardError.ReadToEnd();
-            return new FxcToolResult(p.ExitCode, stdOut, stdError);
+            return new ToolResult(p.ExitCode, stdOut, stdError);
         }
 
         private static string FormatArgs(string file, string profile, string entryPoint, string output = null)
@@ -78,13 +78,13 @@ namespace ShaderGen.Tests
         }
     }
 
-    public class FxcToolResult
+    public class ToolResult
     {
         public int ExitCode { get; }
         public string StdOut { get; }
         public string StdError { get; }
 
-        public FxcToolResult(int exitCode, string stdOut, string stdError)
+        public ToolResult(int exitCode, string stdOut, string stdError)
         {
             ExitCode = exitCode;
             StdOut = stdOut;

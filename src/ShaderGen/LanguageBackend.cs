@@ -60,12 +60,6 @@ namespace ShaderGen
             return CSharpToShaderTypeCore(fullType);
         }
 
-        internal string CSharpToShaderType(TypeSyntax typeSyntax)
-        {
-            return CSharpToShaderTypeCore(Compilation.GetSemanticModel(typeSyntax.SyntaxTree).GetFullTypeName(typeSyntax));
-        }
-
-
         internal virtual void AddStructure(StructureDefinition sd)
         {
             if (sd == null)
@@ -101,7 +95,7 @@ namespace ShaderGen
             string typeName = symbolInfo.Symbol.ContainingType.ToDisplayString();
             string identifier = symbolInfo.Symbol.Name;
 
-            return CSharpToIdentifierNameCore(typeName, identifier);
+            return CorrectIdentifier(CSharpToIdentifierNameCore(typeName, identifier));
         }
 
 
@@ -114,7 +108,7 @@ namespace ShaderGen
             return FormatInvocationCore(type, method, parameterInfos);
         }
 
-
+        internal abstract string CorrectIdentifier(string identifier);
         protected abstract string CSharpToShaderTypeCore(string fullType);
         protected abstract string CSharpToIdentifierNameCore(string typeName, string identifier);
         protected abstract string GenerateFullTextCore(ShaderFunction function);

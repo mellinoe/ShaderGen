@@ -10,9 +10,10 @@ namespace ShaderGen
 {
     public class HlslBackend : LanguageBackend
     {
+        private const string FragmentSemanticsSuffix = "__FRAGSEMANTICS";
+
         private readonly List<StructureDefinition> _synthesizedStructures = new List<StructureDefinition>();
 
-        private const string FragmentSemanticsSuffix = "__FRAGSEMANTICS";
         public HlslBackend(Compilation compilation) : base(compilation)
         {
         }
@@ -31,7 +32,7 @@ namespace ShaderGen
             HlslSemanticTracker tracker = new HlslSemanticTracker();
             foreach (FieldDefinition field in sd.Fields)
             {
-                sb.AppendLine($"    {CSharpToShaderType(field.Type.Name.Trim())} {field.Name.Trim()}{HlslSemantic(field.SemanticType, fragmentSemantics, ref tracker)};");
+                sb.AppendLine($"    {CSharpToShaderType(field.Type.Name.Trim())} {CorrectIdentifier(field.Name.Trim())}{HlslSemantic(field.SemanticType, fragmentSemantics, ref tracker)};");
             }
             sb.AppendLine("};");
             sb.AppendLine();
@@ -73,25 +74,25 @@ namespace ShaderGen
                         int val = tracker.Tangent++;
                         return " : TANGENT" + val.ToString();
                     }
-                default: throw new InvalidOperationException("Invalid semantic type: " + semanticType);
+                default: throw new ShaderGenerationException("Invalid semantic type: " + semanticType);
             }
         }
 
         private void WriteSampler(StringBuilder sb, ResourceDefinition rd, int binding)
         {
-            sb.AppendLine($"SamplerState {rd.Name} : register(s{binding});");
+            sb.AppendLine($"SamplerState {CorrectIdentifier(rd.Name)} : register(s{binding});");
             sb.AppendLine();
         }
 
         private void WriteTexture2D(StringBuilder sb, ResourceDefinition rd, int binding)
         {
-            sb.AppendLine($"Texture2D {rd.Name} : register(t{binding});");
+            sb.AppendLine($"Texture2D {CorrectIdentifier(rd.Name)} : register(t{binding});");
             sb.AppendLine();
         }
 
         private void WriteTextureCube(StringBuilder sb, ResourceDefinition rd, int binding)
         {
-            sb.AppendLine($"TextureCube {rd.Name} : register(t{binding});");
+            sb.AppendLine($"TextureCube {CorrectIdentifier(rd.Name)} : register(t{binding});");
             sb.AppendLine();
         }
 
@@ -99,7 +100,7 @@ namespace ShaderGen
         {
             sb.AppendLine($"cbuffer {rd.Name}Buffer : register(b{binding})");
             sb.AppendLine("{");
-            sb.AppendLine($"    {CSharpToShaderType(rd.ValueType.Name)} {rd.Name.Trim()};");
+            sb.AppendLine($"    {CSharpToShaderType(rd.ValueType.Name)} {CorrectIdentifier(rd.Name.Trim())};");
             sb.AppendLine("}");
             sb.AppendLine();
         }
@@ -181,7 +182,7 @@ namespace ShaderGen
                 {
                     if (!TryDiscoverStructure(type.Name))
                     {
-                        throw new InvalidOperationException("Type referred by was not discovered: " + type.Name);
+                        throw new ShaderGenerationException("Type referred by was not discovered: " + type.Name);
                     }
                 }
             }
@@ -241,6 +242,11 @@ namespace ShaderGen
             public int Normal;
             public int Tangent;
             public int Color;
+        }
+
+        internal override string CorrectIdentifier(string identifier)
+        {
+            return identifier;
         }
     }
 }
