@@ -11,9 +11,16 @@ namespace ShaderGen
     internal class ShaderSyntaxWalker : CSharpSyntaxWalker
     {
         private readonly StringBuilder _sb = new StringBuilder();
-        private readonly SemanticModel _model;
+        private readonly Compilation _compilation;
         private readonly LanguageBackend _backend;
         private int _lastResourceBinding;
+
+        public ShaderSyntaxWalker(Compilation compilation, LanguageBackend backend) : base(SyntaxWalkerDepth.Token)
+        {
+            _compilation = compilation;
+            _backend = backend;
+        }
+
 
         internal ShaderModel GetShaderModel(SyntaxTree tree)
         {
@@ -26,11 +33,7 @@ namespace ShaderGen
             return _backend.GetShaderModel();
         }
 
-        public ShaderSyntaxWalker(SemanticModel model, LanguageBackend backend) : base(SyntaxWalkerDepth.Token)
-        {
-            _model = model;
-            _backend = backend;
-        }
+        private SemanticModel GetModel(SyntaxNode node) => _compilation.GetSemanticModel(node.SyntaxTree);
 
         public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
@@ -41,7 +44,7 @@ namespace ShaderGen
                 parameters.Add(GetParameterDefinition(ps));
             }
 
-            TypeReference returnType = new TypeReference(_model.GetFullTypeName(node.ReturnType));
+            TypeReference returnType = new TypeReference(GetModel(node).GetFullTypeName(node.ReturnType));
 
             bool isVertexShader, isFragmentShader = false;
             isVertexShader = Utilities.GetMethodAttributes(node, "VertexShader").Any();
@@ -55,21 +58,21 @@ namespace ShaderGen
                 ? ShaderFunctionType.FragmentEntryPoint : ShaderFunctionType.Normal;
 
             ShaderFunction sf = new ShaderFunction(functionName, returnType, parameters.ToArray(), type);
-            HlslMethodVisitor hmv = new HlslMethodVisitor(_model, sf, (HlslBackend)_backend);
+            HlslMethodVisitor hmv = new HlslMethodVisitor(GetModel(node), sf, (HlslBackend)_backend);
             ShaderFunctionAndBlockSyntax sfab = new ShaderFunctionAndBlockSyntax(sf, node.Body);
             _backend.AddFunction(sfab);
         }
 
         private ParameterDefinition GetParameterDefinition(ParameterSyntax ps)
         {
-            string fullType = _model.GetFullTypeName(ps.Type);
+            string fullType = GetModel(ps).GetFullTypeName(ps.Type);
             string name = ps.Identifier.ToFullString();
             return new ParameterDefinition(name, new TypeReference(fullType));
         }
 
         public override void VisitStructDeclaration(StructDeclarationSyntax node)
         {
-            TryGetStructDefinition(_model, node, out var sd);
+            TryGetStructDefinition(GetModel(node), node, out var sd);
             _backend.AddStructure(sd);
         }
 
@@ -145,8 +148,8 @@ namespace ShaderGen
                 VariableDeclaratorSyntax vds = node.Variables[0];
 
                 string resourceName = vds.Identifier.Text;
-                TypeInfo typeInfo = _model.GetTypeInfo(node.Type);
-                string fullTypeName = _model.GetFullTypeName(node.Type);
+                TypeInfo typeInfo = GetModel(node).GetTypeInfo(node.Type);
+                string fullTypeName = GetModel(node).GetFullTypeName(node.Type);
                 TypeReference tr = new TypeReference(fullTypeName);
                 ShaderResourceKind kind = ClassifyResourceKind(fullTypeName);
                 ResourceDefinition rd = new ResourceDefinition(resourceName, resourceBinding, tr, kind);
