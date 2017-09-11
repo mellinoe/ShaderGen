@@ -16,7 +16,7 @@ namespace ShaderGen.Tests
             HlslBackend backend = new HlslBackend(model);
             ShaderModel shaderModel = ShaderGeneration.GetShaderModel(model, tree, backend);
             Assert.Equal(2, shaderModel.Structures.Length);
-            Assert.Equal(3, shaderModel.Uniforms.Length);
+            Assert.Equal(3, shaderModel.Resources.Length);
             ShaderFunction vsEntry = shaderModel.GetFunction("VS");
             Assert.Equal("VS", vsEntry.Name);
             Assert.Equal(1, vsEntry.Parameters.Length);

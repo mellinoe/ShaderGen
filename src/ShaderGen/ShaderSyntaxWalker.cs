@@ -132,15 +132,15 @@ namespace ShaderGen
 
         public override void VisitVariableDeclaration(VariableDeclarationSyntax node)
         {
-            if (GetResourceDecl(node, out AttributeSyntax uniformAttr))
+            if (GetResourceDecl(node, out AttributeSyntax resourceAttr))
             {
-                ExpressionSyntax uniformBindingExpr = uniformAttr.ArgumentList.Arguments[0].Expression;
-                if (!(uniformBindingExpr is LiteralExpressionSyntax les))
+                ExpressionSyntax bindingExpr = resourceAttr.ArgumentList.Arguments[0].Expression;
+                if (!(bindingExpr is LiteralExpressionSyntax les))
                 {
                     throw new ShaderGenerationException("Must use a literal parameter in ResourceAttribute ctor.");
                 }
 
-                int uniformBinding = int.Parse(les.ToFullString());
+                int resourceBinding = int.Parse(les.ToFullString());
 
                 if (node.Variables.Count != 1)
                 {
@@ -154,7 +154,7 @@ namespace ShaderGen
                 string fullTypeName = _model.GetFullTypeName(node.Type);
                 TypeReference tr = new TypeReference(fullTypeName);
                 ShaderResourceKind kind = ClassifyResourceKind(fullTypeName);
-                ResourceDefinition rd = new ResourceDefinition(resourceName, uniformBinding, tr, kind);
+                ResourceDefinition rd = new ResourceDefinition(resourceName, resourceBinding, tr, kind);
                 _backend.AddResource(rd);
             }
         }

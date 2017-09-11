@@ -77,11 +77,11 @@ namespace ShaderGen
             }
         }
 
-        protected void WriteUniform(StringBuilder sb, ResourceDefinition ud)
+        protected void WriteResource(StringBuilder sb, ResourceDefinition rd)
         {
-            sb.AppendLine($"cbuffer {ud.Name}Buffer : register(b{ud.Binding})");
+            sb.AppendLine($"cbuffer {rd.Name}Buffer : register(b{rd.Binding})");
             sb.AppendLine("{");
-            sb.AppendLine($"    {HlslKnownTypes.GetMappedName(ud.ValueType.Name.Trim())} {ud.Name.Trim()};");
+            sb.AppendLine($"    {HlslKnownTypes.GetMappedName(rd.ValueType.Name.Trim())} {rd.Name.Trim()};");
             sb.AppendLine("}");
             sb.AppendLine();
         }
@@ -126,9 +126,9 @@ namespace ShaderGen
                 WriteStructure(sb, sd);
             }
 
-            foreach (ResourceDefinition ud in Resources)
+            foreach (ResourceDefinition rd in Resources)
             {
-                WriteUniform(sb, ud);
+                WriteResource(sb, rd);
             }
 
             string result = new HlslMethodVisitor(Model, entryPoint.Function, this).Visit(entryPoint.Block);
