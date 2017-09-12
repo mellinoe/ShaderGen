@@ -91,16 +91,47 @@ namespace ShaderGen
                     foreach (VariableDeclaratorSyntax vds in varDecl.Variables)
                     {
                         string fieldName = vds.Identifier.Text.Trim();
-                        TypeReference tr = new TypeReference(model.GetFullTypeName(varDecl.Type));
+                        string typeName = model.GetFullTypeName(varDecl.Type);
+                        bool isArrayType = typeName.Contains("[]");
+                        int arrayElementCount = 0;
+                        if (isArrayType)
+                        {
+                            typeName = typeName.Substring(0, typeName.Length - 2);
+                            arrayElementCount = GetArrayCountValue(vds);
+                        }
+
+                        TypeReference tr = new TypeReference(typeName);
                         SemanticType semanticType = GetSemanticType(vds);
 
-                        fields.Add(new FieldDefinition(fieldName, tr, semanticType));
+
+                        fields.Add(new FieldDefinition(fieldName, tr, semanticType, arrayElementCount));
                     }
                 }
             }
 
             sd = new StructureDefinition(structName.Trim(), fields.ToArray());
             return true;
+        }
+
+        private static int GetArrayCountValue(VariableDeclaratorSyntax vds)
+        {
+            AttributeSyntax[] arraySizeAttrs = Utilities.GetMemberAttributes(vds, "ArraySize");
+            if (arraySizeAttrs.Length != 1)
+            {
+                throw new ShaderGenerationException(
+                    "Array fields in structs must have a constant size specified by an ArraySizeAttribute.");
+            }
+            AttributeSyntax arraySizeAttr = arraySizeAttrs[0];
+            string fullArg0 = arraySizeAttr.ArgumentList.Arguments[0].ToFullString();
+            if (int.TryParse(fullArg0, out int ret))
+            {
+                return ret;
+            }
+            else
+            {
+                throw new ShaderGenerationException("Incorrectly formatted attribute: " + arraySizeAttr.ToFullString());
+            }
+
         }
 
         private static SemanticType GetSemanticType(VariableDeclaratorSyntax vds)

@@ -25,9 +25,21 @@ namespace ShaderGen
         {
             sb.AppendLine($"struct {CSharpToShaderType(sd.Name)}");
             sb.AppendLine("{");
+            StringBuilder fb = new StringBuilder();
             foreach (FieldDefinition field in sd.Fields)
             {
-                sb.AppendLine($"    {CSharpToShaderType(field.Type.Name.Trim())} {CorrectIdentifier(field.Name.Trim())};");
+                fb.Append(CSharpToShaderType(field.Type.Name.Trim()));
+                fb.Append(' ');
+                fb.Append(CorrectIdentifier(field.Name.Trim()));
+                int arrayCount = field.ArrayElementCount;
+                if (arrayCount > 0)
+                {
+                    fb.Append('['); fb.Append(arrayCount); fb.Append(']');
+                }
+                fb.Append(';');
+                sb.Append("    ");
+                sb.AppendLine(fb.ToString());
+                fb.Clear();
             }
             sb.AppendLine("};");
             sb.AppendLine();
@@ -101,7 +113,7 @@ namespace ShaderGen
             }
 
             string result = new ShaderMethodVisitor(Compilation, entryPoint.Function, this)
-                .Visit(entryPoint.Block);
+                .VisitFunction(entryPoint.Block);
             sb.AppendLine(result);
 
             WriteMainFunction(sb, entryPoint.Function);
@@ -124,9 +136,15 @@ namespace ShaderGen
 
             if (entryFunction.Type == ShaderFunctionType.VertexEntryPoint)
             {
+                bool skippedFirstPositionSemantic = false;
                 foreach (FieldDefinition field in outputType.Fields)
                 {
-                    if (field.SemanticType != SemanticType.Position)
+                    if (field.SemanticType == SemanticType.Position && !skippedFirstPositionSemantic)
+                    {
+                        skippedFirstPositionSemantic = true;
+                        continue;
+                    }
+                    else
                     {
                         sb.AppendLine($"out {CSharpToShaderType(field.Type.Name)} out_{CorrectIdentifier(field.Name)};");
                     }
@@ -141,7 +159,7 @@ namespace ShaderGen
                     throw new ShaderGenerationException("Fragment shader must return a System.Numerics.Vector4 value.");
                 }
 
-                sb.AppendLine($"out vec4 outputColor__;");
+                sb.AppendLine($"out vec4 _outputColor_;");
             }
 
             sb.AppendLine();
@@ -164,7 +182,7 @@ namespace ShaderGen
                 FieldDefinition positionSemanticField = null;
                 foreach (FieldDefinition field in outputType.Fields)
                 {
-                    if (field.SemanticType == SemanticType.Position)
+                    if (positionSemanticField == null && field.SemanticType == SemanticType.Position)
                     {
                         positionSemanticField = field;
                     }
@@ -177,7 +195,7 @@ namespace ShaderGen
                 if (positionSemanticField == null)
                 {
                     // TODO: Should be caught earlier.
-                    throw new ShaderGenerationException("Vertex output must have a position semantic.");
+                    throw new ShaderGenerationException("At least one vertex output must have a position semantic.");
                 }
 
                 sb.AppendLine($"    gl_Position = {CorrectIdentifier("output")}.{CorrectIdentifier(positionSemanticField.Name)};");
@@ -185,7 +203,7 @@ namespace ShaderGen
             else
             {
                 Debug.Assert(entryFunction.Type == ShaderFunctionType.FragmentEntryPoint);
-                sb.AppendLine($"    outputColor__ = {CorrectIdentifier("output")};");
+                sb.AppendLine($"    _outputColor_ = {CorrectIdentifier("output")};");
             }
             sb.AppendLine("}");
         }

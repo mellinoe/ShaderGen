@@ -127,5 +127,21 @@ namespace ShaderGen
             return mds.DescendantNodes().OfType<AttributeSyntax>()
             .Where(attrSyntax => attrSyntax.Name.ToString().Contains(name)).ToArray();
         }
+
+        /// <summary>
+        /// Gets the full namespace + name for the given SymbolInfo.
+        /// </summary>
+        public static string GetFullName(SymbolInfo symbolInfo)
+        {
+            Debug.Assert(symbolInfo.Symbol != null);
+            string fullName = symbolInfo.Symbol.Name;
+            string ns = symbolInfo.Symbol.ContainingNamespace.ToDisplayString();
+            if (!string.IsNullOrEmpty(ns))
+            {
+                fullName = ns + "." + fullName;
+            }
+
+            return fullName;
+        }
     }
 }

@@ -22,11 +22,18 @@ namespace ShaderGen
 
         private SemanticModel GetModel(SyntaxNode node) => _compilation.GetSemanticModel(node.SyntaxTree);
 
-        public override string VisitBlock(BlockSyntax node)
+        public string VisitFunction(BlockSyntax node)
         {
             StringBuilder sb = new StringBuilder();
             string functionDeclStr = GetFunctionDeclStr();
             sb.AppendLine(functionDeclStr);
+            sb.AppendLine(VisitBlock(node));
+            return sb.ToString();
+        }
+
+        public override string VisitBlock(BlockSyntax node)
+        {
+            StringBuilder sb = new StringBuilder();
             sb.AppendLine("{");
 
             foreach (StatementSyntax ss in node.Statements)
@@ -43,7 +50,6 @@ namespace ShaderGen
             }
 
             sb.AppendLine("}");
-
             return sb.ToString();
         }
 
@@ -55,24 +61,7 @@ namespace ShaderGen
 
         public override string VisitLocalDeclarationStatement(LocalDeclarationStatementSyntax node)
         {
-            VariableDeclarationSyntax decl = node.Declaration;
-            if (decl.Variables.Count != 1)
-            {
-                throw new NotImplementedException();
-            }
-
-            string csName = _compilation.GetSemanticModel(decl.Type.SyntaxTree).GetFullTypeName(decl.Type);
-            string mappedType = _backend.CSharpToShaderType(csName);
-            string initializerStr = Visit(decl.Variables[0].Initializer);
-            string result = mappedType + " "
-                + _backend.CorrectIdentifier(decl.Variables[0].Identifier.ToString());
-            if (!string.IsNullOrEmpty(initializerStr))
-            {
-                result += " " + initializerStr;
-            }
-
-            result += ";";
-            return result;
+            return Visit(node.Declaration) + ";";
         }
 
         public override string VisitEqualsValueClause(EqualsValueClauseSyntax node)
@@ -110,18 +99,34 @@ namespace ShaderGen
 
         public override string VisitInvocationExpression(InvocationExpressionSyntax node)
         {
-            IdentifierNameSyntax ins = node.Expression as IdentifierNameSyntax;
-            if (ins == null)
+            if (node.Expression is IdentifierNameSyntax ins)
             {
-                throw new NotImplementedException("Function calls must be made through an IdentifierNameSyntax.");
+                InvocationParameterInfo[] parameterInfos = GetParameterInfos(node.ArgumentList);
+                SymbolInfo symbolInfo = GetModel(node).GetSymbolInfo(ins);
+                string type = symbolInfo.Symbol.ContainingType.ToDisplayString();
+                string method = symbolInfo.Symbol.Name;
+                return _backend.FormatInvocation(type, method, parameterInfos);
             }
+            else if (node.Expression is MemberAccessExpressionSyntax maes)
+            {
+                if (!(maes.Expression is IdentifierNameSyntax targetName))
+                {
+                    throw new NotImplementedException();
+                }
 
-            InvocationParameterInfo[] parameterInfos = GetParameterInfos(node.ArgumentList);
-            SymbolInfo symbolInfo = GetModel(node).GetSymbolInfo(ins);
-            string type = symbolInfo.Symbol.ContainingType.ToDisplayString();
-            string method = symbolInfo.Symbol.Name;
-
-            return _backend.FormatInvocation(type, method, parameterInfos);
+                InvocationParameterInfo[] parameterInfos = GetParameterInfos(node.ArgumentList);
+                SymbolInfo symbolInfo = GetModel(maes).GetSymbolInfo(targetName);
+                string type = Utilities.GetFullName(symbolInfo);
+                string method = maes.Name.ToFullString();
+                return _backend.FormatInvocation(type, method, parameterInfos);
+            }
+            else
+            {
+                string message = "Function calls must be made through an IdentifierNameSyntax or a MemberAccessExpressionSyntax.";
+                message += Environment.NewLine + "This node used a " + node.Expression.GetType().Name;
+                message += Environment.NewLine + node.ToFullString();
+                throw new NotImplementedException(message);
+            }
         }
 
         public override string VisitBinaryExpression(BinaryExpressionSyntax node)
@@ -159,12 +164,7 @@ namespace ShaderGen
         public override string VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
         {
             SymbolInfo symbolInfo = GetModel(node).GetSymbolInfo(node.Type);
-            string fullName = symbolInfo.Symbol.Name;
-            string ns = symbolInfo.Symbol.ContainingNamespace.ToDisplayString();
-            if (!string.IsNullOrEmpty(ns))
-            {
-                fullName = ns + "." + fullName;
-            }
+            string fullName = Utilities.GetFullName(symbolInfo);
 
             if (!Utilities.IsBasicNumericType(fullName))
             {
@@ -184,7 +184,78 @@ namespace ShaderGen
 
         public override string VisitLiteralExpression(LiteralExpressionSyntax node)
         {
-            return node.ToFullString().Trim();
+            string literal = node.ToFullString().Trim();
+            return _backend.CorrectLiteral(literal);
+        }
+
+        public override string VisitIfStatement(IfStatementSyntax node)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("if (" + Visit(node.Condition) + ")");
+            sb.AppendLine(Visit(node.Statement));
+            sb.AppendLine(Visit(node.Else));
+            return sb.ToString();
+        }
+
+        public override string VisitElseClause(ElseClauseSyntax node)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("else");
+            sb.AppendLine(Visit(node.Statement));
+            return sb.ToString();
+        }
+
+        public override string VisitForStatement(ForStatementSyntax node)
+        {
+            StringBuilder sb = new StringBuilder();
+            string declaration = Visit(node.Declaration);
+            string incrementers = string.Join(", ", node.Incrementors.Select(es => Visit(es)));
+            string condition = Visit(node.Condition);
+            sb.AppendLine($"for ({declaration}; {condition}; {incrementers})");
+            sb.AppendLine(Visit(node.Statement));
+            return sb.ToString();
+        }
+
+        public override string VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node)
+        {
+            return node.OperatorToken.ToFullString() + Visit(node.Operand);
+        }
+
+        public override string VisitPostfixUnaryExpression(PostfixUnaryExpressionSyntax node)
+        {
+            return Visit(node.Operand) + node.OperatorToken.ToFullString();
+        }
+
+        public override string VisitVariableDeclaration(VariableDeclarationSyntax node)
+        {
+            if (node.Variables.Count != 1)
+            {
+                throw new NotImplementedException();
+            }
+
+            string csName = _compilation.GetSemanticModel(node.Type.SyntaxTree).GetFullTypeName(node.Type);
+            string mappedType = _backend.CSharpToShaderType(csName);
+            string initializerStr = Visit(node.Variables[0].Initializer);
+            string result = mappedType + " "
+                + _backend.CorrectIdentifier(node.Variables[0].Identifier.ToString());
+            if (!string.IsNullOrEmpty(initializerStr))
+            {
+                result += " " + initializerStr;
+            }
+
+            return result;
+        }
+
+        public override string VisitElementAccessExpression(ElementAccessExpressionSyntax node)
+        {
+            return Visit(node.Expression) + Visit(node.ArgumentList);
+        }
+
+        public override string VisitBracketedArgumentList(BracketedArgumentListSyntax node)
+        {
+            return node.OpenBracketToken.ToFullString()
+                + string.Join(", ", node.Arguments.Select(argSyntax => Visit(argSyntax)))
+                + node.CloseBracketToken.ToFullString();
         }
 
         protected string GetParameterDeclList()

@@ -14,13 +14,29 @@ namespace ShaderGen
             Dictionary<string, InvocationTranslator> builtinMappings = new Dictionary<string, InvocationTranslator>()
             {
                 { "Mul", SimpleNameTranslator("mul") },
-                { "Sample", Sample2D }
+                { "Saturate", SimpleNameTranslator("saturate") },
+                { "Abs", SimpleNameTranslator("abs") },
+                { "Pow", SimpleNameTranslator("pow") },
+                { "Acos", SimpleNameTranslator("acos") },
+                { "Tan", SimpleNameTranslator("tan") },
+                { "Clamp", SimpleNameTranslator("clamp") },
+                { "Sample", Sample2D },
+                { "Discard", Discard },
             };
-
             ret.Add("ShaderGen.ShaderBuiltins", builtinMappings);
+
+            Dictionary<string, InvocationTranslator> v3Mappings = new Dictionary<string, InvocationTranslator>()
+            {
+                { "Normalize", SimpleNameTranslator("normalize") },
+                { "Dot", SimpleNameTranslator("dot") },
+                { "Distance", SimpleNameTranslator("distance") },
+                { "Reflect", SimpleNameTranslator("reflect") },
+            };
+            ret.Add("System.Numerics.Vector3", v3Mappings);
 
             return ret;
         }
+
 
         public static string TranslateInvocation(string type, string method, InvocationParameterInfo[] parameters)
         {
@@ -32,7 +48,7 @@ namespace ShaderGen
                 }
             }
 
-            return method;
+            throw new ShaderGenerationException($"Reference to unknown function: {type}.{method}");
         }
 
         private static InvocationTranslator SimpleNameTranslator(string nameTarget)
@@ -46,6 +62,11 @@ namespace ShaderGen
         private static string Sample2D(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
             return $"{parameters[0].Identifier}.Sample({parameters[1].Identifier}, {parameters[2].Identifier})";
+        }
+
+        private static string Discard(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return $"discard;";
         }
     }
 

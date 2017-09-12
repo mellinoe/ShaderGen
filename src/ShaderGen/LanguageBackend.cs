@@ -30,21 +30,21 @@ namespace ShaderGen
                 Functions.Select(sfabs => sfabs.Function).ToArray());
         }
 
-        public string GetCode(ShaderFunction entryFunction)
+        public string GetCode(ShaderFunction function)
         {
-            if (entryFunction == null)
+            if (function == null)
             {
-                throw new ArgumentNullException(nameof(entryFunction));
+                throw new ArgumentNullException(nameof(function));
             }
-            if (!entryFunction.IsEntryPoint)
+            if (!function.IsEntryPoint)
             {
-                throw new ArgumentException($"IsEntryPoint must be true for parameter {nameof(entryFunction)}");
+                throw new ArgumentException($"IsEntryPoint must be true for parameter {nameof(function)}");
             }
 
-            if (!_fullTextShaders.TryGetValue(entryFunction, out string result))
+            if (!_fullTextShaders.TryGetValue(function, out string result))
             {
-                result = GenerateFullTextCore(entryFunction);
-                _fullTextShaders.Add(entryFunction, result);
+                result = GenerateFullTextCore(function);
+                _fullTextShaders.Add(function, result);
             }
 
             return result;
@@ -113,5 +113,19 @@ namespace ShaderGen
         protected abstract string CSharpToIdentifierNameCore(string typeName, string identifier);
         protected abstract string GenerateFullTextCore(ShaderFunction function);
         protected abstract string FormatInvocationCore(string type, string method, InvocationParameterInfo[] parameterInfos);
+
+        internal string CorrectLiteral(string literal)
+        {
+            if (literal.EndsWith("f",  StringComparison.OrdinalIgnoreCase))
+            {
+                if (!literal.Contains("."))
+                {
+                    // This isn't a hack at all
+                    return literal.Insert(literal.Length - 1, ".");
+                }
+            }
+
+            return literal;
+        }
     }
 }

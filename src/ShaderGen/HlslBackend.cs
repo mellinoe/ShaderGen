@@ -30,9 +30,22 @@ namespace ShaderGen
             sb.AppendLine($"struct {CSharpToShaderType(sd.Name)}");
             sb.AppendLine("{");
             HlslSemanticTracker tracker = new HlslSemanticTracker();
+            StringBuilder fb = new StringBuilder();
             foreach (FieldDefinition field in sd.Fields)
             {
-                sb.AppendLine($"    {CSharpToShaderType(field.Type.Name.Trim())} {CorrectIdentifier(field.Name.Trim())}{HlslSemantic(field.SemanticType, fragmentSemantics, ref tracker)};");
+                fb.Append(CSharpToShaderType(field.Type.Name.Trim()));
+                fb.Append(' ');
+                fb.Append(CorrectIdentifier(field.Name.Trim()));
+                int arrayCount = field.ArrayElementCount;
+                if (arrayCount > 0)
+                {
+                    fb.Append('['); fb.Append(arrayCount); fb.Append(']');
+                }
+                fb.Append(HlslSemantic(field.SemanticType, fragmentSemantics, ref tracker));
+                fb.Append(';');
+                sb.Append("    ");
+                sb.AppendLine(fb.ToString());
+                fb.Clear();
             }
             sb.AppendLine("};");
             sb.AppendLine();
@@ -47,7 +60,16 @@ namespace ShaderGen
                 case SemanticType.Position:
                     if (fragmentSemantics)
                     {
-                        return " : SV_POSITION";
+                        if (!tracker.emittedSvPosition)
+                        {
+                            tracker.emittedSvPosition = true;
+                            return " : SV_POSITION";
+                        }
+                        else
+                        {
+                            int val = tracker.Position++;
+                            return " : POSITION" + val.ToString();
+                        }
                     }
                     else
                     {
@@ -166,7 +188,8 @@ namespace ShaderGen
                 }
             }
 
-            string result = new HlslMethodVisitor(Compilation, entryPoint.Function, this).Visit(entryPoint.Block);
+            string result = new HlslMethodVisitor(Compilation, entryPoint.Function, this)
+                .VisitFunction(entryPoint.Block);
             sb.AppendLine(result);
 
             return sb.ToString();
@@ -242,6 +265,8 @@ namespace ShaderGen
             public int Normal;
             public int Tangent;
             public int Color;
+
+            public bool emittedSvPosition;
         }
 
         internal override string CorrectIdentifier(string identifier)
