@@ -54,7 +54,9 @@ namespace ShaderGen.Tests
         [InlineData(null, "TestShaders.ComplexExpression.FS")]
         [InlineData("TestShaders.PartialVertex.VertexShaderFunc", null)]
         [InlineData("TestShaders.VeldridShaders.ForwardMtlCombined.VS", "TestShaders.VeldridShaders.ForwardMtlCombined.FS")]
-        public void GlslEndToEnd(string vsName, string fsName)
+        [InlineData("TestShaders.VeldridShaders.ForwardMtlCombined.VS", null)]
+        [InlineData(null, "TestShaders.VeldridShaders.ForwardMtlCombined.FS")]
+        public void Glsl330EndToEnd(string vsName, string fsName)
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             Glsl330Backend backend = new Glsl330Backend(compilation);
@@ -69,13 +71,49 @@ namespace ShaderGen.Tests
             {
                 ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
                 string vsCode = backend.GetCode(vsFunction);
-                GlsLangValidatorTool.AssertCompilesCode(vsCode, "vert");
+                GlsLangValidatorTool.AssertCompilesCode(vsCode, "vert", false);
             }
             if (fsName != null)
             {
                 ShaderFunction fsFunction = shaderModel.GetFunction(fsName);
                 string fsCode = backend.GetCode(fsFunction);
-                GlsLangValidatorTool.AssertCompilesCode(fsCode, "frag");
+                GlsLangValidatorTool.AssertCompilesCode(fsCode, "frag", false);
+            }
+        }
+
+        [Theory]
+        [InlineData("TestShaders.TestVertexShader.VS", null)]
+        [InlineData(null, "TestShaders.TestFragmentShader.FS")]
+        [InlineData("TestShaders.TestVertexShader.VS", "TestShaders.TestFragmentShader.FS")]
+        [InlineData(null, "TestShaders.TextureSamplerFragment.FS")]
+        [InlineData("TestShaders.VertexAndFragment.VS", "TestShaders.VertexAndFragment.FS")]
+        [InlineData(null, "TestShaders.ComplexExpression.FS")]
+        [InlineData("TestShaders.PartialVertex.VertexShaderFunc", null)]
+        [InlineData("TestShaders.VeldridShaders.ForwardMtlCombined.VS", "TestShaders.VeldridShaders.ForwardMtlCombined.FS")]
+        [InlineData("TestShaders.VeldridShaders.ForwardMtlCombined.VS", null)]
+        [InlineData(null, "TestShaders.VeldridShaders.ForwardMtlCombined.FS")]
+        public void Glsl450EndToEnd(string vsName, string fsName)
+        {
+            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            LanguageBackend backend = new Glsl450Backend(compilation);
+            ShaderGenerator sg = new ShaderGenerator(
+                compilation,
+                vsName,
+                fsName,
+                backend);
+
+            ShaderModel shaderModel = sg.GenerateShaders();
+            if (vsName != null)
+            {
+                ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
+                string vsCode = backend.GetCode(vsFunction);
+                GlsLangValidatorTool.AssertCompilesCode(vsCode, "vert", true);
+            }
+            if (fsName != null)
+            {
+                ShaderFunction fsFunction = shaderModel.GetFunction(fsName);
+                string fsCode = backend.GetCode(fsFunction);
+                GlsLangValidatorTool.AssertCompilesCode(fsCode, "frag", true);
             }
         }
 
@@ -90,7 +128,7 @@ namespace ShaderGen.Tests
                 Assert.True(result.Success);
             }
 
-            LanguageBackend backend = new Glsl330Backend(compilation);
+            LanguageBackend backend = new Glsl450Backend(compilation);
             ShaderGenerator sg = new ShaderGenerator(
                 compilation,
                 vsName,
@@ -102,15 +140,15 @@ namespace ShaderGen.Tests
             {
                 ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
                 string vsCode = backend.GetCode(vsFunction);
-                File.WriteAllText(@"E:\forward-vertex.glsl", vsCode);
-                GlsLangValidatorTool.AssertCompilesCode(vsCode, "vert");
+                File.WriteAllText(@"C:\Users\raver\Documents\forward-vertex.glsl", vsCode);
+                GlsLangValidatorTool.AssertCompilesCode(vsCode, "vert", true);
             }
             if (fsName != null)
             {
                 ShaderFunction fsFunction = shaderModel.GetFunction(fsName);
                 string fsCode = backend.GetCode(fsFunction);
-                File.WriteAllText(@"E:\forward-frag.glsl", fsCode);
-                GlsLangValidatorTool.AssertCompilesCode(fsCode, "frag");
+                File.WriteAllText(@"C:\Users\raver\Documents\forward-frag.glsl", fsCode);
+                GlsLangValidatorTool.AssertCompilesCode(fsCode, "frag", true);
             }
         }
     }

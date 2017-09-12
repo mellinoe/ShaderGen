@@ -11,18 +11,18 @@ namespace ShaderGen.Tests
     {
         private static readonly string s_fxcLocation = FindExe();
 
-        public static void AssertCompilesCode(string code, string type)
+        public static void AssertCompilesCode(string code, string type, bool vulkanSemantics)
         {
             using (TempFile tmpFile = new TempFile())
             {
                 File.WriteAllText(tmpFile, code);
-                AssertCompilesFile(tmpFile, type);
+                AssertCompilesFile(tmpFile, type, vulkanSemantics);
             }
         }
 
-        public static void AssertCompilesFile(string file, string type, string output = null)
+        public static void AssertCompilesFile(string file, string type, bool vulkanSemantics, string output = null)
         {
-            ToolResult result = Compile(file, type, output);
+            ToolResult result = Compile(file, type, vulkanSemantics, output);
             if (result.ExitCode != 0)
             {
                 string message = result.StdOut;
@@ -30,12 +30,12 @@ namespace ShaderGen.Tests
             }
         }
 
-        public static ToolResult Compile(string file, string type, string output = null)
+        public static ToolResult Compile(string file, string type, bool vulkanSemantics, string output = null)
         {
             ProcessStartInfo psi = new ProcessStartInfo()
             {
                 FileName = s_fxcLocation,
-                Arguments = FormatArgs(file, type, output),
+                Arguments = FormatArgs(file, type, vulkanSemantics, output),
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
             };
@@ -48,9 +48,13 @@ namespace ShaderGen.Tests
             return new ToolResult(p.ExitCode, stdOut, stdError);
         }
 
-        private static string FormatArgs(string file, string type, string output = null)
+        private static string FormatArgs(string file, string type, bool vulkanSemantics, string output = null)
         {
             StringBuilder args = new StringBuilder();
+            if (vulkanSemantics)
+            {
+                args.Append("-V ");
+            }
             args.Append("-S "); args.Append(type);
             if (output != null)
             {

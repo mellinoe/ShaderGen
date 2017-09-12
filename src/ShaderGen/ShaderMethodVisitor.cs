@@ -265,10 +265,14 @@ namespace ShaderGen
 
         private InvocationParameterInfo[] GetParameterInfos(ArgumentListSyntax argumentList)
         {
-            return argumentList.Arguments.Select(argSyntax => new InvocationParameterInfo
+            return argumentList.Arguments.Select(argSyntax =>
             {
-                FullTypeName = null, // TODO
-                Identifier = Visit(argSyntax.Expression)
+                TypeInfo typeInfo = GetModel(argSyntax).GetTypeInfo(argSyntax.Expression);
+                return new InvocationParameterInfo
+                {
+                    FullTypeName = typeInfo.Type.ToDisplayString(),
+                    Identifier = Visit(argSyntax.Expression)
+                };
             }).ToArray();
         }
     }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ShaderGen
 {
-    public static class GlslKnownFunctions
+    public static class Glsl330KnownFunctions
     {
         private static Dictionary<string, Dictionary<string, InvocationTranslator>> s_mappings = GetMappings();
 
