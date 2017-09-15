@@ -138,6 +138,8 @@ namespace ShaderGen
                 throw new ShaderGenerationException("Couldn't find given function: " + function.Name);
             }
 
+            ValidateRequiredSemantics(entryPoint.Function, function.Type);
+
             StructureDefinition input = GetRequiredStructureType(entryPoint.Function.Parameters[0].Type);
 
             if (function.Type == ShaderFunctionType.VertexEntryPoint)
@@ -195,7 +197,7 @@ namespace ShaderGen
             return sb.ToString();
         }
 
-        private StructureDefinition GetRequiredStructureType(TypeReference type)
+        protected override StructureDefinition GetRequiredStructureType(TypeReference type)
         {
             StructureDefinition result = Structures.SingleOrDefault(sd => sd.Name == type.Name);
             if (result == null)
@@ -203,7 +205,7 @@ namespace ShaderGen
                 result = _synthesizedStructures.SingleOrDefault(sd => sd.Name == type.Name);
                 if (result == null)
                 {
-                    if (!TryDiscoverStructure(type.Name))
+                    if (!TryDiscoverStructure(type.Name, out result))
                     {
                         throw new ShaderGenerationException("Type referred by was not discovered: " + type.Name);
                     }
@@ -211,22 +213,6 @@ namespace ShaderGen
             }
 
             return result;
-        }
-
-        private bool TryDiscoverStructure(string name)
-        {
-            INamedTypeSymbol type = Compilation.GetTypeByMetadataName(name);
-            SyntaxNode declaringSyntax = type.OriginalDefinition.DeclaringSyntaxReferences[0].GetSyntax();
-            if (declaringSyntax is StructDeclarationSyntax sds)
-            {
-                if (ShaderSyntaxWalker.TryGetStructDefinition(Compilation.GetSemanticModel(sds.SyntaxTree), sds, out StructureDefinition sd))
-                {
-                    Structures.Add(sd);
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         private StructureDefinition CreateOutputStructure(StructureDefinition sd)

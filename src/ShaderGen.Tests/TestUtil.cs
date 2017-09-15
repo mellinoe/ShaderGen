@@ -100,6 +100,16 @@ namespace ShaderGen.Tests
                 @"C:\Program Files\dotnet\sdk\NuGetFallbackFolder",
             };
         }
+
+        public static LanguageBackend[] GetAllBackends(Compilation compilation)
+        {
+            return new LanguageBackend[]
+            {
+                new HlslBackend(compilation),
+                new Glsl330Backend(compilation),
+                new Glsl450Backend(compilation)
+            };
+        }
     }
 
     public class TempFile : IDisposable

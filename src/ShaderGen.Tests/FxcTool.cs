@@ -41,7 +41,7 @@ namespace ShaderGen.Tests
             };
 
             Process p = Process.Start(psi);
-            p.WaitForExit(10000);
+            p.WaitForExit(4000);
 
             string stdOut = p.StandardOutput.ReadToEnd();
             string stdError = p.StandardError.ReadToEnd();

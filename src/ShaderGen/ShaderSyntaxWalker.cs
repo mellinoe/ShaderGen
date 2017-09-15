@@ -159,7 +159,34 @@ namespace ShaderGen
                 throw new ShaderGenerationException("Too many vertex semantics applied to field: " + vds.ToFullString());
             }
 
+            if (CheckSingleAttribute(vds, "PositionSemantic"))
+            {
+                return SemanticType.Position;
+            }
+            else if (CheckSingleAttribute(vds, "NormalSemantic"))
+            {
+                return SemanticType.Normal;
+            }
+            else if (CheckSingleAttribute(vds, "TextureCoordinateSemantic"))
+            {
+                return SemanticType.TextureCoordinate;
+            }
+            else if (CheckSingleAttribute(vds, "ColorSemantic"))
+            {
+                return SemanticType.Color;
+            }
+            else if (CheckSingleAttribute(vds, "TangentSemantic"))
+            {
+                return SemanticType.Tangent;
+            }
+
             return SemanticType.None;
+        }
+
+        private static bool CheckSingleAttribute(VariableDeclaratorSyntax vds, string name)
+        {
+            AttributeSyntax[] attrs = Utilities.GetMemberAttributes(vds, name);
+            return attrs.Length == 1;
         }
 
         public override void VisitVariableDeclaration(VariableDeclarationSyntax node)

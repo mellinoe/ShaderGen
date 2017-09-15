@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ShaderGen\ShaderGen.csproj" />
+    <PackageReference Include="System.CommandLine" Version="0.1.0-e170912-3" />
+  </ItemGroup>
+
+</Project>

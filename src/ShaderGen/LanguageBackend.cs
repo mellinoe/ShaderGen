@@ -108,6 +108,67 @@ namespace ShaderGen
             return FormatInvocationCore(type, method, parameterInfos);
         }
 
+        protected void ValidateRequiredSemantics(ShaderFunction function, ShaderFunctionType type)
+        {
+            if (type == ShaderFunctionType.VertexEntryPoint)
+            {
+                StructureDefinition outputType = GetRequiredStructureType(function.ReturnType);
+                foreach (FieldDefinition field in outputType.Fields)
+                {
+                    if (field.SemanticType == SemanticType.None)
+                    {
+                        throw new ShaderGenerationException("Function return type is missing semantics on field: " + field.Name);
+                    }
+                }
+            }
+            if (type != ShaderFunctionType.Normal)
+            {
+                foreach (ParameterDefinition pd in function.Parameters)
+                {
+                    StructureDefinition pType = GetRequiredStructureType(pd.Type);
+                    foreach (FieldDefinition field in pType.Fields)
+                    {
+                        if (field.SemanticType == SemanticType.None)
+                        {
+                            throw new ShaderGenerationException(
+                                $"Function parameter {pd.Name}'s type is missing semantics on field: {field.Name}");
+                        }
+                    }
+                }
+            }
+        }
+
+        protected virtual StructureDefinition GetRequiredStructureType(TypeReference type)
+        {
+            StructureDefinition result = Structures.SingleOrDefault(sd => sd.Name == type.Name);
+            if (result == null)
+            {
+                if (!TryDiscoverStructure(type.Name, out result))
+                {
+                    throw new ShaderGenerationException("Type referred by was not discovered: " + type.Name);
+                }
+            }
+
+            return result;
+        }
+
+        protected bool TryDiscoverStructure(string name, out StructureDefinition sd)
+        {
+            INamedTypeSymbol type = Compilation.GetTypeByMetadataName(name);
+            SyntaxNode declaringSyntax = type.OriginalDefinition.DeclaringSyntaxReferences[0].GetSyntax();
+            if (declaringSyntax is StructDeclarationSyntax sds)
+            {
+                if (ShaderSyntaxWalker.TryGetStructDefinition(Compilation.GetSemanticModel(sds.SyntaxTree), sds, out sd))
+                {
+                    Structures.Add(sd);
+                    return true;
+                }
+            }
+
+            sd = null;
+            return false;
+        }
+
         internal abstract string CorrectIdentifier(string identifier);
         protected abstract string CSharpToShaderTypeCore(string fullType);
         protected abstract string CSharpToIdentifierNameCore(string typeName, string identifier);
@@ -116,7 +177,7 @@ namespace ShaderGen
 
         internal string CorrectLiteral(string literal)
         {
-            if (literal.EndsWith("f",  StringComparison.OrdinalIgnoreCase))
+            if (literal.EndsWith("f", StringComparison.OrdinalIgnoreCase))
             {
                 if (!literal.Contains("."))
                 {

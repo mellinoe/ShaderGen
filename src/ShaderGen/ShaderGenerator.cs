@@ -74,6 +74,10 @@ namespace ShaderGen
         private void GetTrees(HashSet<SyntaxTree> treesToVisit, string typeName)
         {
             INamedTypeSymbol typeSymbol = _compilation.GetTypeByMetadataName(typeName);
+            if (typeSymbol == null)
+            {
+                throw new ShaderGenerationException("No type was found with the name " + typeName);
+            }
             foreach (SyntaxReference syntaxRef in typeSymbol.DeclaringSyntaxReferences)
             {
                 treesToVisit.Add(syntaxRef.SyntaxTree);

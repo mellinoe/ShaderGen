@@ -57,6 +57,8 @@ namespace ShaderGen
                 throw new ShaderGenerationException("Couldn't find given function: " + function.Name);
             }
 
+            ValidateRequiredSemantics(entryPoint.Function, function.Type);
+
             StructureDefinition input = GetRequiredStructureType(entryPoint.Function.Parameters[0].Type);
 
             WriteVersionHeader(sb);
@@ -194,36 +196,6 @@ namespace ShaderGen
                 sb.AppendLine($"    _outputColor_ = {CorrectIdentifier("output")};");
             }
             sb.AppendLine("}");
-        }
-
-        private StructureDefinition GetRequiredStructureType(TypeReference type)
-        {
-            StructureDefinition result = Structures.SingleOrDefault(sd => sd.Name == type.Name);
-            if (result == null)
-            {
-                if (!TryDiscoverStructure(type.Name))
-                {
-                    throw new ShaderGenerationException("Type referred by was not discovered: " + type.Name);
-                }
-            }
-
-            return result;
-        }
-
-        private bool TryDiscoverStructure(string name)
-        {
-            INamedTypeSymbol type = Compilation.GetTypeByMetadataName(name);
-            SyntaxNode declaringSyntax = type.OriginalDefinition.DeclaringSyntaxReferences[0].GetSyntax();
-            if (declaringSyntax is StructDeclarationSyntax sds)
-            {
-                if (ShaderSyntaxWalker.TryGetStructDefinition(Compilation.GetSemanticModel(sds.SyntaxTree), sds, out StructureDefinition sd))
-                {
-                    Structures.Add(sd);
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         protected override string CSharpToIdentifierNameCore(string typeName, string identifier)

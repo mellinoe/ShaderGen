@@ -5,9 +5,9 @@ namespace TestShaders
 {
     public struct PositionTexture
     {
-        [VertexSemantic(SemanticType.Position)]
+        [PositionSemantic]
         public Vector3 Position;
-        [VertexSemantic(SemanticType.TextureCoordinate)]
+        [TextureCoordinateSemantic]
         public Vector2 TextureCoord;
     }
 }
