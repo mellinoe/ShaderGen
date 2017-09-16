@@ -17,6 +17,11 @@ namespace ShaderGen
 
         public GeneratedShaderSet(string name, string vsCode, string fsCode, ShaderModel model)
         {
+            if (string.IsNullOrEmpty(vsCode) && string.IsNullOrEmpty(fsCode))
+            {
+                throw new ShaderGenerationException("At least one of vsCode or fsCode must be non-empty");
+            }
+
             Name = name;
             VertexShaderCode = vsCode;
             FragmentShaderCode = fsCode;

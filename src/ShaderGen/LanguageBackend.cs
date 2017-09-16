@@ -11,9 +11,14 @@ namespace ShaderGen
     {
         protected readonly Compilation Compilation;
 
-        internal List<StructureDefinition> Structures { get; } = new List<StructureDefinition>();
-        internal List<ResourceDefinition> Resources { get; } = new List<ResourceDefinition>();
-        internal List<ShaderFunctionAndBlockSyntax> Functions { get; } = new List<ShaderFunctionAndBlockSyntax>();
+        internal class BackendContext
+        {
+            internal List<StructureDefinition> Structures { get; } = new List<StructureDefinition>();
+            internal List<ResourceDefinition> Resources { get; } = new List<ResourceDefinition>();
+            internal List<ShaderFunctionAndBlockSyntax> Functions { get; } = new List<ShaderFunctionAndBlockSyntax>();
+        }
+
+        internal Dictionary<string, BackendContext> Contexts = new Dictionary<string, BackendContext>();
 
         private readonly Dictionary<ShaderFunction, string> _fullTextShaders = new Dictionary<ShaderFunction, string>();
 
@@ -22,15 +27,42 @@ namespace ShaderGen
             Compilation = compilation;
         }
 
-        internal ShaderModel GetShaderModel()
+        // Must be called before attempting to retrieve the context.
+        internal void InitContext(string setName)
         {
-            return new ShaderModel(
-                Structures.ToArray(),
-                Resources.ToArray(),
-                Functions.Select(sfabs => sfabs.Function).ToArray());
+            if (Contexts.ContainsKey(setName))
+            {
+                throw new InvalidOperationException("A set was initialized twice: " + setName);
+            }
+
+            Contexts.Add(setName, new BackendContext());
         }
 
-        public string GetCode(ShaderFunction function)
+        internal BackendContext GetContext(string setName)
+        {
+            if (!Contexts.TryGetValue(setName, out BackendContext ret))
+            {
+                throw new InvalidOperationException("There was no Shader Set generated with the name " + setName);
+            }
+            return ret;
+        }
+
+        internal ShaderModel GetShaderModel(string setName)
+        {
+            BackendContext context = GetContext(setName);
+            // HACK: Discover all method input structures.
+            foreach (ShaderFunctionAndBlockSyntax sf in context.Functions.ToArray())
+            {
+                GetCode(setName, sf.Function);
+            }
+      
+            return new ShaderModel(
+                context.Structures.ToArray(),
+                context.Resources.ToArray(),
+                context.Functions.Select(sfabs => sfabs.Function).ToArray());
+        }
+
+        public string GetCode(string setName, ShaderFunction function)
         {
             if (function == null)
             {
@@ -43,7 +75,7 @@ namespace ShaderGen
 
             if (!_fullTextShaders.TryGetValue(function, out string result))
             {
-                result = GenerateFullTextCore(function);
+                result = GenerateFullTextCore(setName, function);
                 _fullTextShaders.Add(function, result);
             }
 
@@ -60,34 +92,34 @@ namespace ShaderGen
             return CSharpToShaderTypeCore(fullType);
         }
 
-        internal virtual void AddStructure(StructureDefinition sd)
+        internal virtual void AddStructure(string setName, StructureDefinition sd)
         {
             if (sd == null)
             {
                 throw new ArgumentNullException(nameof(sd));
             }
 
-            Structures.Add(sd);
+            GetContext(setName).Structures.Add(sd);
         }
 
-        internal virtual void AddResource(ResourceDefinition ud)
+        internal virtual void AddResource(string setName, ResourceDefinition ud)
         {
             if (ud == null)
             {
                 throw new ArgumentNullException(nameof(ud));
             }
 
-            Resources.Add(ud);
+            GetContext(setName).Resources.Add(ud);
         }
 
-        internal virtual void AddFunction(ShaderFunctionAndBlockSyntax sf)
+        internal virtual void AddFunction(string setName, ShaderFunctionAndBlockSyntax sf)
         {
             if (sf == null)
             {
                 throw new ArgumentNullException(nameof(sf));
             }
 
-            Functions.Add(sf);
+            GetContext(setName).Functions.Add(sf);
         }
 
         internal virtual string CSharpToShaderIdentifierName(SymbolInfo symbolInfo)
@@ -108,11 +140,11 @@ namespace ShaderGen
             return FormatInvocationCore(type, method, parameterInfos);
         }
 
-        protected void ValidateRequiredSemantics(ShaderFunction function, ShaderFunctionType type)
+        protected void ValidateRequiredSemantics(string setName, ShaderFunction function, ShaderFunctionType type)
         {
             if (type == ShaderFunctionType.VertexEntryPoint)
             {
-                StructureDefinition outputType = GetRequiredStructureType(function.ReturnType);
+                StructureDefinition outputType = GetRequiredStructureType(setName, function.ReturnType);
                 foreach (FieldDefinition field in outputType.Fields)
                 {
                     if (field.SemanticType == SemanticType.None)
@@ -125,7 +157,7 @@ namespace ShaderGen
             {
                 foreach (ParameterDefinition pd in function.Parameters)
                 {
-                    StructureDefinition pType = GetRequiredStructureType(pd.Type);
+                    StructureDefinition pType = GetRequiredStructureType(setName, pd.Type);
                     foreach (FieldDefinition field in pType.Fields)
                     {
                         if (field.SemanticType == SemanticType.None)
@@ -138,12 +170,12 @@ namespace ShaderGen
             }
         }
 
-        protected virtual StructureDefinition GetRequiredStructureType(TypeReference type)
+        protected virtual StructureDefinition GetRequiredStructureType(string setName, TypeReference type)
         {
-            StructureDefinition result = Structures.SingleOrDefault(sd => sd.Name == type.Name);
+            StructureDefinition result = GetContext(setName).Structures.SingleOrDefault(sd => sd.Name == type.Name);
             if (result == null)
             {
-                if (!TryDiscoverStructure(type.Name, out result))
+                if (!TryDiscoverStructure(setName, type.Name, out result))
                 {
                     throw new ShaderGenerationException("Type referred by was not discovered: " + type.Name);
                 }
@@ -152,7 +184,7 @@ namespace ShaderGen
             return result;
         }
 
-        protected bool TryDiscoverStructure(string name, out StructureDefinition sd)
+        protected bool TryDiscoverStructure(string setName, string name, out StructureDefinition sd)
         {
             INamedTypeSymbol type = Compilation.GetTypeByMetadataName(name);
             SyntaxNode declaringSyntax = type.OriginalDefinition.DeclaringSyntaxReferences[0].GetSyntax();
@@ -160,7 +192,7 @@ namespace ShaderGen
             {
                 if (ShaderSyntaxWalker.TryGetStructDefinition(Compilation.GetSemanticModel(sds.SyntaxTree), sds, out sd))
                 {
-                    Structures.Add(sd);
+                    GetContext(setName).Structures.Add(sd);
                     return true;
                 }
             }
@@ -172,7 +204,7 @@ namespace ShaderGen
         internal abstract string CorrectIdentifier(string identifier);
         protected abstract string CSharpToShaderTypeCore(string fullType);
         protected abstract string CSharpToIdentifierNameCore(string typeName, string identifier);
-        protected abstract string GenerateFullTextCore(ShaderFunction function);
+        protected abstract string GenerateFullTextCore(string setName, ShaderFunction function);
         protected abstract string FormatInvocationCore(string type, string method, InvocationParameterInfo[] parameterInfos);
 
         internal string CorrectLiteral(string literal)

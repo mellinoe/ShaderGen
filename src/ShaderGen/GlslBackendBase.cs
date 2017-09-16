@@ -46,29 +46,30 @@ namespace ShaderGen
         }
 
 
-        protected override string GenerateFullTextCore(ShaderFunction function)
+        protected override string GenerateFullTextCore(string setName, ShaderFunction function)
         {
+            BackendContext context = GetContext(setName);
             StringBuilder sb = new StringBuilder();
 
-            ShaderFunctionAndBlockSyntax entryPoint = Functions.SingleOrDefault(
+            ShaderFunctionAndBlockSyntax entryPoint = context.Functions.SingleOrDefault(
                 sfabs => sfabs.Function.Name == function.Name);
             if (entryPoint == null)
             {
                 throw new ShaderGenerationException("Couldn't find given function: " + function.Name);
             }
 
-            ValidateRequiredSemantics(entryPoint.Function, function.Type);
+            ValidateRequiredSemantics(setName, entryPoint.Function, function.Type);
 
-            StructureDefinition input = GetRequiredStructureType(entryPoint.Function.Parameters[0].Type);
+            StructureDefinition input = GetRequiredStructureType(setName, entryPoint.Function.Parameters[0].Type);
 
             WriteVersionHeader(sb);
 
-            foreach (StructureDefinition sd in Structures)
+            foreach (StructureDefinition sd in context.Structures)
             {
                 WriteStructure(sb, sd);
             }
 
-            foreach (ResourceDefinition rd in Resources)
+            foreach (ResourceDefinition rd in context.Resources)
             {
                 switch (rd.ResourceKind)
                 {
@@ -92,17 +93,17 @@ namespace ShaderGen
                 .VisitFunction(entryPoint.Block);
             sb.AppendLine(result);
 
-            WriteMainFunction(sb, entryPoint.Function);
+            WriteMainFunction(setName, sb, entryPoint.Function);
 
             return sb.ToString();
         }
 
-        private void WriteMainFunction(StringBuilder sb, ShaderFunction entryFunction)
+        private void WriteMainFunction(string setName, StringBuilder sb, ShaderFunction entryFunction)
         {
             ParameterDefinition input = entryFunction.Parameters[0];
-            StructureDefinition inputType = GetRequiredStructureType(input.Type);
+            StructureDefinition inputType = GetRequiredStructureType(setName, input.Type);
             StructureDefinition outputType = entryFunction.Type == ShaderFunctionType.VertexEntryPoint
-                ? GetRequiredStructureType(entryFunction.ReturnType)
+                ? GetRequiredStructureType(setName, entryFunction.ReturnType)
                 : null; // Hacky but meh
 
             int inVarIndex = 0;

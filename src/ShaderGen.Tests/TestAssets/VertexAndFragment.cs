@@ -1,8 +1,6 @@
 ﻿using ShaderGen;
 using System.Numerics;
 
-[assembly: ShaderSet("VertexAndFragment", "TestShaders.VertexAndFragment.VS", "TestShaders.VertexAndFragment.FS")]
-
 namespace TestShaders
 {
     public class VertexAndFragment

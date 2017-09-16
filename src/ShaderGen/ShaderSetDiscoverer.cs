@@ -6,6 +6,7 @@ namespace ShaderGen
 {
     internal class ShaderSetDiscoverer : CSharpSyntaxWalker
     {
+        private readonly HashSet<string> _discoveredNames = new HashSet<string>();
         private readonly List<ShaderSetInfo> _shaderSets = new List<ShaderSetInfo>();
         public override void VisitAttribute(AttributeSyntax node)
         {
@@ -31,6 +32,11 @@ namespace ShaderGen
                 if (vsName == null && fsName == null)
                 {
                     throw new ShaderGenerationException("ShaderSetAttribute must specify at least one shader name.");
+                }
+
+                if (!_discoveredNames.Add(name))
+                {
+                    throw new ShaderGenerationException("Multiple shader sets with the same name were defined: " + name);
                 }
 
                 _shaderSets.Add(new ShaderSetInfo(

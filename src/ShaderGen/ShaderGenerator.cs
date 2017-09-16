@@ -52,8 +52,14 @@ namespace ShaderGen
                     $"The name passed to {nameof(fragmentFunctionName)} must be a fully-qualified type and method.");
             }
 
+            string setName = vertexFunctionName;
+            if (fragmentFunctionName != null)
+            {
+                setName += "+" + fragmentFunctionName;
+            }
+
             _shaderSets.Add(new ShaderSetInfo(
-                vertexFunctionName + "+" + fragmentFunctionName,
+                setName,
                 _vertexFunctionName,
                 _fragmentFunctionName));
         }
@@ -89,7 +95,6 @@ namespace ShaderGen
 
         public ShaderGenerationResult GenerateShaders()
         {
-
             if (_shaderSets.Count == 0)
             {
                 throw new ShaderGenerationException("No shader sets were discovered.");
@@ -119,33 +124,40 @@ namespace ShaderGen
                 GetTrees(treesToVisit, fragmentFunctionName.TypeName);
             }
 
-            ShaderSyntaxWalker walker = new ShaderSyntaxWalker(_compilation, _languages.ToArray());
+            foreach (LanguageBackend language in _languages)
+            {
+                language.InitContext(ss.Name);
+            }
+
+            ShaderSyntaxWalker walker = new ShaderSyntaxWalker(_compilation, _languages.ToArray(), ss);
             foreach (SyntaxTree tree in treesToVisit)
             {
                 walker.Visit(tree.GetRoot());
             }
 
-            ShaderModel model = walker.GetShaderModel();
-            ShaderFunction vsFunc = (ss.VertexShader != null)
-                ? model.GetFunction(ss.VertexShader.FullName)
-                : null;
-            ShaderFunction fsFunc = (ss.FragmentShader != null)
-                ? model.GetFunction(ss.FragmentShader.FullName)
-                : null;
             foreach (LanguageBackend language in _languages)
             {
-                string vsCode = null;
-                string fsCode = null;
-                if (vsFunc != null)
+                ShaderModel model = language.GetShaderModel(ss.Name);
+                ShaderFunction vsFunc = (ss.VertexShader != null)
+                    ? model.GetFunction(ss.VertexShader.FullName)
+                    : null;
+                ShaderFunction fsFunc = (ss.FragmentShader != null)
+                    ? model.GetFunction(ss.FragmentShader.FullName)
+                    : null;
                 {
-                    vsCode = language.GetCode(vsFunc);
-                }
-                if (fsFunc != null)
-                {
-                    fsCode = language.GetCode(fsFunc);
-                }
+                    string vsCode = null;
+                    string fsCode = null;
+                    if (vsFunc != null)
+                    {
+                        vsCode = language.GetCode(ss.Name, vsFunc);
+                    }
+                    if (fsFunc != null)
+                    {
+                        fsCode = language.GetCode(ss.Name, fsFunc);
+                    }
 
-                result.AddShaderSet(language, new GeneratedShaderSet(ss.Name, vsCode, fsCode, model));
+                    result.AddShaderSet(language, new GeneratedShaderSet(ss.Name, vsCode, fsCode, model));
+                }
             }
         }
 

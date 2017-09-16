@@ -127,40 +127,40 @@ namespace ShaderGen
             sb.AppendLine();
         }
 
-        protected override string GenerateFullTextCore(ShaderFunction function)
+        protected override string GenerateFullTextCore(string setName, ShaderFunction function)
         {
             StringBuilder sb = new StringBuilder();
 
-            ShaderFunctionAndBlockSyntax entryPoint = Functions.SingleOrDefault(
+            ShaderFunctionAndBlockSyntax entryPoint = GetContext(setName).Functions.SingleOrDefault(
                 sfabs => sfabs.Function.Name == function.Name);
             if (entryPoint == null)
             {
                 throw new ShaderGenerationException("Couldn't find given function: " + function.Name);
             }
 
-            ValidateRequiredSemantics(entryPoint.Function, function.Type);
+            ValidateRequiredSemantics(setName, entryPoint.Function, function.Type);
 
-            StructureDefinition input = GetRequiredStructureType(entryPoint.Function.Parameters[0].Type);
+            StructureDefinition input = GetRequiredStructureType(setName, entryPoint.Function.Parameters[0].Type);
 
             if (function.Type == ShaderFunctionType.VertexEntryPoint)
             {
                 // HLSL vertex outputs needs to have semantics applied to the structure fields.
-                StructureDefinition output = CreateOutputStructure(GetRequiredStructureType(entryPoint.Function.ReturnType));
-                Functions.Remove(entryPoint);
+                StructureDefinition output = CreateOutputStructure(GetRequiredStructureType(setName, entryPoint.Function.ReturnType));
+                GetContext(setName).Functions.Remove(entryPoint);
                 entryPoint = entryPoint.WithReturnType(new TypeReference(output.Name));
-                Functions.Add(entryPoint);
+                GetContext(setName).Functions.Add(entryPoint);
             }
 
             if (function.Type == ShaderFunctionType.FragmentEntryPoint)
             {
                 // HLSL pixel shader inputs also need these semantics.
                 StructureDefinition modifiedInput = CreateOutputStructure(input);
-                Functions.Remove(entryPoint);
+                GetContext(setName).Functions.Remove(entryPoint);
                 entryPoint = entryPoint.WithParameter(0, new TypeReference(modifiedInput.Name));
-                Functions.Add(entryPoint);
+                GetContext(setName).Functions.Add(entryPoint);
             }
 
-            foreach (StructureDefinition sd in Structures)
+            foreach (StructureDefinition sd in GetContext(setName).Structures)
             {
                 WriteStructure(sb, sd);
             }
@@ -170,7 +170,7 @@ namespace ShaderGen
             }
 
             int uniformBinding = 0, textureBinding = 0, samplerBinding = 0;
-            foreach (ResourceDefinition rd in Resources)
+            foreach (ResourceDefinition rd in GetContext(setName).Resources)
             {
                 switch (rd.ResourceKind)
                 {
@@ -197,15 +197,15 @@ namespace ShaderGen
             return sb.ToString();
         }
 
-        protected override StructureDefinition GetRequiredStructureType(TypeReference type)
+        protected override StructureDefinition GetRequiredStructureType(string setName, TypeReference type)
         {
-            StructureDefinition result = Structures.SingleOrDefault(sd => sd.Name == type.Name);
+            StructureDefinition result = GetContext(setName).Structures.SingleOrDefault(sd => sd.Name == type.Name);
             if (result == null)
             {
                 result = _synthesizedStructures.SingleOrDefault(sd => sd.Name == type.Name);
                 if (result == null)
                 {
-                    if (!TryDiscoverStructure(type.Name, out result))
+                    if (!TryDiscoverStructure(setName, type.Name, out result))
                     {
                         throw new ShaderGenerationException("Type referred by was not discovered: " + type.Name);
                     }

@@ -65,18 +65,17 @@ namespace ShaderGen.Tests
             HlslBackend backend = new HlslBackend(compilation);
             ShaderGenerator sg = new ShaderGenerator(
                 compilation,
-                "TestShaders.PartialVertex.VertexShader",
+                "TestShaders.PartialVertex.VertexShaderFunc",
                 null,
                 backend);
 
             ShaderGenerationResult genResult = sg.GenerateShaders();
             IReadOnlyList<GeneratedShaderSet> sets = genResult.GetOutput(backend);
             Assert.Equal(1, sets.Count);
-            ShaderModel shaderModel = sets[0].Model;
-
-            ShaderFunction entryFunction = shaderModel.GetFunction("VertexShaderFunc");
-            string vsCode = backend.GetCode(entryFunction);
-            FxcTool.AssertCompilesCode(vsCode, "vs_5_0", entryFunction.Name);
+            GeneratedShaderSet set = sets[0];
+            ShaderModel shaderModel = set.Model;
+            string vsCode = set.VertexShaderCode;
+            FxcTool.AssertCompilesCode(vsCode, "vs_5_0", "VertexShaderFunc");
         }
     }
 }

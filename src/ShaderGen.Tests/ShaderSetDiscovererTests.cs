@@ -16,7 +16,7 @@ namespace ShaderGen.Tests
             ShaderGenerator sg = new ShaderGenerator(compilation, backend);
             ShaderGenerationResult result = sg.GenerateShaders();
             IReadOnlyList<GeneratedShaderSet> hlslSets = result.GetOutput(backend);
-            Assert.Equal(1, hlslSets.Count);
+            Assert.Equal(3, hlslSets.Count);
             GeneratedShaderSet set = hlslSets[0];
             Assert.Equal("VertexAndFragment", set.Name);
             ShaderModel shaderModel = set.Model;

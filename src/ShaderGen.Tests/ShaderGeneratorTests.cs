@@ -31,18 +31,19 @@ namespace ShaderGen.Tests
             ShaderGenerationResult result = sg.GenerateShaders();
             IReadOnlyList<GeneratedShaderSet> sets = result.GetOutput(backend);
             Assert.Equal(1, sets.Count);
-            ShaderModel shaderModel = sets[0].Model;
+            GeneratedShaderSet set = sets[0];
+            ShaderModel shaderModel = set.Model;
 
             if (vsName != null)
             {
                 ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
-                string vsCode = backend.GetCode(vsFunction);
+                string vsCode = set.VertexShaderCode;
                 FxcTool.AssertCompilesCode(vsCode, "vs_5_0", vsFunction.Name);
             }
             if (fsName != null)
             {
                 ShaderFunction fsFunction = shaderModel.GetFunction(fsName);
-                string fsCode = backend.GetCode(fsFunction);
+                string fsCode = set.FragmentShaderCode;
                 FxcTool.AssertCompilesCode(fsCode, "ps_5_0", fsFunction.Name);
             }
         }
@@ -71,18 +72,19 @@ namespace ShaderGen.Tests
             ShaderGenerationResult result = sg.GenerateShaders();
             IReadOnlyList<GeneratedShaderSet> sets = result.GetOutput(backend);
             Assert.Equal(1, sets.Count);
-            ShaderModel shaderModel = sets[0].Model;
+            GeneratedShaderSet set = sets[0];
+            ShaderModel shaderModel = set.Model;
 
             if (vsName != null)
             {
                 ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
-                string vsCode = backend.GetCode(vsFunction);
+                string vsCode = set.VertexShaderCode;
                 GlsLangValidatorTool.AssertCompilesCode(vsCode, "vert", false);
             }
             if (fsName != null)
             {
                 ShaderFunction fsFunction = shaderModel.GetFunction(fsName);
-                string fsCode = backend.GetCode(fsFunction);
+                string fsCode = set.FragmentShaderCode;
                 GlsLangValidatorTool.AssertCompilesCode(fsCode, "frag", false);
             }
         }
@@ -111,18 +113,19 @@ namespace ShaderGen.Tests
             ShaderGenerationResult result = sg.GenerateShaders();
             IReadOnlyList<GeneratedShaderSet> sets = result.GetOutput(backend);
             Assert.Equal(1, sets.Count);
-            ShaderModel shaderModel = sets[0].Model;
+            GeneratedShaderSet set = sets[0];
+            ShaderModel shaderModel = set.Model;
 
             if (vsName != null)
             {
                 ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
-                string vsCode = backend.GetCode(vsFunction);
+                string vsCode = set.VertexShaderCode;
                 GlsLangValidatorTool.AssertCompilesCode(vsCode, "vert", true);
             }
             if (fsName != null)
             {
                 ShaderFunction fsFunction = shaderModel.GetFunction(fsName);
-                string fsCode = backend.GetCode(fsFunction);
+                string fsCode = set.FragmentShaderCode;
                 GlsLangValidatorTool.AssertCompilesCode(fsCode, "frag", true);
             }
         }
@@ -148,19 +151,20 @@ namespace ShaderGen.Tests
             ShaderGenerationResult result = sg.GenerateShaders();
             IReadOnlyList<GeneratedShaderSet> sets = result.GetOutput(backend);
             Assert.Equal(1, sets.Count);
-            ShaderModel shaderModel = sets[0].Model;
+            GeneratedShaderSet set = sets[0];
+            ShaderModel shaderModel = set.Model;
 
             if (vsName != null)
             {
                 ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
-                string vsCode = backend.GetCode(vsFunction);
+                string vsCode = set.VertexShaderCode;
                 File.WriteAllText(@"C:\Users\raver\Documents\forward-vertex.glsl", vsCode);
                 GlsLangValidatorTool.AssertCompilesCode(vsCode, "vert", true);
             }
             if (fsName != null)
             {
                 ShaderFunction fsFunction = shaderModel.GetFunction(fsName);
-                string fsCode = backend.GetCode(fsFunction);
+                string fsCode = set.FragmentShaderCode;
                 File.WriteAllText(@"C:\Users\raver\Documents\forward-frag.glsl", fsCode);
                 GlsLangValidatorTool.AssertCompilesCode(fsCode, "frag", true);
             }

@@ -13,22 +13,15 @@ namespace ShaderGen
         private readonly StringBuilder _sb = new StringBuilder();
         private readonly Compilation _compilation;
         private readonly LanguageBackend[] _backends;
+        private readonly ShaderSetInfo _shaderSet;
         private int _lastResourceBinding;
 
-        public ShaderSyntaxWalker(Compilation compilation, LanguageBackend[] backends) : base(SyntaxWalkerDepth.Token)
+        public ShaderSyntaxWalker(Compilation compilation, LanguageBackend[] backends, ShaderSetInfo ss)
+            : base(SyntaxWalkerDepth.Token)
         {
             _compilation = compilation;
             _backends = backends;
-        }
-
-        public ShaderModel GetShaderModel()
-        {
-            // HACK: Discover all method input structures.
-            foreach (ShaderFunctionAndBlockSyntax sf in _backends[0].Functions.ToArray())
-            {
-                foreach (LanguageBackend b in _backends) { b.GetCode(sf.Function); }
-            }
-            return _backends[0].GetShaderModel(); // HACK
+            _shaderSet = ss;
         }
 
         private SemanticModel GetModel(SyntaxNode node) => _compilation.GetSemanticModel(node.SyntaxTree);
@@ -57,7 +50,7 @@ namespace ShaderGen
 
             ShaderFunction sf = new ShaderFunction(functionName, returnType, parameters.ToArray(), type);
             ShaderFunctionAndBlockSyntax sfab = new ShaderFunctionAndBlockSyntax(sf, node.Body);
-            foreach (LanguageBackend b in _backends) { b.AddFunction(sfab); }
+            foreach (LanguageBackend b in _backends) { b.AddFunction(_shaderSet.Name, sfab); }
         }
 
         private ParameterDefinition GetParameterDefinition(ParameterSyntax ps)
@@ -70,7 +63,7 @@ namespace ShaderGen
         public override void VisitStructDeclaration(StructDeclarationSyntax node)
         {
             TryGetStructDefinition(GetModel(node), node, out var sd);
-            foreach (var b in _backends) { b.AddStructure(sd); }
+            foreach (var b in _backends) { b.AddStructure(_shaderSet.Name, sd); }
         }
 
         public static bool TryGetStructDefinition(SemanticModel model, StructDeclarationSyntax node, out StructureDefinition sd)
@@ -211,7 +204,7 @@ namespace ShaderGen
                 ValidateResourceType(typeInfo);
             }
 
-            foreach (LanguageBackend b in _backends) { b.AddResource(rd); }
+            foreach (LanguageBackend b in _backends) { b.AddResource(_shaderSet.Name, rd); }
         }
 
         private void ValidateResourceType(TypeInfo typeInfo)

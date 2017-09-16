@@ -2,7 +2,7 @@
 
 namespace ShaderGen
 {
-    [AttributeUsage(AttributeTargets.Assembly)]
+    [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
     public class ShaderSetAttribute : Attribute
     {
         public string Name { get; }
