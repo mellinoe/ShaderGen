@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ShaderGen.Attributes\ShaderGen.Primitives.csproj" />
+    <ProjectReference Include="..\ShaderGen.Primitives\ShaderGen.Primitives.csproj" />
   </ItemGroup>
 
 </Project>

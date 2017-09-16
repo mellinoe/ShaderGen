@@ -8,7 +8,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShaderGen.Tests", "ShaderGe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShaderGen.App", "ShaderGen.App\ShaderGen.App.csproj", "{C3DC24D3-98F7-4162-9D8D-822383A79668}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShaderGen.Primitives", "ShaderGen.Attributes\ShaderGen.Primitives.csproj", "{2DF9100D-B99D-4E6A-A3B2-3628044D151A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShaderGen.Primitives", "ShaderGen.Primitives\ShaderGen.Primitives.csproj", "{2DF9100D-B99D-4E6A-A3B2-3628044D151A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AppTest", "AppTest", "{12D59BC2-33E0-460F-A788-6514D8350F81}"
 EndProject
