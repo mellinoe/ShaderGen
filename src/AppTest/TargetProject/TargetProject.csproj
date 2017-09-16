@@ -2,10 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <VertexShaderName>TargetProject.VertexAndFragment.VS</VertexShaderName>
-    <VertexShaderOutput>vsout</VertexShaderOutput>
-    <FragmentShaderName>TargetProject.VertexAndFragment.FS</FragmentShaderName>
-    <FragmentShaderOutput>fsout</FragmentShaderOutput>
+    <ShaderOutputPath>$(OutputPath)</ShaderOutputPath>
   </PropertyGroup>
 
   <ItemGroup>

@@ -7,6 +7,8 @@
 
   <Target Name="GenerateShaderCode" AfterTargets="AfterBuild">
     <Message Text="Generating shader code." />
+
+    <Error Condition="'$(ShaderOutputPath)' == ''" Text="ShaderOutputPath must be set." />
     
     <WriteLinesToFile Lines="@(ReferencePath)" File="$(_SGReferencesResponsePath)" Overwrite="true" />
     <WriteLinesToFile Lines="@(Compile)" File="$(_SGSourcesResponsePath)" Overwrite="true" />
@@ -14,10 +16,7 @@
     <PropertyGroup>
       <_SGArgs>$(_SGArgs) --ref "$(_SGReferencesResponsePath)"</_SGArgs>
       <_SGArgs>$(_SGArgs) --src "$(_SGSourcesResponsePath)"</_SGArgs>
-      <_SGArgs>$(_SGArgs) --vs $(VertexShaderName)</_SGArgs>
-      <_SGArgs>$(_SGArgs) --vsout $(VertexShaderOutput)</_SGArgs>
-      <_SGArgs>$(_SGArgs) --fs $(FragmentShaderName)</_SGArgs>
-      <_SGArgs>$(_SGArgs) --fsout $(FragmentShaderOutput)</_SGArgs>
+      <_SGArgs>$(_SGArgs) --out $(FragmentShaderOutput) $(ShaderOutputPath)</_SGArgs>
     </PropertyGroup>
 
     <Message Text="_SGArgs: $(_SGArgs)" Importance="high" />

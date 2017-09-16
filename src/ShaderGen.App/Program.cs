@@ -16,10 +16,7 @@ namespace ShaderGen.App
         {
             string referenceItemsResponsePath = null;
             string compileItemsResponsePath = null;
-            string vertexShaderName = null;
-            string fragmentShaderName = null;
-            string vertexShaderOutputName = null;
-            string fragmentShaderOutputName = null;
+            string outputPath = null;
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -30,19 +27,30 @@ namespace ShaderGen.App
             {
                 syntax.DefineOption("ref", ref referenceItemsResponsePath, true, "The semicolon-separated list of references to compile against.");
                 syntax.DefineOption("src", ref compileItemsResponsePath, true, "The semicolon-separated list of source files to compile.");
-                syntax.DefineOption("vs", ref vertexShaderName, false, "The full name of the vertex shader to build.");
-                syntax.DefineOption("fs", ref fragmentShaderName, false, "The full name of the fragment shader to bulid.");
-                syntax.DefineOption("vsout", ref vertexShaderOutputName, false, "The output path for the vertex shaders.");
-                syntax.DefineOption("fsout", ref fragmentShaderOutputName, false, "The output path for the fragment shaders.");
+                syntax.DefineOption("out", ref outputPath, true, "The output path for the generated shaders.");
             });
 
             if (!File.Exists(referenceItemsResponsePath))
             {
                 Console.Error.WriteLine("Reference items response file does not exist: " + referenceItemsResponsePath);
+                return -1;
             }
             if (!File.Exists(compileItemsResponsePath))
             {
                 Console.Error.WriteLine("Compile items response file does not exist: " + compileItemsResponsePath);
+                return -1;
+            }
+            if (!Directory.Exists(outputPath))
+            {
+                try
+                {
+                    Directory.CreateDirectory(outputPath);
+                }
+                catch
+                {
+                    Console.Error.WriteLine("Unable to create the output directory.");
+                    return -1;
+                }
             }
 
             string[] referenceItems = File.ReadAllLines(referenceItemsResponsePath);
@@ -96,7 +104,7 @@ namespace ShaderGen.App
                 glsl450
             };
 
-            ShaderGenerator sg = new ShaderGenerator(compilation, vertexShaderName, fragmentShaderName, languages);
+            ShaderGenerator sg = new ShaderGenerator(compilation, languages);
             ShaderGenerationResult shaderGenResult;
             try
             {
@@ -113,16 +121,23 @@ namespace ShaderGen.App
 
             foreach (LanguageBackend lang in languages)
             {
+                string extension = BackendExtension(lang);
                 IReadOnlyList<GeneratedShaderSet> sets = shaderGenResult.GetOutput(lang);
-                Debug.Assert(sets.Count == 1);
-                GeneratedShaderSet set = sets[0];
-                if (vertexShaderName != null)
+                foreach (GeneratedShaderSet set in sets)
                 {
-                    File.WriteAllText($"{vertexShaderOutputName}.{BackendExtension(lang)}", set.VertexShaderCode);
-                }
-                if (fragmentShaderName != null)
-                {
-                    File.WriteAllText($"{fragmentShaderName}.{BackendExtension(lang)}", set.FragmentShaderCode);
+                    string name = set.Name;
+                    if (set.VertexShaderCode != null)
+                    {
+                        string vsOutName = name + "-vertex." + extension;
+                        string vsOutPath = Path.Combine(outputPath, vsOutName);
+                        File.WriteAllText(vsOutPath, set.VertexShaderCode);
+                    }
+                    if (set.FragmentShaderCode != null)
+                    {
+                        string fsOutName = name + "-fragment." + extension;
+                        string fsOutPath = Path.Combine(outputPath, fsOutName);
+                        File.WriteAllText(fsOutPath, set.FragmentShaderCode);
+                    }
                 }
             }
 
@@ -137,11 +152,11 @@ namespace ShaderGen.App
             }
             else if (lang.GetType() == typeof(Glsl330Backend))
             {
-                return "glsl330";
+                return "330.glsl";
             }
             else if (lang.GetType() == typeof(Glsl450Backend))
             {
-                return "glsl450";
+                return "450.glsl";
             }
 
             throw new InvalidOperationException("Invalid backend type: " + lang.GetType().Name);

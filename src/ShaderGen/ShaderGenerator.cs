@@ -92,7 +92,7 @@ namespace ShaderGen
 
             if (_shaderSets.Count == 0)
             {
-                throw new ShaderGenerationException("No shader sets were set to be generated.");
+                throw new ShaderGenerationException("No shader sets were discovered.");
             }
 
             ShaderGenerationResult result = new ShaderGenerationResult();

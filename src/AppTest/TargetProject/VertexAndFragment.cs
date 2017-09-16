@@ -1,6 +1,8 @@
 ﻿using ShaderGen;
 using System.Numerics;
 
+[assembly:ShaderSet("SimpleSet", "TargetProject.VertexAndFragment.VS", "TargetProject.VertexAndFragment.FS")]
+
 namespace TargetProject
 {
     public class VertexAndFragment
