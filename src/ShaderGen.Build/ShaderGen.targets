@@ -1,13 +1,8 @@
 ﻿<Project>
-  <PropertyGroup>
-    <_SGExePath>$(MSBuildThisFileDirectory)ShaderGen.App.dll</_SGExePath>
-    <_SGReferencesResponsePath>$(IntermediateOutputPath)_sgreferences.txt</_SGReferencesResponsePath>
-    <_SGSourcesResponsePath>$(IntermediateOutputPath)_sgsources.txt</_SGSourcesResponsePath>
-  </PropertyGroup>
-
   <Target Name="GenerateShaderCode" AfterTargets="AfterBuild">
     <Message Text="Generating shader code." />
 
+    <Error Condition="'$(_SGExePath)' == ''" Text="The ShaderGen tool was not located or set." />
     <Error Condition="'$(ShaderOutputPath)' == ''" Text="ShaderOutputPath must be set." />
     
     <WriteLinesToFile Lines="@(ReferencePath)" File="$(_SGReferencesResponsePath)" Overwrite="true" />

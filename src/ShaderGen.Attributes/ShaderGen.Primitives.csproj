@@ -4,9 +4,8 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>ShaderGen</RootNamespace>
     <AssemblyVersion>1.0.0</AssemblyVersion>
-
     <!-- Package stuff -->
-    <PackageId>ShaderGen.Attributes</PackageId>
+    <PackageId>ShaderGen.Primitives</PackageId>
     <Description>C# attributes and primitives for generating shader code via ShaderGen.</Description>
     <PackageTags>Shader GLSL HLSL SPIR-V Graphics OpenGL Vulkan Direct3D Game</PackageTags>
     <PackageVersion>$(AssemblyVersion)</PackageVersion>

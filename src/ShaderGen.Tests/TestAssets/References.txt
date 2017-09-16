@@ -1,4 +1,4 @@
-﻿{appcontextbasedirectory}/ShaderGen.dll
+﻿{appcontextbasedirectory}/ShaderGen.Primitives.dll
 {nupkgdir}/microsoft.codeanalysis.csharp/2.3.2/lib/netstandard1.3/Microsoft.CodeAnalysis.CSharp.dll 
 {nupkgdir}/microsoft.codeanalysis.common/2.3.2/lib/netstandard1.3/Microsoft.CodeAnalysis.dll 
 {nupkgdir}/netstandard.library/2.0.0/build/netstandard2.0/ref/Microsoft.Win32.Primitives.dll 

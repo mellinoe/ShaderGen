@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Publish">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -6,7 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="ShaderGen.targets">
+    <Content Include="..\ShaderGen.Build\ShaderGen.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\ShaderGen.Build\ShaderGen.Build.SourceRef.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

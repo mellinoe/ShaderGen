@@ -6,8 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\ShaderGen.Attributes\ShaderGen.Attributes.csproj" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\ShaderGen.Attributes\ShaderGen.Primitives.csproj" />
   </ItemGroup>
 
 </Project>

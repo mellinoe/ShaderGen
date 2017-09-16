@@ -8,11 +8,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShaderGen.Tests", "ShaderGe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShaderGen.App", "ShaderGen.App\ShaderGen.App.csproj", "{C3DC24D3-98F7-4162-9D8D-822383A79668}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShaderGen.Attributes", "ShaderGen.Attributes\ShaderGen.Attributes.csproj", "{2DF9100D-B99D-4E6A-A3B2-3628044D151A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShaderGen.Primitives", "ShaderGen.Attributes\ShaderGen.Primitives.csproj", "{2DF9100D-B99D-4E6A-A3B2-3628044D151A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AppTest", "AppTest", "{12D59BC2-33E0-460F-A788-6514D8350F81}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TargetProject", "AppTest\TargetProject\TargetProject.csproj", "{10F1C4EA-7708-491A-81A4-20B356A4F6DD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShaderGen.Build", "ShaderGen.Build\ShaderGen.Build.csproj", "{F960509E-C4BF-4518-937E-98B96AF0757F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -84,6 +86,18 @@ Global
 		{10F1C4EA-7708-491A-81A4-20B356A4F6DD}.Release|x64.Build.0 = Release|Any CPU
 		{10F1C4EA-7708-491A-81A4-20B356A4F6DD}.Release|x86.ActiveCfg = Release|Any CPU
 		{10F1C4EA-7708-491A-81A4-20B356A4F6DD}.Release|x86.Build.0 = Release|Any CPU
+		{F960509E-C4BF-4518-937E-98B96AF0757F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F960509E-C4BF-4518-937E-98B96AF0757F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F960509E-C4BF-4518-937E-98B96AF0757F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F960509E-C4BF-4518-937E-98B96AF0757F}.Debug|x64.Build.0 = Debug|Any CPU
+		{F960509E-C4BF-4518-937E-98B96AF0757F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F960509E-C4BF-4518-937E-98B96AF0757F}.Debug|x86.Build.0 = Debug|Any CPU
+		{F960509E-C4BF-4518-937E-98B96AF0757F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F960509E-C4BF-4518-937E-98B96AF0757F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F960509E-C4BF-4518-937E-98B96AF0757F}.Release|x64.ActiveCfg = Release|Any CPU
+		{F960509E-C4BF-4518-937E-98B96AF0757F}.Release|x64.Build.0 = Release|Any CPU
+		{F960509E-C4BF-4518-937E-98B96AF0757F}.Release|x86.ActiveCfg = Release|Any CPU
+		{F960509E-C4BF-4518-937E-98B96AF0757F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

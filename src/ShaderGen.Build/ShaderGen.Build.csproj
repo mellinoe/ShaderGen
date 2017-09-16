@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk" >
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <PublishedToolPath>$([System.IO.Path]::GetFullPath('$(RepositoryRootDirectory)bin\$(Configuration)'))\ShaderGen.App\netcoreapp2.0\publish</PublishedToolPath>
+
+    <!-- Nuget info -->
+    <PackageId>ShaderGen.Build</PackageId>
+    <Description>$(PublishedToolPath)</Description>
+    <!--<Description>Build-time plugin which generates shader code during a post-build event.</Description>-->
+    <PackageTags>Shader GLSL HLSL SPIR-V Graphics OpenGL Vulkan Direct3D Game</PackageTags>
+    <PackageVersion>1.0.0</PackageVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="ShaderGen.Build.targets">
+      <Pack>true</Pack>
+      <PackagePath>build</PackagePath>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\ShaderGen.App\ShaderGen.App.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <SkipGetTargetFrameworkProperties>true</SkipGetTargetFrameworkProperties>
+    </ProjectReference>
+  </ItemGroup>
+
+</Project>
