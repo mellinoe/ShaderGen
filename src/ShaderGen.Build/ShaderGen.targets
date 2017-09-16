@@ -18,7 +18,6 @@
       <_SGArgs>$(_SGArgs) --out $(FragmentShaderOutput) $(ShaderOutputPath)</_SGArgs>
     </PropertyGroup>
 
-    <Message Text="_SGArgs: $(_SGArgs)" Importance="high" />
     <Exec Command="dotnet $(_SGExePath) $(_SGArgs)"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           StandardOutputImportance="high" />
