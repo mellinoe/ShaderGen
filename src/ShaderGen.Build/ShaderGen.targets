@@ -1,4 +1,8 @@
 ﻿<Project>
+  <PropertyGroup>
+    <_SGReferencesResponsePath>$(IntermediateOutputPath)_sgreferences.txt</_SGReferencesResponsePath>
+    <_SGSourcesResponsePath>$(IntermediateOutputPath)_sgsources.txt</_SGSourcesResponsePath>
+  </PropertyGroup>
   <Target Name="GenerateShaderCode" AfterTargets="AfterBuild">
     <Message Text="Generating shader code." />
 
