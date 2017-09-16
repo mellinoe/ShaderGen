@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using System.Collections.Generic;
 using System.IO;
 using Xunit;
 
@@ -27,7 +28,11 @@ namespace ShaderGen.Tests
                 fsName,
                 backend);
 
-            ShaderModel shaderModel = sg.GenerateShaders();
+            ShaderGenerationResult result = sg.GenerateShaders();
+            IReadOnlyList<GeneratedShaderSet> sets = result.GetOutput(backend);
+            Assert.Equal(1, sets.Count);
+            ShaderModel shaderModel = sets[0].Model;
+
             if (vsName != null)
             {
                 ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
@@ -63,7 +68,11 @@ namespace ShaderGen.Tests
                 fsName,
                 backend);
 
-            ShaderModel shaderModel = sg.GenerateShaders();
+            ShaderGenerationResult result = sg.GenerateShaders();
+            IReadOnlyList<GeneratedShaderSet> sets = result.GetOutput(backend);
+            Assert.Equal(1, sets.Count);
+            ShaderModel shaderModel = sets[0].Model;
+
             if (vsName != null)
             {
                 ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
@@ -99,7 +108,11 @@ namespace ShaderGen.Tests
                 fsName,
                 backend);
 
-            ShaderModel shaderModel = sg.GenerateShaders();
+            ShaderGenerationResult result = sg.GenerateShaders();
+            IReadOnlyList<GeneratedShaderSet> sets = result.GetOutput(backend);
+            Assert.Equal(1, sets.Count);
+            ShaderModel shaderModel = sets[0].Model;
+
             if (vsName != null)
             {
                 ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
@@ -121,8 +134,8 @@ namespace ShaderGen.Tests
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             using (TempFile fp = new TempFile())
             {
-                Microsoft.CodeAnalysis.Emit.EmitResult result = compilation.Emit(fp);
-                Assert.True(result.Success);
+                Microsoft.CodeAnalysis.Emit.EmitResult emitResult = compilation.Emit(fp);
+                Assert.True(emitResult.Success);
             }
 
             LanguageBackend backend = new Glsl450Backend(compilation);
@@ -132,7 +145,11 @@ namespace ShaderGen.Tests
                 fsName,
                 backend);
 
-            ShaderModel shaderModel = sg.GenerateShaders();
+            ShaderGenerationResult result = sg.GenerateShaders();
+            IReadOnlyList<GeneratedShaderSet> sets = result.GetOutput(backend);
+            Assert.Equal(1, sets.Count);
+            ShaderModel shaderModel = sets[0].Model;
+
             if (vsName != null)
             {
                 ShaderFunction vsFunction = shaderModel.GetFunction(vsName);

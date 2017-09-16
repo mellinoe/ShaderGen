@@ -25,7 +25,9 @@ namespace ShaderGen.Tests
 
     class ReferenceTypeField
     {
+#pragma warning disable 0649
         public object ReferenceField;
+#pragma warning restore 0649
 
         [VertexShader]
         public Position4Texture2 VS(PositionTexture input)

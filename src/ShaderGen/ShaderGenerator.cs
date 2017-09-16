@@ -4,11 +4,10 @@ using System.Collections.Generic;
 
 namespace ShaderGen
 {
-    public class ShaderGenerator
+    public partial class ShaderGenerator
     {
         private readonly Compilation _compilation;
-        private readonly TypeAndMethodName _vertexFunctionName;
-        private readonly TypeAndMethodName _fragmentFunctionName;
+        private readonly List<ShaderSetInfo> _shaderSets = new List<ShaderSetInfo>();
         private readonly List<LanguageBackend> _languages;
 
         public ShaderGenerator(
@@ -37,38 +36,117 @@ namespace ShaderGen
 
             _compilation = compilation;
             _languages = new List<LanguageBackend>(languages);
-            if (vertexFunctionName != null && !GetTypeAndMethodName(vertexFunctionName, out _vertexFunctionName))
+            TypeAndMethodName _vertexFunctionName = null;
+            if (vertexFunctionName != null
+                && !TypeAndMethodName.Get(vertexFunctionName, out _vertexFunctionName))
             {
                 throw new ShaderGenerationException(
                     $"The name passed to {nameof(vertexFunctionName)} must be a fully-qualified type and method.");
             }
-            if (fragmentFunctionName != null && !GetTypeAndMethodName(fragmentFunctionName, out _fragmentFunctionName))
+
+            TypeAndMethodName _fragmentFunctionName = null;
+            if (fragmentFunctionName != null
+                && !TypeAndMethodName.Get(fragmentFunctionName, out _fragmentFunctionName))
             {
                 throw new ShaderGenerationException(
                     $"The name passed to {nameof(fragmentFunctionName)} must be a fully-qualified type and method.");
             }
+
+            _shaderSets.Add(new ShaderSetInfo(
+                vertexFunctionName + "+" + fragmentFunctionName,
+                _vertexFunctionName,
+                _fragmentFunctionName));
         }
 
-        public ShaderModel GenerateShaders()
+        public ShaderGenerator(
+            Compilation compilation,
+            params LanguageBackend[] languages)
         {
-            HashSet<SyntaxTree> treesToVisit = new HashSet<SyntaxTree>();
-            if (_vertexFunctionName != null)
+            if (compilation == null)
             {
-                GetTrees(treesToVisit, _vertexFunctionName.TypeName);
+                throw new ArgumentNullException(nameof(compilation));
             }
-            if (_fragmentFunctionName != null)
+            if (languages == null)
             {
-                GetTrees(treesToVisit, _fragmentFunctionName.TypeName);
+                throw new ArgumentNullException(nameof(languages));
+            }
+            if (languages.Length == 0)
+            {
+                throw new ArgumentException("At least one LanguageBackend must be provided.");
             }
 
-            ShaderSyntaxWalker walker = null;
-            walker = new ShaderSyntaxWalker(_compilation, _languages.ToArray());
+            _compilation = compilation;
+            _languages = new List<LanguageBackend>(languages);
+
+            ShaderSetDiscoverer ssd = new ShaderSetDiscoverer();
+            foreach (SyntaxTree tree in _compilation.SyntaxTrees)
+            {
+                ssd.Visit(tree.GetRoot());
+            }
+
+            _shaderSets.AddRange(ssd.GetShaderSets());
+        }
+
+        public ShaderGenerationResult GenerateShaders()
+        {
+
+            if (_shaderSets.Count == 0)
+            {
+                throw new ShaderGenerationException("No shader sets were set to be generated.");
+            }
+
+            ShaderGenerationResult result = new ShaderGenerationResult();
+            foreach (ShaderSetInfo ss in _shaderSets)
+            {
+                GenerateShaders(ss, result);
+            }
+
+            return result;
+        }
+
+        private void GenerateShaders(ShaderSetInfo ss, ShaderGenerationResult result)
+        {
+            TypeAndMethodName vertexFunctionName = ss.VertexShader;
+            TypeAndMethodName fragmentFunctionName = ss.FragmentShader;
+
+            HashSet<SyntaxTree> treesToVisit = new HashSet<SyntaxTree>();
+            if (vertexFunctionName != null)
+            {
+                GetTrees(treesToVisit, vertexFunctionName.TypeName);
+            }
+            if (fragmentFunctionName != null)
+            {
+                GetTrees(treesToVisit, fragmentFunctionName.TypeName);
+            }
+
+            ShaderSyntaxWalker walker = new ShaderSyntaxWalker(_compilation, _languages.ToArray());
             foreach (SyntaxTree tree in treesToVisit)
             {
                 walker.Visit(tree.GetRoot());
             }
 
-            return walker.GetShaderModel();
+            ShaderModel model = walker.GetShaderModel();
+            ShaderFunction vsFunc = (ss.VertexShader != null)
+                ? model.GetFunction(ss.VertexShader.FullName)
+                : null;
+            ShaderFunction fsFunc = (ss.FragmentShader != null)
+                ? model.GetFunction(ss.FragmentShader.FullName)
+                : null;
+            foreach (LanguageBackend language in _languages)
+            {
+                string vsCode = null;
+                string fsCode = null;
+                if (vsFunc != null)
+                {
+                    vsCode = language.GetCode(vsFunc);
+                }
+                if (fsFunc != null)
+                {
+                    fsCode = language.GetCode(fsFunc);
+                }
+
+                result.AddShaderSet(language, new GeneratedShaderSet(ss.Name, vsCode, fsCode, model));
+            }
         }
 
         private void GetTrees(HashSet<SyntaxTree> treesToVisit, string typeName)
@@ -82,32 +160,6 @@ namespace ShaderGen
             {
                 treesToVisit.Add(syntaxRef.SyntaxTree);
             }
-        }
-
-        private static bool GetTypeAndMethodName(string fullName, out TypeAndMethodName typeAndMethodName)
-        {
-            string[] parts = fullName.Split(new[] { '.' });
-            if (parts.Length < 2)
-            {
-                typeAndMethodName = default(TypeAndMethodName);
-                return false;
-            }
-            string typeName = parts[0];
-            for (int i = 1; i < parts.Length - 1; i++)
-            {
-                typeName += "." + parts[i];
-            }
-
-            typeAndMethodName = new TypeAndMethodName { TypeName = typeName, MethodName = parts[parts.Length - 1] };
-            return true;
-        }
-
-        public class TypeAndMethodName
-        {
-            public string TypeName;
-            public string MethodName;
-
-            public string ToFullname => TypeName + "." + MethodName;
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
-using System.IO;
+using System.Collections.Generic;
 using TestShaders;
 using Xunit;
 
@@ -7,7 +7,6 @@ namespace ShaderGen.Tests
 {
     public class ShaderModelTests
     {
-
         [Fact]
         public void TestVertexShader_ShaderModel()
         {
@@ -19,7 +18,11 @@ namespace ShaderGen.Tests
                 functionName,
                 null,
                 backend);
-            ShaderModel shaderModel = sg.GenerateShaders();
+            ShaderGenerationResult genResult = sg.GenerateShaders();
+            IReadOnlyList<GeneratedShaderSet> sets = genResult.GetOutput(backend);
+            Assert.Equal(1, sets.Count);
+            ShaderModel shaderModel = sets[0].Model;
+
             Assert.Equal(2, shaderModel.Structures.Length);
             Assert.Equal(3, shaderModel.Resources.Length);
             ShaderFunction vsEntry = shaderModel.GetFunction(functionName);
@@ -40,7 +43,10 @@ namespace ShaderGen.Tests
                 functionName,
                 null,
                 backend);
-            ShaderModel shaderModel = sg.GenerateShaders();
+            ShaderGenerationResult genResult = sg.GenerateShaders();
+            IReadOnlyList<GeneratedShaderSet> sets = genResult.GetOutput(backend);
+            Assert.Equal(1, sets.Count);
+            ShaderModel shaderModel = sets[0].Model;
 
             StructureDefinition vsInput = shaderModel.GetStructureDefinition(nameof(TestShaders) + "." + nameof(PositionTexture));
             Assert.Equal(SemanticType.Position, vsInput.Fields[0].SemanticType);
@@ -63,7 +69,11 @@ namespace ShaderGen.Tests
                 null,
                 backend);
 
-            ShaderModel shaderModel = sg.GenerateShaders();
+            ShaderGenerationResult genResult = sg.GenerateShaders();
+            IReadOnlyList<GeneratedShaderSet> sets = genResult.GetOutput(backend);
+            Assert.Equal(1, sets.Count);
+            ShaderModel shaderModel = sets[0].Model;
+
             ShaderFunction entryFunction = shaderModel.GetFunction("VertexShaderFunc");
             string vsCode = backend.GetCode(entryFunction);
             FxcTool.AssertCompilesCode(vsCode, "vs_5_0", entryFunction.Name);

@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -96,10 +97,10 @@ namespace ShaderGen.App
             };
 
             ShaderGenerator sg = new ShaderGenerator(compilation, vertexShaderName, fragmentShaderName, languages);
-            ShaderModel model;
+            ShaderGenerationResult shaderGenResult;
             try
             {
-                model = sg.GenerateShaders();
+                shaderGenResult = sg.GenerateShaders();
             }
             catch (Exception e)
             {
@@ -110,23 +111,40 @@ namespace ShaderGen.App
                 return -1;
             }
 
-            if (vertexShaderName != null)
+            foreach (LanguageBackend lang in languages)
             {
-                ShaderFunction vsFunc = model.GetFunction(vertexShaderName);
-                File.WriteAllText($"{vertexShaderOutputName}.hlsl", hlsl.GetCode(vsFunc));
-                File.WriteAllText($"{vertexShaderOutputName}.glsl330", glsl330.GetCode(vsFunc));
-                File.WriteAllText($"{vertexShaderOutputName}.glsl450", glsl450.GetCode(vsFunc));
-            }
-
-            if (fragmentShaderName != null)
-            {
-                ShaderFunction fsFunc = model.GetFunction(fragmentShaderName);
-                File.WriteAllText($"{vertexShaderOutputName}.hlsl", hlsl.GetCode(fsFunc));
-                File.WriteAllText($"{vertexShaderOutputName}.glsl330", glsl330.GetCode(fsFunc));
-                File.WriteAllText($"{vertexShaderOutputName}.glsl450", glsl450.GetCode(fsFunc));
+                IReadOnlyList<GeneratedShaderSet> sets = shaderGenResult.GetOutput(lang);
+                Debug.Assert(sets.Count == 1);
+                GeneratedShaderSet set = sets[0];
+                if (vertexShaderName != null)
+                {
+                    File.WriteAllText($"{vertexShaderOutputName}.{BackendExtension(lang)}", set.VertexShaderCode);
+                }
+                if (fragmentShaderName != null)
+                {
+                    File.WriteAllText($"{fragmentShaderName}.{BackendExtension(lang)}", set.FragmentShaderCode);
+                }
             }
 
             return 0;
+        }
+
+        private static string BackendExtension(LanguageBackend lang)
+        {
+            if (lang.GetType() == typeof(HlslBackend))
+            {
+                return "hlsl";
+            }
+            else if (lang.GetType() == typeof(Glsl330Backend))
+            {
+                return "glsl330";
+            }
+            else if (lang.GetType() == typeof(Glsl450Backend))
+            {
+                return "glsl450";
+            }
+
+            throw new InvalidOperationException("Invalid backend type: " + lang.GetType().Name);
         }
     }
 }
