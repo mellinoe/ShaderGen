@@ -1,0 +1,29 @@
+#version 450
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
+struct TargetProject_VertexAndFragment_VertexInput
+{
+    vec3 Position;
+};
+
+struct TargetProject_VertexAndFragment_FragmentInput
+{
+    vec4 Position;
+};
+
+vec4 FS(TargetProject_VertexAndFragment_FragmentInput input_)
+{
+    return vec4(input_.Position.x, input_.Position.y, input_.Position.z, 1);
+}
+
+
+layout(location = 0) in vec4 Position;
+layout(location = 0) out vec4 _outputColor_;
+
+void main()
+{
+    TargetProject_VertexAndFragment_FragmentInput input_;
+    input_.Position = Position;
+    vec4 output_ = FS(input_);
+    _outputColor_ = output_;
+}

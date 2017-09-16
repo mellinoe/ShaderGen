@@ -6,8 +6,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="ShaderGen.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ShaderGen\ShaderGen.csproj" />
-    <PackageReference Include="System.CommandLine" Version="0.1.0-e170912-3" />
+    <PackageReference Include="System.CommandLine" Version="0.1.0-e170407-3" />
   </ItemGroup>
 
 </Project>

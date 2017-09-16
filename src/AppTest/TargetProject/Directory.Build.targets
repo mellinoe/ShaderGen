@@ -1,0 +1,4 @@
+<Project>
+  <Import Project="..\..\..\bin\$(Configuration)\ShaderGen.App\netcoreapp2.0\ShaderGen.targets"
+          Condition="Exists('..\..\..\bin\$(Configuration)\ShaderGen.App\netcoreapp2.0\ShaderGen.targets')" />
+</Project>

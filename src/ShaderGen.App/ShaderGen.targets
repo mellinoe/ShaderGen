@@ -1,0 +1,28 @@
+﻿<Project>
+  <PropertyGroup>
+    <_SGExePath>$(MSBuildThisFileDirectory)ShaderGen.App.dll</_SGExePath>
+    <_SGReferencesResponsePath>$(IntermediateOutputPath)_sgreferences.txt</_SGReferencesResponsePath>
+    <_SGSourcesResponsePath>$(IntermediateOutputPath)_sgsources.txt</_SGSourcesResponsePath>
+  </PropertyGroup>
+
+  <Target Name="GenerateShaderCode" AfterTargets="AfterBuild">
+    <Message Text="Generating shader code." />
+    
+    <WriteLinesToFile Lines="@(ReferencePath)" File="$(_SGReferencesResponsePath)" Overwrite="true" />
+    <WriteLinesToFile Lines="@(Compile)" File="$(_SGSourcesResponsePath)" Overwrite="true" />
+
+    <PropertyGroup>
+      <_SGArgs>$(_SGArgs) --ref "$(_SGReferencesResponsePath)"</_SGArgs>
+      <_SGArgs>$(_SGArgs) --src "$(_SGSourcesResponsePath)"</_SGArgs>
+      <_SGArgs>$(_SGArgs) --vs $(VertexShaderName)</_SGArgs>
+      <_SGArgs>$(_SGArgs) --vsout $(VertexShaderOutput)</_SGArgs>
+      <_SGArgs>$(_SGArgs) --fs $(FragmentShaderName)</_SGArgs>
+      <_SGArgs>$(_SGArgs) --fsout $(FragmentShaderOutput)</_SGArgs>
+    </PropertyGroup>
+
+    <Message Text="_SGArgs: $(_SGArgs)" Importance="high" />
+    <Exec Command="dotnet $(_SGExePath) $(_SGArgs)"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          StandardOutputImportance="high" />
+  </Target>
+</Project>
