@@ -11,10 +11,7 @@ namespace TestShaders
             [VertexSemantic(SemanticType.Color)] public Vector4 Color;
         }
 
-        [Resource]
         public Matrix4x4 First;
-
-        [Resource]
         public Matrix4x4 Second;
     }
 }

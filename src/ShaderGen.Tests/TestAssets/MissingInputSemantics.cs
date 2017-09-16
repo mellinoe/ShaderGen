@@ -6,13 +6,8 @@ namespace TestShaders
 {
     public class MissingInputSemantics
     {
-        [Resource]
         public Matrix4x4 World;
-
-        [Resource]
         public Matrix4x4 View;
-
-        [Resource]
         public Matrix4x4 Projection;
 
         // Not a real uniform.

@@ -6,17 +6,9 @@ namespace TestShaders
 {
     public class TestVertexShader
     {
-        [Resource]
         public Matrix4x4 World;
-
-        [Resource]
         public Matrix4x4 View;
-
-        [Resource]
         public Matrix4x4 Projection;
-
-        // Not a real uniform.
-        public Matrix4x4 NotARealUniformField;
 
         [VertexShader]
         public VertexOutput VS(PositionTexture input)

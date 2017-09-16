@@ -191,24 +191,40 @@ namespace ShaderGen
 
         public override void VisitVariableDeclaration(VariableDeclarationSyntax node)
         {
-            if (GetResourceDecl(node, out AttributeSyntax resourceAttr))
+            int resourceBinding = _lastResourceBinding++;
+
+            if (node.Variables.Count != 1)
             {
-                int resourceBinding = _lastResourceBinding++;
+                throw new ShaderGenerationException("Cannot declare multiple variables together.");
+            }
 
-                if (node.Variables.Count != 1)
+            VariableDeclaratorSyntax vds = node.Variables[0];
+
+            string resourceName = vds.Identifier.Text;
+            TypeInfo typeInfo = GetModel(node).GetTypeInfo(node.Type);
+            string fullTypeName = GetModel(node).GetFullTypeName(node.Type);
+            TypeReference tr = new TypeReference(fullTypeName);
+            ShaderResourceKind kind = ClassifyResourceKind(fullTypeName);
+            ResourceDefinition rd = new ResourceDefinition(resourceName, resourceBinding, tr, kind);
+            if (kind == ShaderResourceKind.Uniform)
+            {
+                ValidateResourceType(typeInfo);
+            }
+
+            foreach (LanguageBackend b in _backends) { b.AddResource(rd); }
+        }
+
+        private void ValidateResourceType(TypeInfo typeInfo)
+        {
+            string name = typeInfo.Type.ToDisplayString();
+            if (name != nameof(ShaderGen) + "." + nameof(Texture2DResource)
+                && name != nameof(ShaderGen) + "." + nameof(TextureCubeResource)
+                && name != nameof(ShaderGen) + "." + nameof(SamplerResource))
+            {
+                if (typeInfo.Type.IsReferenceType)
                 {
-                    throw new ShaderGenerationException("Cannot declare multiple ResourceAttribute variables together.");
+                    throw new ShaderGenerationException("Shader resource fields must be simple blittable structures.");
                 }
-
-                VariableDeclaratorSyntax vds = node.Variables[0];
-
-                string resourceName = vds.Identifier.Text;
-                TypeInfo typeInfo = GetModel(node).GetTypeInfo(node.Type);
-                string fullTypeName = GetModel(node).GetFullTypeName(node.Type);
-                TypeReference tr = new TypeReference(fullTypeName);
-                ShaderResourceKind kind = ClassifyResourceKind(fullTypeName);
-                ResourceDefinition rd = new ResourceDefinition(resourceName, resourceBinding, tr, kind);
-                foreach (LanguageBackend b in _backends) { b.AddResource(rd); }
             }
         }
 
@@ -230,13 +246,6 @@ namespace ShaderGen
             {
                 return ShaderResourceKind.Uniform;
             }
-        }
-
-        private bool GetResourceDecl(VariableDeclarationSyntax node, out AttributeSyntax attr)
-        {
-            attr = (node.Parent.DescendantNodes().OfType<AttributeSyntax>().FirstOrDefault(
-                attrSyntax => attrSyntax.ToString().Contains("Resource")));
-            return attr != null;
         }
     }
 }

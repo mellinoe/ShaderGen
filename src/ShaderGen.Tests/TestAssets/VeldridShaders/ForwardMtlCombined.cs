@@ -7,22 +7,22 @@ namespace TestShaders.VeldridShaders
 {
     public class ForwardMtlCombined
     {
-        [Resource] public Matrix4x4 Projection;
-        [Resource] public Matrix4x4 View;
-        [Resource] public Matrix4x4 World;
-        [Resource] public Matrix4x4 InverseTransposeWorld;
-        [Resource] public Matrix4x4 LightProjection;
-        [Resource] public Matrix4x4 LightView;
-        [Resource] public LightInfoBuffer LightInfo;
-        [Resource] public CameraInfoBuffer CameraInfo;
-        [Resource] public PointLightsBuffer PointLights;
-        [Resource] public MaterialPropertiesBuffer MaterialProperties;
-        [Resource] public Texture2DResource SurfaceTexture;
-        [Resource] public SamplerResource RegularSampler;
-        [Resource] public Texture2DResource AlphaMap;
-        [Resource] public SamplerResource AlphaMapSampler;
-        [Resource] public Texture2DResource ShadowMap;
-        [Resource] public SamplerResource ShadowMapSampler;
+        public Matrix4x4 Projection;
+        public Matrix4x4 View;
+        public Matrix4x4 World;
+        public Matrix4x4 InverseTransposeWorld;
+        public Matrix4x4 LightProjection;
+        public Matrix4x4 LightView;
+        public LightInfoBuffer LightInfo;
+        public CameraInfoBuffer CameraInfo;
+        public PointLightsBuffer PointLights;
+        public MaterialPropertiesBuffer MaterialProperties;
+        public Texture2DResource SurfaceTexture;
+        public SamplerResource RegularSampler;
+        public Texture2DResource AlphaMap;
+        public SamplerResource AlphaMapSampler;
+        public Texture2DResource ShadowMap;
+        public SamplerResource ShadowMapSampler;
 
         public struct LightInfoBuffer
         {

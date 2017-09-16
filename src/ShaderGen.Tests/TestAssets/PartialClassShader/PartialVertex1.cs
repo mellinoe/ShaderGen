@@ -11,7 +11,6 @@ namespace TestShaders
             [VertexSemantic(SemanticType.Color)] public Vector4 Color;
         }
 
-        [Resource]
         public SamplerResource Sampler;
 
         [VertexShader]
