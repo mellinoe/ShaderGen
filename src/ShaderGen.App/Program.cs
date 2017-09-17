@@ -131,17 +131,60 @@ namespace ShaderGen.App
                         string vsOutName = name + "-vertex." + extension;
                         string vsOutPath = Path.Combine(outputPath, vsOutName);
                         File.WriteAllText(vsOutPath, set.VertexShaderCode);
+                        CompileCode(lang, vsOutPath, set.VertexFunction.Name, true);
                     }
                     if (set.FragmentShaderCode != null)
                     {
                         string fsOutName = name + "-fragment." + extension;
                         string fsOutPath = Path.Combine(outputPath, fsOutName);
                         File.WriteAllText(fsOutPath, set.FragmentShaderCode);
+                        CompileCode(lang, fsOutPath, set.FragmentFunction.Name, false);
                     }
                 }
             }
 
             return 0;
+        }
+
+        private static void CompileCode(LanguageBackend lang, string shaderPath, string entryPoint, bool isVertex)
+        {
+            Type langType = lang.GetType();
+            if (langType == typeof(HlslBackend))
+            {
+                CompileHlsl(shaderPath, entryPoint, isVertex);
+            }
+            else if (langType == typeof(Glsl450Backend))
+            {
+                CompileSpirv(shaderPath, entryPoint, isVertex);
+            }
+        }
+
+        private static void CompileHlsl(string shaderPath, string entryPoint, bool isVertex)
+        {
+            string outputPath = shaderPath + ".bytes";
+            string args = $"/T {(isVertex ? "vs_5_0" : "ps_5_0")} /E {entryPoint} {shaderPath} /Fo {outputPath}";
+            try
+            {
+                Process.Start("fxc", args).WaitForExit();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Failed to compile HLSL bytecode: " + e);
+            }
+        }
+
+        private static void CompileSpirv(string shaderPath, string entryPoint, bool isVertex)
+        {
+            string outputPath = shaderPath + ".spv";
+            string args = $"-V -S {(isVertex ? "vert" : "frag")} {shaderPath} -o {outputPath}";
+            try
+            {
+                Process.Start("glslangvalidator", args).WaitForExit();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Failed to compile SPIR-V bytecode: " + e);
+            }
         }
 
         private static string BackendExtension(LanguageBackend lang)

@@ -156,7 +156,7 @@ namespace ShaderGen
                         fsCode = language.GetCode(ss.Name, fsFunc);
                     }
 
-                    result.AddShaderSet(language, new GeneratedShaderSet(ss.Name, vsCode, fsCode, model));
+                    result.AddShaderSet(language, new GeneratedShaderSet(ss.Name, vsCode, fsCode, vsFunc, fsFunc, model));
                 }
             }
         }

@@ -13,9 +13,17 @@ namespace ShaderGen
         public string Name { get; }
         public string VertexShaderCode { get; }
         public string FragmentShaderCode { get; }
+        public ShaderFunction VertexFunction { get; }
+        public ShaderFunction FragmentFunction { get; }
         public ShaderModel Model { get; }
 
-        public GeneratedShaderSet(string name, string vsCode, string fsCode, ShaderModel model)
+        public GeneratedShaderSet(
+            string name,
+            string vsCode,
+            string fsCode,
+            ShaderFunction vertexfunction,
+            ShaderFunction fragmentFunction,
+            ShaderModel model)
         {
             if (string.IsNullOrEmpty(vsCode) && string.IsNullOrEmpty(fsCode))
             {
@@ -25,6 +33,8 @@ namespace ShaderGen
             Name = name;
             VertexShaderCode = vsCode;
             FragmentShaderCode = fsCode;
+            VertexFunction = vertexfunction;
+            FragmentFunction = fragmentFunction;
             Model = model;
         }
     }
