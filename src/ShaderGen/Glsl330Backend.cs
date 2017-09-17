@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Microsoft.CodeAnalysis;
+using System.Diagnostics;
 
 namespace ShaderGen
 {
@@ -48,12 +49,24 @@ namespace ShaderGen
         protected override void WriteInOutVariable(
             StringBuilder sb,
             bool isInVar,
+            bool isVertexStage,
             string normalizedType,
             string normalizedIdentifier,
             int index)
         {
             string qualifier = isInVar ? "in" : "out";
-            sb.AppendLine($"{qualifier} {normalizedType} {normalizedIdentifier};");
+            string identifier;
+            if ((isVertexStage && isInVar) || (!isVertexStage && !isInVar))
+            {
+                identifier = normalizedIdentifier;
+            }
+            else
+            {
+                Debug.Assert(isVertexStage || isInVar);
+                identifier = $"fsin_{index}";
+            }
+
+            sb.AppendLine($"{qualifier} {normalizedType} {identifier};");
         }
     }
 }

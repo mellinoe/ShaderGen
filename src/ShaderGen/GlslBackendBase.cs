@@ -106,18 +106,31 @@ namespace ShaderGen
                 ? GetRequiredStructureType(setName, entryFunction.ReturnType)
                 : null; // Hacky but meh
 
+            // Declare "in" variables
             int inVarIndex = 0;
+            string fragCoordName = null;
             foreach (FieldDefinition field in inputType.Fields)
             {
-                WriteInOutVariable(
-                    sb,
-                    true,
-                    CSharpToShaderType(field.Type.Name),
-                    CorrectIdentifier(field.Name),
-                    inVarIndex);
-                inVarIndex += 1;
+                if (entryFunction.Type == ShaderFunctionType.FragmentEntryPoint
+                    && fragCoordName == null
+                    && field.SemanticType == SemanticType.Position)
+                {
+                    fragCoordName = field.Name;
+                }
+                else
+                {
+                    WriteInOutVariable(
+                        sb,
+                        true,
+                        entryFunction.Type == ShaderFunctionType.VertexEntryPoint,
+                        CSharpToShaderType(field.Type.Name),
+                        CorrectIdentifier(field.Name),
+                        inVarIndex);
+                    inVarIndex += 1;
+                }
             }
 
+            // Declare "out" variables
             if (entryFunction.Type == ShaderFunctionType.VertexEntryPoint)
             {
                 bool skippedFirstPositionSemantic = false;
@@ -134,6 +147,7 @@ namespace ShaderGen
                         WriteInOutVariable(
                             sb,
                             false,
+                            true,
                             CSharpToShaderType(field.Type.Name),
                             "out_" + CorrectIdentifier(field.Name),
                             outVarIndex);
@@ -150,7 +164,7 @@ namespace ShaderGen
                     throw new ShaderGenerationException("Fragment shader must return a System.Numerics.Vector4 value.");
                 }
 
-                WriteInOutVariable(sb, false, "vec4", "_outputColor_", 0);
+                WriteInOutVariable(sb, false, false, "vec4", "_outputColor_", 0);
             }
 
             sb.AppendLine();
@@ -161,15 +175,38 @@ namespace ShaderGen
             sb.AppendLine($"void main()");
             sb.AppendLine("{");
             sb.AppendLine($"    {inTypeName} {CorrectIdentifier("input")};");
+
+            // Assign synthetic "in" variables (with real field name) to structure passed to actual function.
+            int inoutIndex = 0;
+            bool foundSystemPosition = false;
             foreach (FieldDefinition field in inputType.Fields)
             {
-                sb.AppendLine($"    {CorrectIdentifier("input")}.{CorrectIdentifier(field.Name)} = {CorrectIdentifier(field.Name)};");
+                if (entryFunction.Type == ShaderFunctionType.VertexEntryPoint)
+                {
+                    sb.AppendLine($"    {CorrectIdentifier("input")}.{CorrectIdentifier(field.Name)} = {CorrectIdentifier(field.Name)};");
+                }
+                else
+                {
+                    if (field.SemanticType == SemanticType.Position && !foundSystemPosition)
+                    {
+                        Debug.Assert(field.Name == fragCoordName);
+                        foundSystemPosition = true;
+                        sb.AppendLine($"    {CorrectIdentifier("input")}.{CorrectIdentifier(field.Name)} = gl_FragCoord;");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"    {CorrectIdentifier("input")}.{CorrectIdentifier(field.Name)} = fsin_{inoutIndex++};");
+                    }
+                }
             }
 
+            // Call actual function.
             sb.AppendLine($"    {outTypeName} {CorrectIdentifier("output")} = {entryFunction.Name}({CorrectIdentifier("input")});");
 
+            // Assign output fields to synthetic "out" variables with normalized "fsin_#" names.
             if (entryFunction.Type == ShaderFunctionType.VertexEntryPoint)
             {
+                inoutIndex = 0;
                 FieldDefinition positionSemanticField = null;
                 foreach (FieldDefinition field in outputType.Fields)
                 {
@@ -179,7 +216,7 @@ namespace ShaderGen
                     }
                     else
                     {
-                        sb.AppendLine($"    out_{CorrectIdentifier(field.Name)} = {CorrectIdentifier("output")}.{CorrectIdentifier(field.Name)};");
+                        sb.AppendLine($"    fsin_{inoutIndex++} = {CorrectIdentifier("output")}.{CorrectIdentifier(field.Name)};");
                     }
                 }
 
@@ -224,6 +261,12 @@ namespace ShaderGen
         protected abstract void WriteSampler(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteTexture2D(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteTextureCube(StringBuilder sb, ResourceDefinition rd);
-        protected abstract void WriteInOutVariable(StringBuilder sb, bool isInVar, string normalizedType, string normalizedIdentifier, int index);
+        protected abstract void WriteInOutVariable(
+            StringBuilder sb,
+            bool isInVar,
+            bool isVertexStage,
+            string normalizedType,
+            string normalizedIdentifier,
+            int index);
     }
 }

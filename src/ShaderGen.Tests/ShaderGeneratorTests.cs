@@ -132,8 +132,8 @@ namespace ShaderGen.Tests
 
         public void DummyTest()
         {
-            string vsName = "TestShaders.VeldridShaders.ForwardMtlCombined.VS";
-            string fsName = "TestShaders.VeldridShaders.ForwardMtlCombined.FS";
+            string vsName = "TestShaders.VeldridShaders.VertexAndFragment.VS";
+            string fsName = "TestShaders.VeldridShaders.VertexAndFragment.FS";
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             using (TempFile fp = new TempFile())
             {
