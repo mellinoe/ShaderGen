@@ -68,5 +68,10 @@ namespace ShaderGen
 
             sb.AppendLine($"{qualifier} {normalizedType} {identifier};");
         }
+
+        protected override void EmitGlPositionCorrection(StringBuilder sb)
+        {
+            sb.AppendLine($"        gl_Position.z = gl_Position.z * 2.0 - gl_Position.w;");
+        }
     }
 }

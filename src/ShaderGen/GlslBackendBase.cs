@@ -227,6 +227,7 @@ namespace ShaderGen
                 }
 
                 sb.AppendLine($"    gl_Position = {CorrectIdentifier("output")}.{CorrectIdentifier(positionSemanticField.Name)};");
+                EmitGlPositionCorrection(sb);
             }
             else
             {
@@ -268,5 +269,6 @@ namespace ShaderGen
             string normalizedType,
             string normalizedIdentifier,
             int index);
+        protected abstract void EmitGlPositionCorrection(StringBuilder sb);
     }
 }
