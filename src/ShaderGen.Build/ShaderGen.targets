@@ -1,9 +1,12 @@
 ﻿<Project>
+
   <PropertyGroup>
     <_SGReferencesResponsePath>$(IntermediateOutputPath)_sgreferences.txt</_SGReferencesResponsePath>
     <_SGSourcesResponsePath>$(IntermediateOutputPath)_sgsources.txt</_SGSourcesResponsePath>
+    <_SGGeneratedFilesList>$(IntermediateOutputPath)_sggeneratedfiles.txt</_SGGeneratedFilesList>
   </PropertyGroup>
-  <Target Name="GenerateShaderCode" AfterTargets="AfterBuild">
+
+  <Target Name="GenerateShaderCode" AfterTargets="ResolveReferences">
     <Message Text="Generating shader code." />
 
     <Error Condition="'$(_SGExePath)' == ''" Text="The ShaderGen tool was not located or set." />
@@ -15,11 +18,28 @@
     <PropertyGroup>
       <_SGArgs>$(_SGArgs) --ref "$(_SGReferencesResponsePath)"</_SGArgs>
       <_SGArgs>$(_SGArgs) --src "$(_SGSourcesResponsePath)"</_SGArgs>
-      <_SGArgs>$(_SGArgs) --out $(FragmentShaderOutput) $(ShaderOutputPath)</_SGArgs>
+      <_SGArgs>$(_SGArgs) --out $(ShaderOutputPath)</_SGArgs>
+      <_SGArgs>$(_SGArgs) --genlist $(_SGGeneratedFilesList)</_SGArgs>
+      <_SGArgs Condition="'$(ListAllShaderPaths)' == 'true'">$(_SGArgs) --listall</_SGArgs>
     </PropertyGroup>
+
+    <Delete Files="$(_SGGeneratedFilesList)" Condition="Exists($(_SGGeneratedFilesList))" ContinueOnError="true" />
 
     <Exec Command="dotnet $(_SGExePath) $(_SGArgs)"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           StandardOutputImportance="high" />
+
+    <ReadLinesFromFile
+      Condition="Exists($(_SGGeneratedFilesList))"
+      File="$(_SGGeneratedFilesList)">
+      <Output 
+          TaskParameter="Lines"
+          ItemName="GeneratedShader" />
+    </ReadLinesFromFile>
+
+    <CallTarget Condition="'@(ShaderGenPostTargets)' != ''"
+                Targets="@(ShaderGenPostTargets)" />
+
   </Target>
+
 </Project>

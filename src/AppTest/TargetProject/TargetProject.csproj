@@ -3,14 +3,20 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <ShaderOutputPath>$(OutputPath)</ShaderOutputPath>
+    <ListAllShaderPaths>true</ListAllShaderPaths>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
+    <ShaderGenPostTargets Include="PostShaderGen" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\ShaderGen.Primitives\ShaderGen.Primitives.csproj" />
   </ItemGroup>
+
+  <Target Name="PostShaderGen">
+    <Message Text="I am a post-gen target." Importance="high" />
+  </Target>
 
 </Project>

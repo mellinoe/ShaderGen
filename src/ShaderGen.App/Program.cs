@@ -17,6 +17,8 @@ namespace ShaderGen.App
             string referenceItemsResponsePath = null;
             string compileItemsResponsePath = null;
             string outputPath = null;
+            string genListFilePath = null;
+            bool listAllFiles = false;
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -28,6 +30,8 @@ namespace ShaderGen.App
                 syntax.DefineOption("ref", ref referenceItemsResponsePath, true, "The semicolon-separated list of references to compile against.");
                 syntax.DefineOption("src", ref compileItemsResponsePath, true, "The semicolon-separated list of source files to compile.");
                 syntax.DefineOption("out", ref outputPath, true, "The output path for the generated shaders.");
+                syntax.DefineOption("genlist", ref genListFilePath, true, "The output file to store the list of generated files.");
+                syntax.DefineOption("listall", ref listAllFiles, false, "Forces all generated files to be listed in the list file. By default, only bytecode files will be listed and not the original shader code.");
             });
 
             if (!File.Exists(referenceItemsResponsePath))
@@ -119,6 +123,7 @@ namespace ShaderGen.App
                 return -1;
             }
 
+            List<string> generatedFilePaths = new List<string>();
             foreach (LanguageBackend lang in languages)
             {
                 string extension = BackendExtension(lang);
@@ -131,60 +136,94 @@ namespace ShaderGen.App
                         string vsOutName = name + "-vertex." + extension;
                         string vsOutPath = Path.Combine(outputPath, vsOutName);
                         File.WriteAllText(vsOutPath, set.VertexShaderCode);
-                        CompileCode(lang, vsOutPath, set.VertexFunction.Name, true);
+                        bool succeeded = CompileCode(lang, vsOutPath, set.VertexFunction.Name, true, out string genPath);
+                        if (succeeded)
+                        {
+                            generatedFilePaths.Add(genPath);
+                        }
+                        if (!succeeded || listAllFiles)
+                        {
+                            generatedFilePaths.Add(vsOutPath);
+                        }
                     }
                     if (set.FragmentShaderCode != null)
                     {
                         string fsOutName = name + "-fragment." + extension;
                         string fsOutPath = Path.Combine(outputPath, fsOutName);
                         File.WriteAllText(fsOutPath, set.FragmentShaderCode);
-                        CompileCode(lang, fsOutPath, set.FragmentFunction.Name, false);
+                        bool succeeded = CompileCode(lang, fsOutPath, set.FragmentFunction.Name, false, out string genPath);
+                        if (succeeded)
+                        {
+                            generatedFilePaths.Add(genPath);
+                        }
+                        if (!succeeded || listAllFiles)
+                        {
+                            generatedFilePaths.Add(fsOutPath);
+                        }
                     }
                 }
             }
 
+            File.WriteAllLines(genListFilePath, generatedFilePaths);
+
             return 0;
         }
 
-        private static void CompileCode(LanguageBackend lang, string shaderPath, string entryPoint, bool isVertex)
+        private static bool CompileCode(LanguageBackend lang, string shaderPath, string entryPoint, bool isVertex, out string path)
         {
             Type langType = lang.GetType();
             if (langType == typeof(HlslBackend))
             {
-                CompileHlsl(shaderPath, entryPoint, isVertex);
+                return CompileHlsl(shaderPath, entryPoint, isVertex, out path);
             }
             else if (langType == typeof(Glsl450Backend))
             {
-                CompileSpirv(shaderPath, entryPoint, isVertex);
+                return CompileSpirv(shaderPath, entryPoint, isVertex, out path);
+            }
+
+            else
+            {
+                path = null;
+                return false;
             }
         }
 
-        private static void CompileHlsl(string shaderPath, string entryPoint, bool isVertex)
+        private static bool CompileHlsl(string shaderPath, string entryPoint, bool isVertex, out string path)
         {
             string outputPath = shaderPath + ".bytes";
             string args = $"/T {(isVertex ? "vs_5_0" : "ps_5_0")} /E {entryPoint} {shaderPath} /Fo {outputPath}";
             try
             {
                 Process.Start("fxc", args).WaitForExit();
+                path = outputPath;
+                return true;
             }
             catch (Exception e)
             {
                 Console.WriteLine("Failed to compile HLSL bytecode: " + e);
             }
+
+            path = null;
+            return false;
         }
 
-        private static void CompileSpirv(string shaderPath, string entryPoint, bool isVertex)
+        private static bool CompileSpirv(string shaderPath, string entryPoint, bool isVertex, out string path)
         {
             string outputPath = shaderPath + ".spv";
             string args = $"-V -S {(isVertex ? "vert" : "frag")} {shaderPath} -o {outputPath}";
             try
             {
                 Process.Start("glslangvalidator", args).WaitForExit();
+                path = outputPath;
+                return true;
             }
             catch (Exception e)
             {
                 Console.WriteLine("Failed to compile SPIR-V bytecode: " + e);
             }
+
+            path = null;
+            return false;
         }
 
         private static string BackendExtension(LanguageBackend lang)
