@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace ShaderGen.App
@@ -190,11 +191,12 @@ namespace ShaderGen.App
 
         private static bool CompileHlsl(string shaderPath, string entryPoint, bool isVertex, out string path)
         {
-            string outputPath = shaderPath + ".bytes";
-            string args = $"/T {(isVertex ? "vs_5_0" : "ps_5_0")} /E {entryPoint} {shaderPath} /Fo {outputPath}";
             try
             {
-                Process.Start("fxc", args).WaitForExit();
+                string outputPath = shaderPath + ".bytes";
+                string args = $"/T {(isVertex ? "vs_5_0" : "ps_5_0")} /E {entryPoint} {shaderPath} /Fo {outputPath}";
+                string fxcPath = FindFxcExe();
+                Process.Start(fxcPath, args).WaitForExit();
                 path = outputPath;
                 return true;
             }
@@ -242,6 +244,22 @@ namespace ShaderGen.App
             }
 
             throw new InvalidOperationException("Invalid backend type: " + lang.GetType().Name);
+        }
+
+        private static string FindFxcExe()
+        {
+            const string WindowsKitsFolder = @"C:\Program Files (x86)\Windows Kits";
+            IEnumerable<string> paths = Directory.EnumerateFiles(
+                WindowsKitsFolder,
+                "fxc.exe",
+                SearchOption.AllDirectories);
+            string path = paths.FirstOrDefault(s => !s.Contains("arm"));
+            if (path == null)
+            {
+                throw new FileNotFoundException("Couldn't locate fxc.exe.");
+            }
+
+            return path;
         }
     }
 }
