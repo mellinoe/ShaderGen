@@ -52,10 +52,22 @@ namespace ShaderGen
                     $"The name passed to {nameof(fragmentFunctionName)} must be a fully-qualified type and method.");
             }
 
-            string setName = vertexFunctionName;
-            if (fragmentFunctionName != null)
+            string setName = string.Empty;
+
+            if (vertexFunctionName != null)
             {
-                setName += "+" + fragmentFunctionName;
+                setName = vertexFunctionName;
+                if (fragmentFunctionName != null)
+                {
+                    if (setName == string.Empty)
+                    {
+                        setName = fragmentFunctionName;
+                    }
+                    else
+                    {
+                        setName += "+" + fragmentFunctionName;
+                    }
+                }
             }
 
             _shaderSets.Add(new ShaderSetInfo(

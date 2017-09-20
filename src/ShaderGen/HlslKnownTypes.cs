@@ -6,6 +6,8 @@ namespace ShaderGen
     {
         private static readonly Dictionary<string, string> s_knownTypes = new Dictionary<string, string>()
         {
+            { "System.Int32", "int" },
+            { "System.Single", "float" },
             { "System.Numerics.Vector2", "float2" },
             { "System.Numerics.Vector3", "float3" },
             { "System.Numerics.Vector4", "float4" },

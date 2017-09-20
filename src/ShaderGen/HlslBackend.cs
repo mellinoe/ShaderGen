@@ -21,7 +21,8 @@ namespace ShaderGen
         protected override string CSharpToShaderTypeCore(string fullType)
         {
             return HlslKnownTypes.GetMappedName(fullType)
-                .Replace(".", "_");
+                .Replace(".", "_")
+                .Replace("+", "_");
         }
 
         protected void WriteStructure(StringBuilder sb, StructureDefinition sd)

@@ -50,16 +50,47 @@ namespace ShaderGen
         internal ShaderModel GetShaderModel(string setName)
         {
             BackendContext context = GetContext(setName);
+
             // HACK: Discover all method input structures.
             foreach (ShaderFunctionAndBlockSyntax sf in context.Functions.ToArray())
             {
                 GetCode(setName, sf.Function);
             }
-      
+
+            foreach (ResourceDefinition rd in context.Resources.Where(rd => rd.ResourceKind == ShaderResourceKind.Uniform))
+            {
+                ForceTypeDiscovery(setName, rd.ValueType);
+            }
+            // HACK: Discover all field structure types.
+            foreach (StructureDefinition sd in context.Structures.ToArray())
+            {
+                foreach (FieldDefinition fd in sd.Fields)
+                {
+                    ForceTypeDiscovery(setName, fd.Type);
+                }
+            }
+
             return new ShaderModel(
                 context.Structures.ToArray(),
                 context.Resources.ToArray(),
                 context.Functions.Select(sfabs => sfabs.Function).ToArray());
+        }
+
+        private void ForceTypeDiscovery(string setName, TypeReference fd)
+        {
+            if (ShaderPrimitiveTypes.IsPrimitiveType(fd.Name))
+            {
+                return;
+            }
+            if (!TryDiscoverStructure(setName, fd.Name, out StructureDefinition sd))
+            {
+                throw new ShaderGenerationException("" +
+                    "Resource type's field could not be resolved: " + fd.Name + " " + fd.Name);
+            }
+            foreach (FieldDefinition field in sd.Fields)
+            {
+                ForceTypeDiscovery(setName, field.Type);
+            }
         }
 
         public string GetCode(string setName, ShaderFunction function)
@@ -99,7 +130,11 @@ namespace ShaderGen
                 throw new ArgumentNullException(nameof(sd));
             }
 
-            GetContext(setName).Structures.Add(sd);
+            List<StructureDefinition> structures = GetContext(setName).Structures;
+            if (!structures.Any(old => old.Name == sd.Name))
+            {
+                structures.Add(sd);
+            }
         }
 
         internal virtual void AddResource(string setName, ResourceDefinition ud)
@@ -129,7 +164,6 @@ namespace ShaderGen
 
             return CorrectIdentifier(CSharpToIdentifierNameCore(typeName, identifier));
         }
-
 
         internal string FormatInvocation(string type, string method, InvocationParameterInfo[] parameterInfos)
         {
@@ -187,12 +221,16 @@ namespace ShaderGen
         protected bool TryDiscoverStructure(string setName, string name, out StructureDefinition sd)
         {
             INamedTypeSymbol type = Compilation.GetTypeByMetadataName(name);
+            if (type == null)
+            {
+                throw new ShaderGenerationException("Unable to obtain compilation type metadata for " + name);
+            }
             SyntaxNode declaringSyntax = type.OriginalDefinition.DeclaringSyntaxReferences[0].GetSyntax();
             if (declaringSyntax is StructDeclarationSyntax sds)
             {
                 if (ShaderSyntaxWalker.TryGetStructDefinition(Compilation.GetSemanticModel(sds.SyntaxTree), sds, out sd))
                 {
-                    GetContext(setName).Structures.Add(sd);
+                    AddStructure(setName, sd);
                     return true;
                 }
             }

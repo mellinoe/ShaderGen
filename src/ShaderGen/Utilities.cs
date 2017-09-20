@@ -6,12 +6,18 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace ShaderGen
 {
     internal static class Utilities
     {
         public static string GetFullTypeName(this SemanticModel model, TypeSyntax type)
+        {
+            bool _; return GetFullTypeName(model, type, out _);
+        }
+
+        public static string GetFullTypeName(this SemanticModel model, TypeSyntax type, out bool isArray)
         {
             if (model == null)
             {
@@ -26,7 +32,6 @@ namespace ShaderGen
                 model = GetSemanticModel(model.Compilation, type.SyntaxTree);
             }
 
-
             TypeInfo typeInfo = model.GetTypeInfo(type);
             if (typeInfo.Type == null)
             {
@@ -37,12 +42,58 @@ namespace ShaderGen
                 }
             }
 
-            return GetFullTypeName(typeInfo.Type);
+            return GetFullTypeName(typeInfo.Type, out isArray);
         }
 
-        private static string GetFullTypeName(ITypeSymbol type)
+        private static string GetFullTypeName(ITypeSymbol type, out bool isArray)
         {
-            return type.ToDisplayString();
+            if (type is IArrayTypeSymbol ats)
+            {
+                isArray = true;
+                return GetFullMetadataName(ats.ElementType);
+            }
+            else
+            {
+                isArray = false;
+                return GetFullMetadataName(type);
+            }
+        }
+
+        public static string GetFullMetadataName(this ISymbol s)
+        {
+            if (s == null || IsRootNamespace(s))
+            {
+                return string.Empty;
+            }
+
+            StringBuilder sb = new StringBuilder(s.MetadataName);
+            ISymbol last = s;
+
+            s = s.ContainingSymbol;
+
+            while (!IsRootNamespace(s))
+            {
+                if (s is ITypeSymbol && last is ITypeSymbol)
+                {
+                    sb.Insert(0, '+');
+                }
+                else
+                {
+                    sb.Insert(0, '.');
+                }
+
+                sb.Insert(0, s.OriginalDefinition.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat));
+                //sb.Insert(0, s.MetadataName);
+                s = s.ContainingSymbol;
+            }
+
+            return sb.ToString();
+        }
+
+        private static bool IsRootNamespace(ISymbol symbol)
+        {
+            INamespaceSymbol s = null;
+            return ((s = symbol as INamespaceSymbol) != null) && s.IsGlobalNamespace;
         }
 
         private static SemanticModel GetSemanticModel(Compilation compilation, SyntaxTree syntaxTree)
@@ -75,7 +126,7 @@ namespace ShaderGen
             return namespaceName;
         }
 
-        public static string GetFullNestedTypePrefix(SyntaxNode node)
+        public static string GetFullNestedTypePrefix(SyntaxNode node, out bool nested)
         {
             string ns = GetFullNamespace(node);
             List<string> nestedTypeParts = new List<string>();
@@ -85,19 +136,22 @@ namespace ShaderGen
                 node = cds;
             }
 
-            string nestedTypeStr = string.Join(".", nestedTypeParts);
+            string nestedTypeStr = string.Join("+", nestedTypeParts);
             if (string.IsNullOrEmpty(ns))
             {
+                nested = true;
                 return nestedTypeStr;
             }
             else
             {
                 if (string.IsNullOrEmpty(nestedTypeStr))
                 {
+                    nested = false;
                     return ns;
                 }
                 else
                 {
+                    nested = true;
                     return ns + "." + nestedTypeStr;
                 }
             }

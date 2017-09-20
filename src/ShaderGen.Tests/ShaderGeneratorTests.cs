@@ -18,6 +18,7 @@ namespace ShaderGen.Tests
         [InlineData("TestShaders.VeldridShaders.ForwardMtlCombined.VS", "TestShaders.VeldridShaders.ForwardMtlCombined.FS")]
         [InlineData("TestShaders.VeldridShaders.ForwardMtlCombined.VS", null)]
         [InlineData(null, "TestShaders.VeldridShaders.ForwardMtlCombined.FS")]
+        [InlineData("TestShaders.CustomStructResource.VS", null)]
         public void HlslEndToEnd(string vsName, string fsName)
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();

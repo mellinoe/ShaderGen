@@ -68,11 +68,12 @@ namespace ShaderGen
 
         public static bool TryGetStructDefinition(SemanticModel model, StructDeclarationSyntax node, out StructureDefinition sd)
         {
-            string fullNamespace = Utilities.GetFullNestedTypePrefix(node);
+            string fullNestedTypePrefix = Utilities.GetFullNestedTypePrefix(node, out bool nested);
             string structName = node.Identifier.ToFullString().Trim();
-            if (!string.IsNullOrEmpty(fullNamespace))
+            if (!string.IsNullOrEmpty(fullNestedTypePrefix))
             {
-                structName = fullNamespace + "." + structName;
+                string joiner = nested ? "+" : ".";
+                structName = fullNestedTypePrefix + joiner + structName;
             }
 
             List<FieldDefinition> fields = new List<FieldDefinition>();
@@ -84,18 +85,15 @@ namespace ShaderGen
                     foreach (VariableDeclaratorSyntax vds in varDecl.Variables)
                     {
                         string fieldName = vds.Identifier.Text.Trim();
-                        string typeName = model.GetFullTypeName(varDecl.Type);
-                        bool isArrayType = typeName.Contains("[]");
+                        string typeName = model.GetFullTypeName(varDecl.Type, out bool isArray);
                         int arrayElementCount = 0;
-                        if (isArrayType)
+                        if (isArray)
                         {
-                            typeName = typeName.Substring(0, typeName.Length - 2);
                             arrayElementCount = GetArrayCountValue(vds);
                         }
 
                         TypeReference tr = new TypeReference(typeName);
                         SemanticType semanticType = GetSemanticType(vds);
-
 
                         fields.Add(new FieldDefinition(fieldName, tr, semanticType, arrayElementCount));
                     }
