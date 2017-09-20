@@ -7,10 +7,9 @@
 
     <!-- Nuget info -->
     <PackageId>ShaderGen.Build</PackageId>
-    <Description>$(PublishedToolPath)</Description>
-    <!--<Description>Build-time plugin which generates shader code during a post-build event.</Description>-->
+    <Description>Build-time plugin which generates shader code during a post-build event.</Description>
     <PackageTags>Shader GLSL HLSL SPIR-V Graphics OpenGL Vulkan Direct3D Game</PackageTags>
-    <PackageVersion>1.0.0</PackageVersion>
+    <PackageVersion>1.0.1</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>

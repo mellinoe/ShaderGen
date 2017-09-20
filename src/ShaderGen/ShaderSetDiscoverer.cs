@@ -55,7 +55,7 @@ namespace ShaderGen
             }
             else
             {
-                return text.TrimStart('"').TrimEnd('"');
+                return text.Trim().TrimStart('"').TrimEnd('"');
             }
         }
 
