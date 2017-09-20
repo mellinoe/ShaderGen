@@ -12,7 +12,24 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
+    <Compile Update="ShaderSwizzle.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ShaderSwizzle.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="ShaderSwizzle.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ShaderSwizzle.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
 </Project>

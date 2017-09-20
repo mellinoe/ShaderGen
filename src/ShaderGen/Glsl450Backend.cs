@@ -91,5 +91,6 @@ namespace ShaderGen
         {
             sb.AppendLine($"        gl_Position.y = -gl_Position.y; // Correct for Vulkan clip coordinates");
         }
+
     }
 }

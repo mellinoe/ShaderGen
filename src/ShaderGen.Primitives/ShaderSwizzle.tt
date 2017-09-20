@@ -1,0 +1,140 @@
+﻿﻿<#@ template debug="true" hostSpecific="true" #>
+<#@ output extension=".cs" #>
+<#@ Assembly Name="System.dll" #>
+<#@ Assembly Name="System.Core.dll" #>
+<#@ Assembly Name="System.Xml.dll" #>
+<#@ import namespace="System" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Collections.Generic"#>
+<#@ import namespace="System.Runtime.InteropServices" #>
+<#@ import namespace="System.Diagnostics" #>
+using System.Numerics;
+
+namespace ShaderGen
+{
+	public static class ShaderGenSwizzle
+	{
+	<#
+		 for(var numComponents = 1; numComponents < 5; numComponents++)
+		 {
+			 var componentNameSets = new[] { "xyzw", "rgba" }.Select(x => x.Substring(0, numComponents).ToCharArray()).ToList();
+			 foreach (var componentNameSet in componentNameSets)
+			 {
+				for (var i = 0; i < 4; i++)
+				{
+					var vectorSize = i + 1;
+					IEnumerable<string> vectorComponentNames;
+					switch (vectorSize)
+					{
+						case 1:
+							vectorComponentNames = from a in componentNameSet
+								   select string.Concat(a);
+							break;
+
+						case 2:
+							vectorComponentNames = from a in componentNameSet
+								   from b in componentNameSet
+								   select string.Concat(a, b);
+							break;
+
+						case 3:
+							vectorComponentNames = from a in componentNameSet
+								   from b in componentNameSet
+								   from c in componentNameSet
+								   select string.Concat(a, b, c);
+							break;
+
+						case 4:
+							vectorComponentNames = from a in componentNameSet
+								   from b in componentNameSet
+								   from c in componentNameSet
+								   from d in componentNameSet
+								   select string.Concat(a, b, c, d);
+							break;
+						default:
+							throw new ArgumentOutOfRangeException("num");
+					}
+
+					var scalarType = string.Empty;
+					if(numComponents == 1)
+					{
+						scalarType = "float";
+					}
+					else
+					{
+						scalarType = "Vector" + numComponents;
+					}
+
+					var returnValue = "v";
+					var returnType = string.Empty;
+					foreach (var namePermutation in vectorComponentNames)
+					{
+						if(i == 0)
+						{
+							returnType = "float";
+
+							if(numComponents > 1)
+							{
+								if(namePermutation[0] == 'x' || namePermutation == "r")
+								{
+									returnValue = "v.X";
+								}
+								else if(namePermutation == "y" || namePermutation == "y")
+								{
+									returnValue = "v.Y";
+								}
+							}
+						}
+						else 
+						{
+							returnType = "Vector" + vectorSize;
+							returnValue = "new " + returnType + "(";
+
+							// From float to Vector
+							if(numComponents == 1)
+							{
+								returnValue += "v";
+							}
+							else
+							{
+								for(var j = 0; j < vectorSize; j++)
+								{
+									returnValue += "v.";
+
+									if(namePermutation[j] == 'x' || namePermutation[j] == 'r')
+									{
+										returnValue += "X";
+									}
+									else if(namePermutation[j] == 'y' || namePermutation[j] == 'g')
+									{
+										returnValue += "Y";
+									}
+									else if(namePermutation[j] == 'z' || namePermutation[j] == 'b')
+									{
+										returnValue += "Z";
+									}
+									else if(namePermutation[j] == 'w' || namePermutation[j] == 'a')
+									{
+										returnValue += "W";
+									}
+
+									if(j < vectorSize - 1)
+										returnValue += ", ";
+								}
+							}
+
+							returnValue += ")";
+						}
+
+		#>
+	public static <#=returnType#> <#=namePermutation#>(this <#=scalarType#> v) => <#=returnValue#>;
+	<#
+					}
+				}
+			}
+		}
+	#>
+
+		
+	}
+}

@@ -18,7 +18,9 @@ namespace TargetProject
         [FragmentShader]
         public Vector4 FS(FragmentInput input)
         {
-            return new Vector4(input.Position.X, input.Position.Y, input.Position.Z, 1);
+            Vector4 result = new Vector4(input.Position.X, input.Position.Y, input.Position.Z, 1);
+            Vector3 swizzleVector = result.xyz();
+            return result.xyzz();
         }
 
         public struct VertexInput

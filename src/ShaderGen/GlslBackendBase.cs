@@ -271,5 +271,10 @@ namespace ShaderGen
             string normalizedIdentifier,
             int index);
         protected abstract void EmitGlPositionCorrection(StringBuilder sb);
+
+        protected override string FormatSwizzleCore(string type, string method, InvocationParameterInfo[] parameterInfos)
+        {
+            return $"{parameterInfos[0].Identifier}.{method}";
+        }
     }
 }
