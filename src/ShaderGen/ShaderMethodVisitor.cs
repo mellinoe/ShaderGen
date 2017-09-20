@@ -109,15 +109,30 @@ namespace ShaderGen
             }
             else if (node.Expression is MemberAccessExpressionSyntax maes)
             {
+                // Extension method invocation, ie: swizzle:
+                if (maes.Expression is MemberAccessExpressionSyntax subExpression)
+                {
+                    return Visit(subExpression)
+                        + maes.OperatorToken.ToFullString()
+                        + Visit(maes.Name);
+                }
+
                 if (!(maes.Expression is IdentifierNameSyntax targetName))
                 {
                     throw new NotImplementedException();
                 }
 
-                InvocationParameterInfo[] parameterInfos = GetParameterInfos(node.ArgumentList);
                 SymbolInfo symbolInfo = GetModel(maes).GetSymbolInfo(targetName);
                 string type = Utilities.GetFullName(symbolInfo);
+                InvocationParameterInfo[] parameterInfos = GetParameterInfos(node.ArgumentList);
                 string method = maes.Name.ToFullString();
+
+                // Manage swizzle
+                if (symbolInfo.Symbol.Name.Equals("ShaderSwizzle", StringComparison.OrdinalIgnoreCase))
+                {
+                    return _backend.FormatSwizzle(type, method, parameterInfos);
+                }
+
                 return _backend.FormatInvocation(type, method, parameterInfos);
             }
             else
