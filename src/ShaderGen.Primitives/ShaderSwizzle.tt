@@ -12,12 +12,12 @@ using System.Numerics;
 
 namespace ShaderGen
 {
-	public static class ShaderSwizzle
-	{
+    public static class ShaderSwizzle
+    {
 	<#
 		 for(var numComponents = 1; numComponents < 5; numComponents++)
 		 {
-			 var componentNameSets = new[] { "xyzw", "rgba" }.Select(x => x.Substring(0, numComponents).ToCharArray()).ToList();
+			 var componentNameSets = new[] { "XYZW" }.Select(x => x.Substring(0, numComponents).ToCharArray()).ToList();
 			 foreach (var componentNameSet in componentNameSets)
 			 {
 				for (var i = 0; i < 4; i++)
@@ -75,14 +75,7 @@ namespace ShaderGen
 
 							if(numComponents > 1)
 							{
-								if(namePermutation[0] == 'x' || namePermutation == "r")
-								{
-									returnValue = "v.X";
-								}
-								else if(namePermutation == "y" || namePermutation == "y")
-								{
-									returnValue = "v.Y";
-								}
+								returnValue = "v." + namePermutation[0];
 							}
 						}
 						else 
@@ -99,24 +92,7 @@ namespace ShaderGen
 							{
 								for(var j = 0; j < vectorSize; j++)
 								{
-									returnValue += "v.";
-
-									if(namePermutation[j] == 'x' || namePermutation[j] == 'r')
-									{
-										returnValue += "X";
-									}
-									else if(namePermutation[j] == 'y' || namePermutation[j] == 'g')
-									{
-										returnValue += "Y";
-									}
-									else if(namePermutation[j] == 'z' || namePermutation[j] == 'b')
-									{
-										returnValue += "Z";
-									}
-									else if(namePermutation[j] == 'w' || namePermutation[j] == 'a')
-									{
-										returnValue += "W";
-									}
+									returnValue += "v." + namePermutation[j];
 
 									if(j < vectorSize - 1)
 										returnValue += ", ";
