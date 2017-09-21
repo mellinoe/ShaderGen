@@ -2,7 +2,7 @@
 
 namespace ShaderGen
 {
-	public static class ShaderGenSwizzle
+	public static class ShaderSwizzle
 	{
 		public static float x(this float v) => v;
 		public static Vector2 xx(this float v) => new Vector2(v);
