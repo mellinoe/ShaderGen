@@ -128,7 +128,7 @@ namespace ShaderGen
                 string method = maes.Name.ToFullString();
 
                 // Manage swizzle
-                if (symbolInfo.Symbol.Name.Equals("ShaderSwizzle", StringComparison.OrdinalIgnoreCase))
+                if (symbolInfo.Symbol.Name.Equals(nameof(ShaderSwizzle), StringComparison.OrdinalIgnoreCase))
                 {
                     return _backend.FormatSwizzle(type, method, parameterInfos);
                 }
