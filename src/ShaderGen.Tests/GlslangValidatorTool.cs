@@ -9,7 +9,7 @@ namespace ShaderGen.Tests
 {
     public static class GlsLangValidatorTool
     {
-        private static readonly string s_fxcLocation = FindExe();
+        private static readonly string s_toolPath = FindExe();
 
         public static void AssertCompilesCode(string code, string type, bool vulkanSemantics)
         {
@@ -22,6 +22,11 @@ namespace ShaderGen.Tests
 
         public static void AssertCompilesFile(string file, string type, bool vulkanSemantics, string output = null)
         {
+            if (s_toolPath == null)
+            {
+                return;
+            }
+
             ToolResult result = Compile(file, type, vulkanSemantics, output);
             if (result.ExitCode != 0)
             {
@@ -30,11 +35,11 @@ namespace ShaderGen.Tests
             }
         }
 
-        public static ToolResult Compile(string file, string type, bool vulkanSemantics, string output = null)
+        private static ToolResult Compile(string file, string type, bool vulkanSemantics, string output = null)
         {
             ProcessStartInfo psi = new ProcessStartInfo()
             {
-                FileName = s_fxcLocation,
+                FileName = s_toolPath,
                 Arguments = FormatArgs(file, type, vulkanSemantics, output),
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -64,20 +69,21 @@ namespace ShaderGen.Tests
             return args.ToString();
         }
 
+
         private static string FindExe()
         {
             const string VulkanSdkEnvVar = "VULKAN_SDK";
             string vulkanSdkPath = Environment.GetEnvironmentVariable(VulkanSdkEnvVar);
             if (vulkanSdkPath != null)
             {
-                string exePath = Path.Combine(vulkanSdkPath, "bin", "glslangvalidator.exe");
+                string exePath = Path.Combine(vulkanSdkPath, "bin", "glslangvalidator");
                 if (File.Exists(exePath))
                 {
                     return exePath;
                 }
             }
 
-            throw new InvalidOperationException("Couldn't locate fxc.exe.");
+            return null;
         }
     }
 }

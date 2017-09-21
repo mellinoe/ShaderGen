@@ -5,6 +5,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
+using System.Runtime.InteropServices;
 
 namespace ShaderGen.Tests
 {
@@ -73,13 +74,16 @@ namespace ShaderGen.Tests
                 {
                     using (FileStream fs = File.OpenRead(transformed))
                     {
-                        return MetadataReference.CreateFromStream(fs, filePath: transformed);
+                        var result = MetadataReference.CreateFromStream(fs, filePath: transformed);
+                        return result;
                     }
                 }
             }
 
             return null;
         }
+
+        private static int s_thing = 0;
 
         private static string[] GetCompileItems()
         {
@@ -89,16 +93,23 @@ namespace ShaderGen.Tests
         private static string[] GetReferenceItems()
         {
             string[] lines = File.ReadAllLines(Path.Combine(ProjectBasePath, "References.txt"));
-            return lines;
+            return lines.Select(l => l.Trim()).ToArray();;
         }
 
         public static string[] GetPackageDirs()
         {
-            return new string[]
+            List<string> dirs = new List<string>();
+            dirs.Add(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages"));
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages"),
-                @"C:\Program Files\dotnet\sdk\NuGetFallbackFolder",
-            };
+                dirs.Add(@"C:\Program Files\dotnet\sdk\NuGetFallbackFolder");
+            }
+            else
+            {
+                dirs.Add("/usr/share/dotnet/sdk/NuGetFallbackFolder");
+            }
+
+            return dirs.ToArray();
         }
 
         public static LanguageBackend[] GetAllBackends(Compilation compilation)

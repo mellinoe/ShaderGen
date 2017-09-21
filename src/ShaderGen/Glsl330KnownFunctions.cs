@@ -5,11 +5,11 @@ namespace ShaderGen
 {
     public static class Glsl330KnownFunctions
     {
-        private static Dictionary<string, Dictionary<string, InvocationTranslator>> s_mappings = GetMappings();
+        private static Dictionary<string, TypeInvocationTranslator> s_mappings = GetMappings();
 
-        private static Dictionary<string, Dictionary<string, InvocationTranslator>> GetMappings()
+        private static Dictionary<string, TypeInvocationTranslator> GetMappings()
         {
-            Dictionary<string, Dictionary<string, InvocationTranslator>> ret = new Dictionary<string, Dictionary<string, InvocationTranslator>>();
+            Dictionary<string, TypeInvocationTranslator> ret = new Dictionary<string, TypeInvocationTranslator>();
 
             Dictionary<string, InvocationTranslator> builtinMappings = new Dictionary<string, InvocationTranslator>()
             {
@@ -24,7 +24,7 @@ namespace ShaderGen
                 { "Saturate", Saturate },
 
             };
-            ret.Add("ShaderGen.ShaderBuiltins", builtinMappings);
+            ret.Add("ShaderGen.ShaderBuiltins", new DictionaryTypeInvocationTranslator(builtinMappings));
 
             Dictionary<string, InvocationTranslator> v3Mappings = new Dictionary<string, InvocationTranslator>()
             {
@@ -33,7 +33,7 @@ namespace ShaderGen
                 { "Distance", SimpleNameTranslator("distance") },
                 { "Reflect", SimpleNameTranslator("reflect") },
             };
-            ret.Add("System.Numerics.Vector3", v3Mappings);
+            ret.Add("System.Numerics.Vector3", new DictionaryTypeInvocationTranslator(v3Mappings));
 
             return ret;
         }
@@ -42,7 +42,7 @@ namespace ShaderGen
         {
             if (s_mappings.TryGetValue(type, out var dict))
             {
-                if (dict.TryGetValue(method, out InvocationTranslator mappedValue))
+                if (dict.GetTranslator(method, parameters, out InvocationTranslator mappedValue))
                 {
                     return mappedValue(type, method, parameters);
                 }

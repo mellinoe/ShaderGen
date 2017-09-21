@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Xunit;
 
 namespace ShaderGen.Tests
 {
@@ -22,6 +23,11 @@ namespace ShaderGen.Tests
 
         public static void AssertCompilesFile(string file, string profile, string entryPoint, string output = null)
         {
+            if (s_fxcLocation == null)
+            {
+                return;
+            }
+
             ToolResult result = Compile(file, profile, entryPoint, output);
             if (result.ExitCode != 0)
             {
@@ -64,14 +70,14 @@ namespace ShaderGen.Tests
         private static string FindFxcExe()
         {
             const string WindowsKitsFolder = @"C:\Program Files (x86)\Windows Kits";
-            IEnumerable<string> paths = Directory.EnumerateFiles(
-                WindowsKitsFolder,
-                "fxc.exe",
-                SearchOption.AllDirectories);
-            string path = paths.FirstOrDefault(s => !s.Contains("arm"));
-            if (path == null)
+            string path = null;
+            if (Directory.Exists(WindowsKitsFolder))
             {
-                throw new InvalidOperationException("Couldn't locate fxc.exe.");
+                IEnumerable<string> paths = Directory.EnumerateFiles(
+                    WindowsKitsFolder,
+                    "fxc.exe",
+                    SearchOption.AllDirectories);
+                path = paths.FirstOrDefault(s => !s.Contains("arm"));
             }
 
             return path;
