@@ -174,15 +174,6 @@ namespace ShaderGen
             return FormatInvocationCore(type, method, parameterInfos);
         }
 
-        internal string FormatSwizzle(string type, string method, InvocationParameterInfo[] parameterInfos)
-        {
-            Debug.Assert(type != null);
-            Debug.Assert(method != null);
-            Debug.Assert(parameterInfos != null);
-
-            return FormatSwizzleCore(type, method, parameterInfos);
-        }
-
         protected void ValidateRequiredSemantics(string setName, ShaderFunction function, ShaderFunctionType type)
         {
             if (type == ShaderFunctionType.VertexEntryPoint)
@@ -253,7 +244,6 @@ namespace ShaderGen
         protected abstract string CSharpToIdentifierNameCore(string typeName, string identifier);
         protected abstract string GenerateFullTextCore(string setName, ShaderFunction function);
         protected abstract string FormatInvocationCore(string type, string method, InvocationParameterInfo[] parameterInfos);
-        protected abstract string FormatSwizzleCore(string type, string method, InvocationParameterInfo[] parameterInfos);
 
         internal string CorrectLiteral(string literal)
         {
