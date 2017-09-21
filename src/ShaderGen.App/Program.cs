@@ -8,11 +8,17 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace ShaderGen.App
 {
     internal static class Program
     {
+        private static string s_fxcPath;
+        private static bool? s_fxcAvailable;
+        private static bool? s_glslangValidatorAvailable;
+
         public static int Main(string[] args)
         {
             string referenceItemsResponsePath = null;
@@ -173,15 +179,14 @@ namespace ShaderGen.App
         private static bool CompileCode(LanguageBackend lang, string shaderPath, string entryPoint, bool isVertex, out string path)
         {
             Type langType = lang.GetType();
-            if (langType == typeof(HlslBackend))
+            if (langType == typeof(HlslBackend) && IsFxcAvailable())
             {
                 return CompileHlsl(shaderPath, entryPoint, isVertex, out path);
             }
-            else if (langType == typeof(Glsl450Backend))
+            else if (langType == typeof(Glsl450Backend) && IsGlslangValidatorAvailable())
             {
                 return CompileSpirv(shaderPath, entryPoint, isVertex, out path);
             }
-
             else
             {
                 path = null;
@@ -196,7 +201,10 @@ namespace ShaderGen.App
                 string outputPath = shaderPath + ".bytes";
                 string args = $"/T {(isVertex ? "vs_5_0" : "ps_5_0")} /E {entryPoint} {shaderPath} /Fo {outputPath}";
                 string fxcPath = FindFxcExe();
-                Process.Start(fxcPath, args).WaitForExit();
+                ProcessStartInfo psi = new ProcessStartInfo(fxcPath, args);
+                psi.RedirectStandardOutput = true;
+                psi.RedirectStandardError = true;
+                Process.Start(psi).WaitForExit();
                 path = outputPath;
                 return true;
             }
@@ -215,9 +223,17 @@ namespace ShaderGen.App
             string args = $"-V -S {(isVertex ? "vert" : "frag")} {shaderPath} -o {outputPath}";
             try
             {
-                Process.Start("glslangvalidator", args).WaitForExit();
+
+                ProcessStartInfo psi = new ProcessStartInfo("glslangValidator", args);
+                psi.RedirectStandardError = true;
+                psi.RedirectStandardOutput = true;
+                Process.Start(psi).WaitForExit();
                 path = outputPath;
                 return true;
+            }
+            catch (Win32Exception)
+            {
+                Console.WriteLine("Unable to launch glslangValidator tool.");
             }
             catch (Exception e)
             {
@@ -226,6 +242,35 @@ namespace ShaderGen.App
 
             path = null;
             return false;
+        }
+
+        public static bool IsFxcAvailable()
+        {
+            if (!s_fxcAvailable.HasValue)
+            {
+                s_fxcPath = FindFxcExe();
+                s_fxcAvailable = s_fxcPath != null;
+            }
+
+            return s_fxcAvailable.Value;
+        }
+
+        public static bool IsGlslangValidatorAvailable()
+        {
+            if (!s_glslangValidatorAvailable.HasValue)
+            {
+                try
+                {
+                    ProcessStartInfo psi = new ProcessStartInfo("glslangValidator");
+                    psi.RedirectStandardOutput = true;
+                    psi.RedirectStandardError = true;
+                    Process.Start(psi);
+                    s_glslangValidatorAvailable = true;
+                }
+                catch { s_glslangValidatorAvailable = false; }
+            }
+
+            return s_glslangValidatorAvailable.Value;
         }
 
         private static string BackendExtension(LanguageBackend lang)
@@ -249,17 +294,17 @@ namespace ShaderGen.App
         private static string FindFxcExe()
         {
             const string WindowsKitsFolder = @"C:\Program Files (x86)\Windows Kits";
-            IEnumerable<string> paths = Directory.EnumerateFiles(
-                WindowsKitsFolder,
-                "fxc.exe",
-                SearchOption.AllDirectories);
-            string path = paths.FirstOrDefault(s => !s.Contains("arm"));
-            if (path == null)
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Directory.Exists(WindowsKitsFolder))
             {
-                throw new FileNotFoundException("Couldn't locate fxc.exe.");
+                IEnumerable<string> paths = Directory.EnumerateFiles(
+                    WindowsKitsFolder,
+                    "fxc.exe",
+                    SearchOption.AllDirectories);
+                string path = paths.FirstOrDefault(s => !s.Contains("arm"));
+                return path;
             }
 
-            return path;
+            return null;
         }
     }
 }
