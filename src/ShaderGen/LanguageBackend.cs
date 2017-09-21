@@ -51,12 +51,6 @@ namespace ShaderGen
         {
             BackendContext context = GetContext(setName);
 
-            // HACK: Discover all method input structures.
-            foreach (ShaderFunctionAndBlockSyntax sf in context.Functions.ToArray())
-            {
-                GetCode(setName, sf.Function);
-            }
-
             foreach (ResourceDefinition rd in context.Resources.Where(rd => rd.ResourceKind == ShaderResourceKind.Uniform))
             {
                 ForceTypeDiscovery(setName, rd.ValueType);
@@ -68,6 +62,12 @@ namespace ShaderGen
                 {
                     ForceTypeDiscovery(setName, fd.Type);
                 }
+            }
+
+            // HACK: Discover all method input structures.
+            foreach (ShaderFunctionAndBlockSyntax sf in context.Functions.ToArray())
+            {
+                GetCode(setName, sf.Function);
             }
 
             return new ShaderModel(
