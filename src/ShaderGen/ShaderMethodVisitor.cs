@@ -130,7 +130,7 @@ namespace ShaderGen
                 // Manage swizzle
                 if (symbolInfo.Symbol.Name.Equals(nameof(ShaderSwizzle), StringComparison.OrdinalIgnoreCase))
                 {
-                    return _backend.FormatSwizzle(type, method, parameterInfos);
+                    return $"{parameterInfos[0].Identifier}.{method.ToLowerInvariant()}";
                 }
 
                 return _backend.FormatInvocation(type, method, parameterInfos);

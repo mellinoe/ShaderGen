@@ -260,10 +260,5 @@ namespace ShaderGen
         {
             return identifier;
         }
-
-        protected override string FormatSwizzleCore(string type, string method, InvocationParameterInfo[] parameterInfos)
-        {
-            return $"{parameterInfos[0].Identifier}.{method}";
-        }
     }
 }
