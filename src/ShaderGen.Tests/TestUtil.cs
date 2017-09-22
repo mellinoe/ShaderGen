@@ -83,8 +83,6 @@ namespace ShaderGen.Tests
             return null;
         }
 
-        private static int s_thing = 0;
-
         private static string[] GetCompileItems()
         {
             return Directory.EnumerateFiles(ProjectBasePath, "*.cs", SearchOption.AllDirectories).ToArray();

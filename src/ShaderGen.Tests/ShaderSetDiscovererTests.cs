@@ -13,7 +13,7 @@ namespace ShaderGen.Tests
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             HlslBackend backend = new HlslBackend(compilation);
-            ShaderGenerator sg = new ShaderGenerator(compilation, backend);
+            ShaderGenerator sg = new ShaderGenerator(compilation, new[] { backend });
             ShaderGenerationResult result = sg.GenerateShaders();
             IReadOnlyList<GeneratedShaderSet> hlslSets = result.GetOutput(backend);
             Assert.Equal(3, hlslSets.Count);

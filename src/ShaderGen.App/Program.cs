@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using System.Reflection;
 
 namespace ShaderGen.App
 {
@@ -26,6 +27,8 @@ namespace ShaderGen.App
             string outputPath = null;
             string genListFilePath = null;
             bool listAllFiles = false;
+            string processorPath = null;
+            string processorArgs = null;
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -39,6 +42,8 @@ namespace ShaderGen.App
                 syntax.DefineOption("out", ref outputPath, true, "The output path for the generated shaders.");
                 syntax.DefineOption("genlist", ref genListFilePath, true, "The output file to store the list of generated files.");
                 syntax.DefineOption("listall", ref listAllFiles, false, "Forces all generated files to be listed in the list file. By default, only bytecode files will be listed and not the original shader code.");
+                syntax.DefineOption("processor", ref processorPath, false, "The path of an assembly containing IShaderSetProcessor types to be used to post-process GeneratedShaderSet objects.");
+                syntax.DefineOption("processorargs", ref processorArgs, false, "Custom information passed to IShaderSetProcessor.");
             });
 
             if (!File.Exists(referenceItemsResponsePath))
@@ -115,7 +120,21 @@ namespace ShaderGen.App
                 glsl450
             };
 
-            ShaderGenerator sg = new ShaderGenerator(compilation, languages);
+            List<IShaderModelProcessor> processors = new List<IShaderModelProcessor>();
+            if (processorPath != null)
+            {
+                Assembly assm = Assembly.LoadFrom(processorPath);
+                IEnumerable<Type> processorTypes = assm.GetTypes().Where(
+                    t => t.GetInterface(nameof(ShaderGen) + "." + nameof(IShaderModelProcessor)) != null);
+                foreach (Type type in processorTypes)
+                {
+                    IShaderModelProcessor processor = (IShaderModelProcessor)Activator.CreateInstance(type);
+                    processor.UserArgs = processorArgs;
+                    processors.Add(processor);
+                }
+            }
+
+            ShaderGenerator sg = new ShaderGenerator(compilation, languages, processors.ToArray());
             ShaderGenerationResult shaderGenResult;
             try
             {
