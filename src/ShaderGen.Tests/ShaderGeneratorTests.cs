@@ -19,6 +19,7 @@ namespace ShaderGen.Tests
         [InlineData("TestShaders.VeldridShaders.ForwardMtlCombined.VS", null)]
         [InlineData(null, "TestShaders.VeldridShaders.ForwardMtlCombined.FS")]
         [InlineData("TestShaders.CustomStructResource.VS", null)]
+        [InlineData("TestShaders.Swizzles.VS", null)]
         public void HlslEndToEnd(string vsName, string fsName)
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
@@ -61,6 +62,7 @@ namespace ShaderGen.Tests
         [InlineData("TestShaders.VeldridShaders.ForwardMtlCombined.VS", null)]
         [InlineData(null, "TestShaders.VeldridShaders.ForwardMtlCombined.FS")]
         [InlineData("TestShaders.CustomStructResource.VS", null)]
+        [InlineData("TestShaders.Swizzles.VS", null)]
         public void Glsl330EndToEnd(string vsName, string fsName)
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
@@ -103,6 +105,7 @@ namespace ShaderGen.Tests
         [InlineData("TestShaders.VeldridShaders.ForwardMtlCombined.VS", null)]
         [InlineData(null, "TestShaders.VeldridShaders.ForwardMtlCombined.FS")]
         [InlineData("TestShaders.CustomStructResource.VS", null)]
+        [InlineData("TestShaders.Swizzles.VS", null)]
         public void Glsl450EndToEnd(string vsName, string fsName)
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();

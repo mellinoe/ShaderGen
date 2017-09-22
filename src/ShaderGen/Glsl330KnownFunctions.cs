@@ -35,6 +35,8 @@ namespace ShaderGen
             };
             ret.Add("System.Numerics.Vector3", new DictionaryTypeInvocationTranslator(v3Mappings));
 
+            ret.Add("ShaderGen.ShaderSwizzle", new SwizzleTranslator());
+
             return ret;
         }
 

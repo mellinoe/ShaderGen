@@ -19,8 +19,8 @@ namespace TargetProject
         public Vector4 FS(FragmentInput input)
         {
             Vector4 result = new Vector4(input.Position.X, input.Position.Y, input.Position.Z, 1);
-            Vector3 swizzleVector = result.xyz();
-            return result.xyzz();
+            Vector3 swizzleVector = result.XYZ();
+            return result.XYZZ();
         }
 
         public struct VertexInput

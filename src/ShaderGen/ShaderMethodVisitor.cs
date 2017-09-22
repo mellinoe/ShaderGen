@@ -4,6 +4,7 @@ using System.Text;
 using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using System.Collections.Generic;
 
 namespace ShaderGen
 {
@@ -109,31 +110,45 @@ namespace ShaderGen
             }
             else if (node.Expression is MemberAccessExpressionSyntax maes)
             {
-                // Extension method invocation, ie: swizzle:
-                if (maes.Expression is MemberAccessExpressionSyntax subExpression)
+                SymbolInfo methodSymbol = GetModel(maes).GetSymbolInfo(maes);
+                if (methodSymbol.Symbol is IMethodSymbol ims)
                 {
-                    return Visit(subExpression)
-                        + maes.OperatorToken.ToFullString()
-                        + Visit(maes.Name);
+                    string containingType = Utilities.GetFullMetadataName(ims.ContainingType);
+                    string methodName = ims.MetadataName;
+                    List<InvocationParameterInfo> pis = new List<InvocationParameterInfo>();
+                    if (ims.IsExtensionMethod)
+                    {
+                        // Extension method invocation, ie: swizzle:
+                        if (!(maes.Expression is MemberAccessExpressionSyntax subExpression))
+                        {
+                            throw new NotImplementedException(
+                                "Extension methods should have MemberAccessExpressionSyntax expressions.");
+                        }
+
+                        // Might need FullTypeName here too.
+                        pis.Add(new InvocationParameterInfo()
+                        {
+                            Identifier = Visit(subExpression)
+                        });
+                    }
+
+                    pis.AddRange(GetParameterInfos(node.ArgumentList));
+                    return _backend.FormatInvocation(containingType, methodName, pis.ToArray());
                 }
 
-                if (!(maes.Expression is IdentifierNameSyntax targetName))
-                {
-                    throw new NotImplementedException();
-                }
+                throw new NotImplementedException();
 
-                SymbolInfo symbolInfo = GetModel(maes).GetSymbolInfo(targetName);
-                string type = Utilities.GetFullName(symbolInfo);
-                InvocationParameterInfo[] parameterInfos = GetParameterInfos(node.ArgumentList);
-                string method = maes.Name.ToFullString();
+                //if (!(maes.Expression is IdentifierNameSyntax targetName))
+                //{
+                //    throw new NotImplementedException();
+                //}
 
-                // Manage swizzle
-                if (symbolInfo.Symbol.Name.Equals(nameof(ShaderSwizzle), StringComparison.OrdinalIgnoreCase))
-                {
-                    return $"{parameterInfos[0].Identifier}.{method.ToLowerInvariant()}";
-                }
+                //SymbolInfo symbolInfo = GetModel(maes).GetSymbolInfo(targetName);
+                //string type = Utilities.GetFullName(symbolInfo);
+                //InvocationParameterInfo[] parameterInfos = GetParameterInfos(node.ArgumentList);
+                //string method = maes.Name.ToFullString();
 
-                return _backend.FormatInvocation(type, method, parameterInfos);
+                //return _backend.FormatInvocation(type, method, parameterInfos);
             }
             else
             {
@@ -282,13 +297,18 @@ namespace ShaderGen
         {
             return argumentList.Arguments.Select(argSyntax =>
             {
-                TypeInfo typeInfo = GetModel(argSyntax).GetTypeInfo(argSyntax.Expression);
-                return new InvocationParameterInfo
-                {
-                    FullTypeName = typeInfo.Type.ToDisplayString(),
-                    Identifier = Visit(argSyntax.Expression)
-                };
+                return GetInvocationParameterInfo(argSyntax);
             }).ToArray();
+        }
+
+        private InvocationParameterInfo GetInvocationParameterInfo(ArgumentSyntax argSyntax)
+        {
+            TypeInfo typeInfo = GetModel(argSyntax).GetTypeInfo(argSyntax.Expression);
+            return new InvocationParameterInfo
+            {
+                FullTypeName = typeInfo.Type.ToDisplayString(),
+                Identifier = Visit(argSyntax.Expression)
+            };
         }
     }
 }
