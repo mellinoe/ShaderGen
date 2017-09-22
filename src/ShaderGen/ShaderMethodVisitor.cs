@@ -137,18 +137,6 @@ namespace ShaderGen
                 }
 
                 throw new NotImplementedException();
-
-                //if (!(maes.Expression is IdentifierNameSyntax targetName))
-                //{
-                //    throw new NotImplementedException();
-                //}
-
-                //SymbolInfo symbolInfo = GetModel(maes).GetSymbolInfo(targetName);
-                //string type = Utilities.GetFullName(symbolInfo);
-                //InvocationParameterInfo[] parameterInfos = GetParameterInfos(node.ArgumentList);
-                //string method = maes.Name.ToFullString();
-
-                //return _backend.FormatInvocation(type, method, parameterInfos);
             }
             else
             {
