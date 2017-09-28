@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.IO;
+using System.Diagnostics;
 
 namespace ShaderGen
 {
@@ -130,9 +131,11 @@ namespace ShaderGen
 
         protected override string GenerateFullTextCore(string setName, ShaderFunction function)
         {
-            StringBuilder sb = new StringBuilder();
+            Debug.Assert(function.IsEntryPoint);
 
-            ShaderFunctionAndBlockSyntax entryPoint = GetContext(setName).Functions.SingleOrDefault(
+            StringBuilder sb = new StringBuilder();
+            BackendContext setContext = GetContext(setName);
+            ShaderFunctionAndBlockSyntax entryPoint = setContext.Functions.SingleOrDefault(
                 sfabs => sfabs.Function.Name == function.Name);
             if (entryPoint == null)
             {
@@ -147,21 +150,21 @@ namespace ShaderGen
             {
                 // HLSL vertex outputs needs to have semantics applied to the structure fields.
                 StructureDefinition output = CreateOutputStructure(GetRequiredStructureType(setName, entryPoint.Function.ReturnType));
-                GetContext(setName).Functions.Remove(entryPoint);
+                setContext.Functions.Remove(entryPoint);
                 entryPoint = entryPoint.WithReturnType(new TypeReference(output.Name));
-                GetContext(setName).Functions.Add(entryPoint);
+                setContext.Functions.Add(entryPoint);
             }
 
             if (function.Type == ShaderFunctionType.FragmentEntryPoint)
             {
                 // HLSL pixel shader inputs also need these semantics.
                 StructureDefinition modifiedInput = CreateOutputStructure(input);
-                GetContext(setName).Functions.Remove(entryPoint);
+                setContext.Functions.Remove(entryPoint);
                 entryPoint = entryPoint.WithParameter(0, new TypeReference(modifiedInput.Name));
-                GetContext(setName).Functions.Add(entryPoint);
+                setContext.Functions.Add(entryPoint);
             }
 
-            foreach (StructureDefinition sd in GetContext(setName).Structures)
+            foreach (StructureDefinition sd in setContext.Structures)
             {
                 WriteStructure(sb, sd);
             }
@@ -170,8 +173,24 @@ namespace ShaderGen
                 WriteStructure(sb, sd);
             }
 
+            FunctionCallGraphDiscoverer fcgd = new FunctionCallGraphDiscoverer(
+                Compilation,
+                new TypeAndMethodName { TypeName = function.DeclaringType, MethodName = function.Name });
+            fcgd.GenerateFullGraph();
+            TypeAndMethodName[] orderedFunctionList = fcgd.GetOrderedCallList();
+
+            foreach (TypeAndMethodName name in orderedFunctionList)
+            {
+                ShaderFunctionAndBlockSyntax f = setContext.Functions.Single(
+                    sfabs => sfabs.Function.DeclaringType == name.TypeName && sfabs.Function.Name == name.MethodName);
+                if (!f.Function.IsEntryPoint)
+                {
+                    sb.AppendLine(new HlslMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block));
+                }
+            }
+
             int uniformBinding = 0, textureBinding = 0, samplerBinding = 0;
-            foreach (ResourceDefinition rd in GetContext(setName).Resources)
+            foreach (ResourceDefinition rd in setContext.Resources)
             {
                 switch (rd.ResourceKind)
                 {
@@ -191,7 +210,7 @@ namespace ShaderGen
                 }
             }
 
-            string result = new HlslMethodVisitor(Compilation, entryPoint.Function, this)
+            string result = new HlslMethodVisitor(Compilation, setName, entryPoint.Function, this)
                 .VisitFunction(entryPoint.Block);
             sb.AppendLine(result);
 
@@ -235,9 +254,20 @@ namespace ShaderGen
             return clone;
         }
 
-        protected override string FormatInvocationCore(string type, string method, InvocationParameterInfo[] parameterInfos)
+        protected override string FormatInvocationCore(string setName, string type, string method, InvocationParameterInfo[] parameterInfos)
         {
-            return HlslKnownFunctions.TranslateInvocation(type, method, parameterInfos);
+            ShaderFunctionAndBlockSyntax function = GetContext(setName).Functions
+                .SingleOrDefault(sfabs => sfabs.Function.DeclaringType == type && sfabs.Function.Name == method);
+            if (function != null)
+            {
+                string invocationList = string.Join(", ", parameterInfos.Select(ipi => CSharpToIdentifierNameCore(ipi.FullTypeName, ipi.Identifier)));
+                string fullMethodName = CSharpToShaderType(function.Function.DeclaringType) + "_" + function.Function.Name;
+                return $"{fullMethodName}({invocationList})";
+            }
+            else
+            {
+                return HlslKnownFunctions.TranslateInvocation(type, method, parameterInfos);
+            }
         }
 
         protected override string CSharpToIdentifierNameCore(string typeName, string identifier)

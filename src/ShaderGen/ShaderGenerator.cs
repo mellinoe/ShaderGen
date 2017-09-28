@@ -185,6 +185,10 @@ namespace ShaderGen
                 language.InitContext(ss.Name);
             }
 
+            FunctionCallGraphDiscoverer fcgd = new FunctionCallGraphDiscoverer(_compilation, ss.VertexShader);
+            fcgd.GenerateFullGraph();
+            TypeAndMethodName[] orderedCalls = fcgd.GetOrderedCallList();
+
             ShaderSyntaxWalker walker = new ShaderSyntaxWalker(_compilation, _languages.ToArray(), ss);
             foreach (SyntaxTree tree in treesToVisit)
             {

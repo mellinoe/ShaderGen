@@ -7,19 +7,25 @@ namespace ShaderGen.Tests
 {
     public class ShaderGeneratorTests
     {
+        private static IEnumerable<object[]> ShaderSets()
+        {
+            yield return new object[] { "TestShaders.TestVertexShader.VS", null };
+            yield return new object[] { null, "TestShaders.TestFragmentShader.FS" };
+            yield return new object[] { "TestShaders.TestVertexShader.VS", "TestShaders.TestFragmentShader.FS" };
+            yield return new object[] { null, "TestShaders.TextureSamplerFragment.FS" };
+            yield return new object[] { "TestShaders.VertexAndFragment.VS", "TestShaders.VertexAndFragment.FS" };
+            yield return new object[] { null, "TestShaders.ComplexExpression.FS" };
+            yield return new object[] { "TestShaders.PartialVertex.VertexShaderFunc", null };
+            yield return new object[] { "TestShaders.VeldridShaders.ForwardMtlCombined.VS", "TestShaders.VeldridShaders.ForwardMtlCombined.FS" };
+            yield return new object[] { "TestShaders.VeldridShaders.ForwardMtlCombined.VS", null };
+            yield return new object[] { null, "TestShaders.VeldridShaders.ForwardMtlCombined.FS" };
+            yield return new object[] { "TestShaders.CustomStructResource.VS", null };
+            yield return new object[] { "TestShaders.Swizzles.VS", null };
+            yield return new object[] { "TestShaders.CustomMethodCalls.VS", null };
+        }
+
         [Theory]
-        [InlineData("TestShaders.TestVertexShader.VS", null)]
-        [InlineData(null, "TestShaders.TestFragmentShader.FS")]
-        [InlineData("TestShaders.TestVertexShader.VS", "TestShaders.TestFragmentShader.FS")]
-        [InlineData(null, "TestShaders.TextureSamplerFragment.FS")]
-        [InlineData("TestShaders.VertexAndFragment.VS", "TestShaders.VertexAndFragment.FS")]
-        [InlineData(null, "TestShaders.ComplexExpression.FS")]
-        [InlineData("TestShaders.PartialVertex.VertexShaderFunc", null)]
-        [InlineData("TestShaders.VeldridShaders.ForwardMtlCombined.VS", "TestShaders.VeldridShaders.ForwardMtlCombined.FS")]
-        [InlineData("TestShaders.VeldridShaders.ForwardMtlCombined.VS", null)]
-        [InlineData(null, "TestShaders.VeldridShaders.ForwardMtlCombined.FS")]
-        [InlineData("TestShaders.CustomStructResource.VS", null)]
-        [InlineData("TestShaders.Swizzles.VS", null)]
+        [MemberData(nameof(ShaderSets))]
         public void HlslEndToEnd(string vsName, string fsName)
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
@@ -51,18 +57,7 @@ namespace ShaderGen.Tests
         }
 
         [Theory]
-        [InlineData("TestShaders.TestVertexShader.VS", null)]
-        [InlineData(null, "TestShaders.TestFragmentShader.FS")]
-        [InlineData("TestShaders.TestVertexShader.VS", "TestShaders.TestFragmentShader.FS")]
-        [InlineData(null, "TestShaders.TextureSamplerFragment.FS")]
-        [InlineData("TestShaders.VertexAndFragment.VS", "TestShaders.VertexAndFragment.FS")]
-        [InlineData(null, "TestShaders.ComplexExpression.FS")]
-        [InlineData("TestShaders.PartialVertex.VertexShaderFunc", null)]
-        [InlineData("TestShaders.VeldridShaders.ForwardMtlCombined.VS", "TestShaders.VeldridShaders.ForwardMtlCombined.FS")]
-        [InlineData("TestShaders.VeldridShaders.ForwardMtlCombined.VS", null)]
-        [InlineData(null, "TestShaders.VeldridShaders.ForwardMtlCombined.FS")]
-        [InlineData("TestShaders.CustomStructResource.VS", null)]
-        [InlineData("TestShaders.Swizzles.VS", null)]
+        [MemberData(nameof(ShaderSets))]
         public void Glsl330EndToEnd(string vsName, string fsName)
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
@@ -94,18 +89,7 @@ namespace ShaderGen.Tests
         }
 
         [Theory]
-        [InlineData("TestShaders.TestVertexShader.VS", null)]
-        [InlineData(null, "TestShaders.TestFragmentShader.FS")]
-        [InlineData("TestShaders.TestVertexShader.VS", "TestShaders.TestFragmentShader.FS")]
-        [InlineData(null, "TestShaders.TextureSamplerFragment.FS")]
-        [InlineData("TestShaders.VertexAndFragment.VS", "TestShaders.VertexAndFragment.FS")]
-        [InlineData(null, "TestShaders.ComplexExpression.FS")]
-        [InlineData("TestShaders.PartialVertex.VertexShaderFunc", null)]
-        [InlineData("TestShaders.VeldridShaders.ForwardMtlCombined.VS", "TestShaders.VeldridShaders.ForwardMtlCombined.FS")]
-        [InlineData("TestShaders.VeldridShaders.ForwardMtlCombined.VS", null)]
-        [InlineData(null, "TestShaders.VeldridShaders.ForwardMtlCombined.FS")]
-        [InlineData("TestShaders.CustomStructResource.VS", null)]
-        [InlineData("TestShaders.Swizzles.VS", null)]
+        [MemberData(nameof(ShaderSets))]
         public void Glsl450EndToEnd(string vsName, string fsName)
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();

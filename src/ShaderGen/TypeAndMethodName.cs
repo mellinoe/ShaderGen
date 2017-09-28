@@ -1,6 +1,8 @@
-﻿namespace ShaderGen
+﻿using System;
+
+namespace ShaderGen
 {
-    internal class TypeAndMethodName
+    internal class TypeAndMethodName : IEquatable<TypeAndMethodName>
     {
         public string TypeName;
         public string MethodName;
@@ -24,5 +26,12 @@
             typeAndMethodName = new TypeAndMethodName { TypeName = typeName, MethodName = parts[parts.Length - 1] };
             return true;
         }
+
+        public bool Equals(TypeAndMethodName other)
+        {
+            return TypeName == other.TypeName && MethodName == other.MethodName;
+        }
+
+        public override string ToString() => FullName;
     }
 }

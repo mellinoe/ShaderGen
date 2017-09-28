@@ -77,7 +77,7 @@ namespace ShaderGen
 
         }
 
-        protected override string FormatInvocationCore(string type, string method, InvocationParameterInfo[] parameterInfos)
+        protected override string FormatInvocationCore(string setName, string type, string method, InvocationParameterInfo[] parameterInfos)
         {
             return Glsl450KnownFunctions.TranslateInvocation(type, method, parameterInfos);
         }

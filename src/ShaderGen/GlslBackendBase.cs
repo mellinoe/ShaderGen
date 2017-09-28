@@ -90,7 +90,7 @@ namespace ShaderGen
                 }
             }
 
-            string result = new ShaderMethodVisitor(Compilation, entryPoint.Function, this)
+            string result = new ShaderMethodVisitor(Compilation, setName, entryPoint.Function, this)
                 .VisitFunction(entryPoint.Block);
             sb.AppendLine(result);
 

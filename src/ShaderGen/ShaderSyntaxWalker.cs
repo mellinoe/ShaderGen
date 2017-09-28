@@ -32,7 +32,7 @@ namespace ShaderGen
             List<ParameterDefinition> parameters = new List<ParameterDefinition>();
             foreach (ParameterSyntax ps in node.ParameterList.Parameters)
             {
-                parameters.Add(GetParameterDefinition(ps));
+                parameters.Add(ParameterDefinition.GetParameterDefinition(_compilation, ps));
             }
 
             TypeReference returnType = new TypeReference(GetModel(node).GetFullTypeName(node.ReturnType));
@@ -48,16 +48,10 @@ namespace ShaderGen
                 ? ShaderFunctionType.VertexEntryPoint : isFragmentShader
                 ? ShaderFunctionType.FragmentEntryPoint : ShaderFunctionType.Normal;
 
-            ShaderFunction sf = new ShaderFunction(functionName, returnType, parameters.ToArray(), type);
+            string nestedTypePrefix = Utilities.GetFullNestedTypePrefix(node, out bool nested);
+            ShaderFunction sf = new ShaderFunction(nestedTypePrefix, functionName, returnType, parameters.ToArray(), type);
             ShaderFunctionAndBlockSyntax sfab = new ShaderFunctionAndBlockSyntax(sf, node.Body);
             foreach (LanguageBackend b in _backends) { b.AddFunction(_shaderSet.Name, sfab); }
-        }
-
-        private ParameterDefinition GetParameterDefinition(ParameterSyntax ps)
-        {
-            string fullType = GetModel(ps).GetFullTypeName(ps.Type);
-            string name = ps.Identifier.ToFullString();
-            return new ParameterDefinition(name, new TypeReference(fullType));
         }
 
         public override void VisitStructDeclaration(StructDeclarationSyntax node)

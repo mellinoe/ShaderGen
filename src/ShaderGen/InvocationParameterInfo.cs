@@ -11,6 +11,5 @@ namespace ShaderGen
         {
             return string.Join(", ", parameterInfos.Select(pi => pi.Identifier));
         }
-
     }
 }

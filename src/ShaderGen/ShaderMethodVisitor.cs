@@ -5,18 +5,21 @@ using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace ShaderGen
 {
     public partial class ShaderMethodVisitor : CSharpSyntaxVisitor<string>
     {
         protected readonly Compilation _compilation;
+        protected readonly string _setName;
         protected readonly LanguageBackend _backend;
         protected readonly ShaderFunction _shaderFunction;
 
-        public ShaderMethodVisitor(Compilation compilation, ShaderFunction shaderFunction, LanguageBackend backend)
+        public ShaderMethodVisitor(Compilation compilation, string setName, ShaderFunction shaderFunction, LanguageBackend backend)
         {
             _compilation = compilation;
+            _setName = setName;
             _shaderFunction = shaderFunction;
             _backend = backend;
         }
@@ -57,7 +60,11 @@ namespace ShaderGen
         protected virtual string GetFunctionDeclStr()
         {
             string returnType = _backend.CSharpToShaderType(_shaderFunction.ReturnType.Name);
-            return $"{returnType} {_shaderFunction.Name}({GetParameterDeclList()})";
+            string fullDeclType = _backend.CSharpToShaderType(_shaderFunction.DeclaringType);
+            string funcName = _shaderFunction.IsEntryPoint
+                ? _shaderFunction.Name
+                : fullDeclType + "_" + _shaderFunction.Name;
+            return $"{returnType} {funcName}({GetParameterDeclList()})";
         }
 
         public override string VisitLocalDeclarationStatement(LocalDeclarationStatementSyntax node)
@@ -106,7 +113,7 @@ namespace ShaderGen
                 SymbolInfo symbolInfo = GetModel(node).GetSymbolInfo(ins);
                 string type = symbolInfo.Symbol.ContainingType.ToDisplayString();
                 string method = symbolInfo.Symbol.Name;
-                return _backend.FormatInvocation(type, method, parameterInfos);
+                return _backend.FormatInvocation(_setName, type, method, parameterInfos);
             }
             else if (node.Expression is MemberAccessExpressionSyntax maes)
             {
@@ -118,22 +125,27 @@ namespace ShaderGen
                     List<InvocationParameterInfo> pis = new List<InvocationParameterInfo>();
                     if (ims.IsExtensionMethod)
                     {
+                        string identifier = null;
                         // Extension method invocation, ie: swizzle:
-                        if (!(maes.Expression is MemberAccessExpressionSyntax subExpression))
+                        if (maes.Expression is MemberAccessExpressionSyntax subExpression)
                         {
-                            throw new NotImplementedException(
-                                "Extension methods should have MemberAccessExpressionSyntax expressions.");
+                            identifier = Visit(subExpression);
+                        }
+                        else if (maes.Expression is IdentifierNameSyntax identNameSyntax)
+                        {
+                            identifier = Visit(identNameSyntax);
                         }
 
+                        Debug.Assert(identifier != null);
                         // Might need FullTypeName here too.
                         pis.Add(new InvocationParameterInfo()
                         {
-                            Identifier = Visit(subExpression)
+                            Identifier = identifier
                         });
                     }
 
                     pis.AddRange(GetParameterInfos(node.ArgumentList));
-                    return _backend.FormatInvocation(containingType, methodName, pis.ToArray());
+                    return _backend.FormatInvocation(_setName, containingType, methodName, pis.ToArray());
                 }
 
                 throw new NotImplementedException();

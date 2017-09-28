@@ -4,8 +4,8 @@ namespace ShaderGen
 {
     internal class HlslMethodVisitor : ShaderMethodVisitor
     {
-        public HlslMethodVisitor(Compilation compilation, ShaderFunction shaderFunction, LanguageBackend backend)
-            : base(compilation, shaderFunction, backend)
+        public HlslMethodVisitor(Compilation compilation, string setName, ShaderFunction shaderFunction, LanguageBackend backend)
+            : base(compilation, setName, shaderFunction, backend)
         {
         }
 
@@ -13,7 +13,11 @@ namespace ShaderGen
         {
             string returnType = _backend.CSharpToShaderType(_shaderFunction.ReturnType.Name);
             string suffix = _shaderFunction.Type == ShaderFunctionType.FragmentEntryPoint ? " : SV_Target" : string.Empty;
-            string functionDeclStr = $"{returnType} {_shaderFunction.Name}({GetParameterDeclList()}){suffix}";
+            string fullDeclType = _backend.CSharpToShaderType(_shaderFunction.DeclaringType);
+            string funcName = _shaderFunction.IsEntryPoint
+                ? _shaderFunction.Name
+                : fullDeclType + "_" + _shaderFunction.Name;
+            string functionDeclStr = $"{returnType} {funcName}({GetParameterDeclList()}){suffix}";
             return functionDeclStr;
         }
     }

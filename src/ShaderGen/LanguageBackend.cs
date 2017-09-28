@@ -67,7 +67,10 @@ namespace ShaderGen
             // HACK: Discover all method input structures.
             foreach (ShaderFunctionAndBlockSyntax sf in context.Functions.ToArray())
             {
-                GetCode(setName, sf.Function);
+                if (sf.Function.IsEntryPoint)
+                {
+                    GetCode(setName, sf.Function);
+                }
             }
 
             return new ShaderModel(
@@ -98,10 +101,6 @@ namespace ShaderGen
             if (function == null)
             {
                 throw new ArgumentNullException(nameof(function));
-            }
-            if (!function.IsEntryPoint)
-            {
-                throw new ArgumentException($"IsEntryPoint must be true for parameter {nameof(function)}");
             }
 
             if (!_fullTextShaders.TryGetValue(function, out string result))
@@ -165,13 +164,13 @@ namespace ShaderGen
             return CorrectIdentifier(CSharpToIdentifierNameCore(typeName, identifier));
         }
 
-        internal string FormatInvocation(string type, string method, InvocationParameterInfo[] parameterInfos)
+        internal string FormatInvocation(string setName, string type, string method, InvocationParameterInfo[] parameterInfos)
         {
             Debug.Assert(type != null);
             Debug.Assert(method != null);
             Debug.Assert(parameterInfos != null);
 
-            return FormatInvocationCore(type, method, parameterInfos);
+            return FormatInvocationCore(setName, type, method, parameterInfos);
         }
 
         protected void ValidateRequiredSemantics(string setName, ShaderFunction function, ShaderFunctionType type)
@@ -243,7 +242,7 @@ namespace ShaderGen
         protected abstract string CSharpToShaderTypeCore(string fullType);
         protected abstract string CSharpToIdentifierNameCore(string typeName, string identifier);
         protected abstract string GenerateFullTextCore(string setName, ShaderFunction function);
-        protected abstract string FormatInvocationCore(string type, string method, InvocationParameterInfo[] parameterInfos);
+        protected abstract string FormatInvocationCore(string setName, string type, string method, InvocationParameterInfo[] parameterInfos);
 
         internal string CorrectLiteral(string literal)
         {
