@@ -23,22 +23,22 @@ Here is an example vertex and fragment shader, written in C# with ShaderGen:
 ```C#
 public class MinExample
 {
-    [Resource] public Matrix4x4 Projection;
-    [Resource] public Matrix4x4 View;
-    [Resource] public Matrix4x4 World;
-    [Resource] public Texture2DResource SurfaceTexture;
-    [Resource] public SamplerResource Sampler;
+    public Matrix4x4 Projection;
+    public Matrix4x4 View;
+    public Matrix4x4 World;
+    public Texture2DResource SurfaceTexture;
+    public SamplerResource Sampler;
 
     public struct VertexInput
     {
-        [VertexSemantic(SemanticType.Position)] public Vector3 Position;
-        [VertexSemantic(SemanticType.TextureCoordinate)] public Vector2 TextureCoord;
+        [PositionSemantic] public Vector3 Position;
+        [TextureCoordinateSemantic] public Vector2 TextureCoord;
     }
 
     public struct FragmentInput
     {
-        [VertexSemantic(SemanticType.Position)] public Vector4 Position;
-        [VertexSemantic(SemanticType.TextureCoordinate)] public Vector2 TextureCoord;
+        [PositionSemantic] public Vector4 Position;
+        [TextureCoordinateSemantic] public Vector2 TextureCoord;
     }
 
     [VertexShader]
