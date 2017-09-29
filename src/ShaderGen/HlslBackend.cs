@@ -256,18 +256,7 @@ namespace ShaderGen
 
         protected override string FormatInvocationCore(string setName, string type, string method, InvocationParameterInfo[] parameterInfos)
         {
-            ShaderFunctionAndBlockSyntax function = GetContext(setName).Functions
-                .SingleOrDefault(sfabs => sfabs.Function.DeclaringType == type && sfabs.Function.Name == method);
-            if (function != null)
-            {
-                string invocationList = string.Join(", ", parameterInfos.Select(ipi => CSharpToIdentifierNameCore(ipi.FullTypeName, ipi.Identifier)));
-                string fullMethodName = CSharpToShaderType(function.Function.DeclaringType) + "_" + function.Function.Name;
-                return $"{fullMethodName}({invocationList})";
-            }
-            else
-            {
-                return HlslKnownFunctions.TranslateInvocation(type, method, parameterInfos);
-            }
+            return HlslKnownFunctions.TranslateInvocation(type, method, parameterInfos);
         }
 
         protected override string CSharpToIdentifierNameCore(string typeName, string identifier)

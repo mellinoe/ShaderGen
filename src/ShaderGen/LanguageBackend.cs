@@ -166,11 +166,23 @@ namespace ShaderGen
 
         internal string FormatInvocation(string setName, string type, string method, InvocationParameterInfo[] parameterInfos)
         {
+            Debug.Assert(setName != null);
             Debug.Assert(type != null);
             Debug.Assert(method != null);
             Debug.Assert(parameterInfos != null);
 
-            return FormatInvocationCore(setName, type, method, parameterInfos);
+            ShaderFunctionAndBlockSyntax function = GetContext(setName).Functions
+                .SingleOrDefault(sfabs => sfabs.Function.DeclaringType == type && sfabs.Function.Name == method);
+            if (function != null)
+            {
+                string invocationList = string.Join(", ", parameterInfos.Select(ipi => CSharpToIdentifierNameCore(ipi.FullTypeName, ipi.Identifier)));
+                string fullMethodName = CSharpToShaderType(function.Function.DeclaringType) + "_" + function.Function.Name;
+                return $"{fullMethodName}({invocationList})";
+            }
+            else
+            {
+                return FormatInvocationCore(setName, type, method, parameterInfos);
+            }
         }
 
         protected void ValidateRequiredSemantics(string setName, ShaderFunction function, ShaderFunctionType type)
