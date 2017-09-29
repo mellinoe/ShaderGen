@@ -32,6 +32,8 @@ namespace ShaderGen
             return TypeName == other.TypeName && MethodName == other.MethodName;
         }
 
+        public override int GetHashCode() => FullName.GetHashCode();
+
         public override string ToString() => FullName;
     }
 }

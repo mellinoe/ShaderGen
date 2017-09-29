@@ -152,8 +152,7 @@ namespace TestShaders.VeldridShaders
                 input.LightPosition.Y < -1.0f || input.LightPosition.Y > 1.0f ||
                 input.LightPosition.Z < 0.0f || input.LightPosition.Z > 1.0f)
             {
-                Vector4 baseColor = (ambientLight * surfaceColor) + pointDiffuse + pointSpec;
-                return new Vector4(baseColor.X, baseColor.Y, baseColor.Z, surfaceColor.X);
+                return WithAlpha((ambientLight * surfaceColor) + pointDiffuse + pointSpec, surfaceColor.X);
             }
 
             // transform clip space coords to texture space coords (-1:1 to 0:1)
@@ -175,8 +174,7 @@ namespace TestShaders.VeldridShaders
             //if clip space z value greater than shadow map value then pixel is in shadow
             if (ShadowMapDepth < input.LightPosition.Z)
             {
-                Vector4 baseColor = (ambientLight * surfaceColor) + pointDiffuse + pointSpec;
-                return new Vector4(baseColor.X, baseColor.Y, baseColor.Z, surfaceColor.X);
+                return WithAlpha((ambientLight * surfaceColor) + pointDiffuse + pointSpec, surfaceColor.X);
             }
 
             //otherwise calculate ilumination at fragment
@@ -195,8 +193,13 @@ namespace TestShaders.VeldridShaders
                 specularColor = new Vector4(lightColor * MaterialProperties.SpecularIntensity * specularFactor, 1.0f);
             }
 
-            Vector4 baseColor2 = specularColor + (ambientLight * surfaceColor) + (diffuseFactor * surfaceColor) + pointDiffuse + pointSpec;
-            return new Vector4(baseColor2.X, baseColor2.Y, baseColor2.Z, surfaceColor.X);
+            return WithAlpha(specularColor + (ambientLight * surfaceColor)
+                + (diffuseFactor * surfaceColor) + pointDiffuse + pointSpec, surfaceColor.X);
+        }
+
+        Vector4 WithAlpha(Vector4 baseColor, float alpha)
+        {
+            return new Vector4(baseColor.XYZ(), alpha);
         }
     }
 }

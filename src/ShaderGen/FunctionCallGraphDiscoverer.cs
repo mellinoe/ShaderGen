@@ -25,15 +25,12 @@ namespace ShaderGen
 
         public TypeAndMethodName[] GetOrderedCallList()
         {
-            List<TypeAndMethodName> result = new List<TypeAndMethodName>();
-
+            HashSet<TypeAndMethodName> result = new HashSet<TypeAndMethodName>();
             TraverseNode(result, _rootNode);
-
-
             return result.ToArray();
         }
 
-        private void TraverseNode(List<TypeAndMethodName> result, CallGraphNode node)
+        private void TraverseNode(HashSet<TypeAndMethodName> result, CallGraphNode node)
         {
             foreach (TypeAndMethodName existing in result)
             {
