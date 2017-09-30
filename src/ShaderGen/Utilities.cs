@@ -101,17 +101,31 @@ namespace ShaderGen
             return compilation.GetSemanticModel(syntaxTree);
         }
 
-        public static string GetFullNamespace(INamespaceSymbol ns)
+        public static string GetFullName(INamespaceSymbol ns)
         {
             Debug.Assert(ns != null);
             string currentNamespace = ns.Name;
             if (ns.ContainingNamespace != null && !ns.ContainingNamespace.IsGlobalNamespace)
             {
-                return GetFullNamespace(ns.ContainingNamespace) + "." + currentNamespace;
+                return GetFullName(ns.ContainingNamespace) + "." + currentNamespace;
             }
             else
             {
                 return currentNamespace;
+            }
+        }
+
+        public static string GetFullName(INamedTypeSymbol symbol)
+        {
+            Debug.Assert(symbol != null);
+            string name = symbol.Name;
+            if (symbol.ContainingNamespace != null && !symbol.ContainingNamespace.IsGlobalNamespace)
+            {
+                return GetFullName(symbol.ContainingNamespace) + "." + name;
+            }
+            else
+            {
+                return name;
             }
         }
 
@@ -189,7 +203,7 @@ namespace ShaderGen
         {
             Debug.Assert(symbolInfo.Symbol != null);
             string fullName = symbolInfo.Symbol.Name;
-            string ns = symbolInfo.Symbol.ContainingNamespace.ToDisplayString();
+            string ns = GetFullName(symbolInfo.Symbol.ContainingNamespace);
             if (!string.IsNullOrEmpty(ns))
             {
                 fullName = ns + "." + fullName;

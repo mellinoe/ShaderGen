@@ -4,7 +4,7 @@ using Xunit;
 
 namespace ShaderGen.Tests
 {
-    public class IShaderModelProcessorTests
+    public class IShaderSetProcessorTests
     {
         [Fact]
         private void TestProcessor_UsersArgs()
@@ -22,15 +22,15 @@ namespace ShaderGen.Tests
             Assert.Equal("This Sentence Should Be Printed By_Enumerating All Resources In Order", processor.Result);
         }
 
-        private class TestProcessor : IShaderModelProcessor
+        private class TestProcessor : IShaderSetProcessor
         {
             public string Result { get; private set; }
 
             public string UserArgs { get; set; }
 
-            public void ProcessShaderModel(ShaderModel model)
+            public void ProcessShaderSet(ShaderSetProcessorInput input)
             {
-                Result = string.Join(" ", model.Resources.Select(rd => rd.Name));
+                Result = string.Join(" ", input.Model.Resources.Select(rd => rd.Name));
             }
         }
     }

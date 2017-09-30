@@ -9,7 +9,7 @@ namespace ShaderGen
         private readonly Compilation _compilation;
         private readonly List<ShaderSetInfo> _shaderSets = new List<ShaderSetInfo>();
         private readonly List<LanguageBackend> _languages;
-        private readonly IShaderModelProcessor[] _processors;
+        private readonly IShaderSetProcessor[] _processors;
 
         public ShaderGenerator(
             Compilation compilation,
@@ -21,7 +21,7 @@ namespace ShaderGen
                 vertexFunctionName,
                 fragmentFunctionName,
                 languages,
-                Array.Empty<IShaderModelProcessor>())
+                Array.Empty<IShaderSetProcessor>())
         { }
 
         public ShaderGenerator(
@@ -29,7 +29,7 @@ namespace ShaderGen
             string vertexFunctionName,
             string fragmentFunctionName,
             LanguageBackend[] languages,
-            IShaderModelProcessor[] processors)
+            IShaderSetProcessor[] processors)
         {
             if (compilation == null)
             {
@@ -76,16 +76,16 @@ namespace ShaderGen
             if (vertexFunctionName != null)
             {
                 setName = vertexFunctionName;
-                if (fragmentFunctionName != null)
+            }
+            if (fragmentFunctionName != null)
+            {
+                if (setName == string.Empty)
                 {
-                    if (setName == string.Empty)
-                    {
-                        setName = fragmentFunctionName;
-                    }
-                    else
-                    {
-                        setName += "+" + fragmentFunctionName;
-                    }
+                    setName = fragmentFunctionName;
+                }
+                else
+                {
+                    setName += "+" + fragmentFunctionName;
                 }
             }
 
@@ -100,14 +100,14 @@ namespace ShaderGen
         public ShaderGenerator(
             Compilation compilation,
             LanguageBackend[] languages)
-            : this(compilation, languages, Array.Empty<IShaderModelProcessor>())
+            : this(compilation, languages, Array.Empty<IShaderSetProcessor>())
         { }
 
 
         public ShaderGenerator(
             Compilation compilation,
             LanguageBackend[] languages,
-            IShaderModelProcessor[] processors)
+            IShaderSetProcessor[] processors)
         {
             if (compilation == null)
             {
@@ -153,12 +153,17 @@ namespace ShaderGen
             }
 
             // Activate processors
-            foreach (IShaderModelProcessor processor in _processors)
+            foreach (IShaderSetProcessor processor in _processors)
             {
                 // Kind of a hack, but the relevant info should be the same.
                 foreach (GeneratedShaderSet gss in result.GetOutput(_languages[0]))
                 {
-                    processor.ProcessShaderModel(gss.Model);
+                    ShaderSetProcessorInput input = new ShaderSetProcessorInput(
+                        gss.Name,
+                        gss.VertexFunction,
+                        gss.FragmentFunction,
+                        gss.Model);
+                    processor.ProcessShaderSet(input);
                 }
             }
 

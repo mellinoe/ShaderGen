@@ -11,6 +11,8 @@ namespace ShaderGen
 {
     public abstract class GlslBackendBase : LanguageBackend
     {
+        protected readonly HashSet<string> _uniformNames = new HashSet<string>();
+
         public GlslBackendBase(Compilation compilation) : base(compilation)
         {
         }
@@ -68,6 +70,22 @@ namespace ShaderGen
             foreach (StructureDefinition sd in context.Structures)
             {
                 WriteStructure(sb, sd);
+            }
+
+            FunctionCallGraphDiscoverer fcgd = new FunctionCallGraphDiscoverer(
+                Compilation,
+                new TypeAndMethodName { TypeName = function.DeclaringType, MethodName = function.Name });
+            fcgd.GenerateFullGraph();
+            TypeAndMethodName[] orderedFunctionList = fcgd.GetOrderedCallList();
+
+            foreach (TypeAndMethodName name in orderedFunctionList)
+            {
+                ShaderFunctionAndBlockSyntax f = context.Functions.Single(
+                    sfabs => sfabs.Function.DeclaringType == name.TypeName && sfabs.Function.Name == name.MethodName);
+                if (!f.Function.IsEntryPoint)
+                {
+                    sb.AppendLine(new ShaderMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block));
+                }
             }
 
             foreach (ResourceDefinition rd in context.Resources)
@@ -251,6 +269,31 @@ namespace ShaderGen
             }
 
             return identifier;
+        }
+
+        internal override void AddResource(string setName, ResourceDefinition rd)
+        {
+            if (rd.ResourceKind == ShaderResourceKind.Uniform)
+            {
+                _uniformNames.Add(rd.Name);
+            }
+
+            base.AddResource(setName, rd);
+        }
+
+        internal override string CorrectFieldAccess(SymbolInfo symbolInfo)
+        {
+            string originalName = symbolInfo.Symbol.Name;
+            string mapped = CSharpToShaderIdentifierName(symbolInfo);
+            string identifier = CorrectIdentifier(mapped);
+            if (_uniformNames.Contains(originalName))
+            {
+                return "field_" + identifier;
+            }
+            else
+            {
+                return identifier;
+            }
         }
 
         private static readonly HashSet<string> s_glslKeywords = new HashSet<string>()

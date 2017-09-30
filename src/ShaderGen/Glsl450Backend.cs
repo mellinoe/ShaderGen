@@ -20,9 +20,9 @@ namespace ShaderGen
         protected override void WriteUniform(StringBuilder sb, ResourceDefinition rd)
         {
             string layout = FormatLayoutStr(rd);
-            sb.AppendLine($"{layout} uniform {rd.Name}Buffer");
+            sb.AppendLine($"{layout} uniform {rd.Name}");
             sb.AppendLine("{");
-            sb.AppendLine($"    {CSharpToShaderType(rd.ValueType.Name)} {CorrectIdentifier(rd.Name.Trim())};");
+            sb.AppendLine($"    {CSharpToShaderType(rd.ValueType.Name)} field_{CorrectIdentifier(rd.Name.Trim())};");
             sb.AppendLine("};");
             sb.AppendLine();
         }

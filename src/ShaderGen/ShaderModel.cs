@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ShaderGen
@@ -36,5 +37,37 @@ namespace ShaderGen
 
             return Functions.FirstOrDefault(sf => sf.Name == name);
         }
+
+        public int GetTypeSize(TypeReference tr)
+        {
+            if (s_knownTypeSizes.TryGetValue(tr.Name, out int ret))
+            {
+                return ret;
+            }
+            else
+            {
+                StructureDefinition sd = GetStructureDefinition(tr);
+                int totalSize = 0;
+                foreach (FieldDefinition fd in sd.Fields)
+                {
+                    totalSize += GetTypeSize(fd.Type);
+                }
+
+                if (totalSize == 0)
+                {
+                    throw new InvalidOperationException("Unable to determine the size fo type: " + tr.Name);
+                }
+
+                return totalSize;
+            }
+        }
+
+        private static readonly Dictionary<string, int> s_knownTypeSizes = new Dictionary<string, int>()
+        {
+            { "System.Single", 4 },
+            { "System.Numerics.Vector2", 8 },
+            { "System.Numerics.Vector3", 12 },
+            { "System.Numerics.Vector4", 16 },
+        };
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace ShaderGen.Tests
@@ -76,7 +77,8 @@ namespace ShaderGen.Tests
             string vulkanSdkPath = Environment.GetEnvironmentVariable(VulkanSdkEnvVar);
             if (vulkanSdkPath != null)
             {
-                string exePath = Path.Combine(vulkanSdkPath, "bin", "glslangvalidator");
+                string exeExtension = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : string.Empty;
+                string exePath = Path.Combine(vulkanSdkPath, "bin", "glslangvalidator" + exeExtension);
                 if (File.Exists(exePath))
                 {
                     return exePath;

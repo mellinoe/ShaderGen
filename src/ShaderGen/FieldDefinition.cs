@@ -1,4 +1,6 @@
-﻿namespace ShaderGen
+﻿using System;
+
+namespace ShaderGen
 {
     public class FieldDefinition
     {
@@ -12,9 +14,11 @@
         public int ArrayElementCount { get; }
         public bool IsArray => ArrayElementCount > 0;
 
-        public FieldDefinition(string name, TypeReference type, SemanticType semanticType)
-            : this(name, type, semanticType, 0) { }
-        public FieldDefinition(string name, TypeReference type, SemanticType semanticType, int arrayElementCount)
+        public FieldDefinition(
+            string name,
+            TypeReference type,
+            SemanticType semanticType,
+            int arrayElementCount)
         {
             Name = name;
             Type = type;

@@ -1,8 +1,8 @@
 ﻿namespace ShaderGen
 {
-    public interface IShaderModelProcessor
+    public interface IShaderSetProcessor
     {
         string UserArgs { get; set; }
-        void ProcessShaderModel(ShaderModel model);
+        void ProcessShaderSet(ShaderSetProcessorInput input);
     }
 }

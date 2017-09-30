@@ -120,17 +120,26 @@ namespace ShaderGen.App
                 glsl450
             };
 
-            List<IShaderModelProcessor> processors = new List<IShaderModelProcessor>();
+            List<IShaderSetProcessor> processors = new List<IShaderSetProcessor>();
             if (processorPath != null)
             {
-                Assembly assm = Assembly.LoadFrom(processorPath);
-                IEnumerable<Type> processorTypes = assm.GetTypes().Where(
-                    t => t.GetInterface(nameof(ShaderGen) + "." + nameof(IShaderModelProcessor)) != null);
-                foreach (Type type in processorTypes)
+                try
                 {
-                    IShaderModelProcessor processor = (IShaderModelProcessor)Activator.CreateInstance(type);
-                    processor.UserArgs = processorArgs;
-                    processors.Add(processor);
+                    Assembly assm = Assembly.LoadFrom(processorPath);
+                    IEnumerable<Type> processorTypes = assm.GetTypes().Where(
+                        t => t.GetInterface(nameof(ShaderGen) + "." + nameof(IShaderSetProcessor)) != null);
+                    foreach (Type type in processorTypes)
+                    {
+                        IShaderSetProcessor processor = (IShaderSetProcessor)Activator.CreateInstance(type);
+                        processor.UserArgs = processorArgs;
+                        processors.Add(processor);
+                    }
+                }
+                catch (ReflectionTypeLoadException rtle)
+                {
+                    string msg = string.Join(Environment.NewLine, rtle.LoaderExceptions.Select(e => e.ToString()));
+                    Console.WriteLine("FAIL: " + msg);
+                    throw new Exception(msg);
                 }
             }
 

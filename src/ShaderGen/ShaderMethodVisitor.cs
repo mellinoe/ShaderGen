@@ -15,8 +15,13 @@ namespace ShaderGen
         protected readonly string _setName;
         protected readonly LanguageBackend _backend;
         protected readonly ShaderFunction _shaderFunction;
+        private string _containingTypeName;
 
-        public ShaderMethodVisitor(Compilation compilation, string setName, ShaderFunction shaderFunction, LanguageBackend backend)
+        public ShaderMethodVisitor(
+            Compilation compilation,
+            string setName,
+            ShaderFunction shaderFunction,
+            LanguageBackend backend)
         {
             _compilation = compilation;
             _setName = setName;
@@ -28,6 +33,7 @@ namespace ShaderGen
 
         public string VisitFunction(BlockSyntax node)
         {
+            _containingTypeName = Utilities.GetFullNestedTypePrefix(node, out bool _);
             StringBuilder sb = new StringBuilder();
             string functionDeclStr = GetFunctionDeclStr();
             sb.AppendLine(functionDeclStr);
@@ -208,6 +214,12 @@ namespace ShaderGen
         public override string VisitIdentifierName(IdentifierNameSyntax node)
         {
             SymbolInfo symbolInfo = GetModel(node).GetSymbolInfo(node);
+            ISymbol symbol = symbolInfo.Symbol;
+            string containingTypeName = Utilities.GetFullName(symbolInfo.Symbol.ContainingType);
+            if (symbol.Kind == SymbolKind.Field && containingTypeName == _containingTypeName)
+            {
+                return _backend.CorrectFieldAccess(symbolInfo);
+            }
             string mapped = _backend.CSharpToShaderIdentifierName(symbolInfo);
             return _backend.CorrectIdentifier(mapped);
         }

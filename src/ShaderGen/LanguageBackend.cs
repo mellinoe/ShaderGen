@@ -136,14 +136,14 @@ namespace ShaderGen
             }
         }
 
-        internal virtual void AddResource(string setName, ResourceDefinition ud)
+        internal virtual void AddResource(string setName, ResourceDefinition rd)
         {
-            if (ud == null)
+            if (rd == null)
             {
-                throw new ArgumentNullException(nameof(ud));
+                throw new ArgumentNullException(nameof(rd));
             }
 
-            GetContext(setName).Resources.Add(ud);
+            GetContext(setName).Resources.Add(rd);
         }
 
         internal virtual void AddFunction(string setName, ShaderFunctionAndBlockSyntax sf)
@@ -227,6 +227,12 @@ namespace ShaderGen
             }
 
             return result;
+        }
+
+        internal virtual string CorrectFieldAccess(SymbolInfo symbolInfo)
+        {
+            string mapped = CSharpToShaderIdentifierName(symbolInfo);
+            return CorrectIdentifier(mapped);
         }
 
         protected bool TryDiscoverStructure(string setName, string name, out StructureDefinition sd)
