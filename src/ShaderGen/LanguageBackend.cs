@@ -105,6 +105,11 @@ namespace ShaderGen
 
             if (!_fullTextShaders.TryGetValue(function, out string result))
             {
+                if (!function.IsEntryPoint)
+                {
+                    throw new ShaderGenerationException("Functions listed in a ShaderSet attribute must have either VertexFunction or FragmentFunction attributes.");
+                }
+
                 result = GenerateFullTextCore(setName, function);
                 _fullTextShaders.Add(function, result);
             }

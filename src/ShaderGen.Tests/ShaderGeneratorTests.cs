@@ -121,6 +121,54 @@ namespace ShaderGen.Tests
             }
         }
 
+        [Fact]
+        public void AllSetsAllLanguagesEndToEnd()
+        {
+            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            LanguageBackend[] backends = new LanguageBackend[]
+            {
+                new HlslBackend(compilation),
+                new Glsl330Backend(compilation),
+                new Glsl450Backend(compilation),
+            };
+            ShaderGenerator sg = new ShaderGenerator(compilation, backends);
+
+            ShaderGenerationResult result = sg.GenerateShaders();
+
+            foreach (LanguageBackend backend in backends)
+            {
+                IReadOnlyList<GeneratedShaderSet> sets = result.GetOutput(backend);
+                foreach (GeneratedShaderSet set in sets)
+                {
+                    if (set.VertexShaderCode != null)
+                    {
+                        if (backend is HlslBackend)
+                        {
+                            FxcTool.AssertCompilesCode(set.VertexShaderCode, "vs_5_0", set.VertexFunction.Name);
+                        }
+                        else
+                        {
+                            bool is450 = backend is Glsl450Backend;
+                            GlsLangValidatorTool.AssertCompilesCode(set.VertexShaderCode, "vert", is450);
+                        }
+                    }
+                    if (set.FragmentFunction != null)
+                    {
+                        if (backend is HlslBackend)
+                        {
+                            FxcTool.AssertCompilesCode(set.FragmentShaderCode, "ps_5_0", set.FragmentFunction.Name);
+                        }
+                        else
+                        {
+                            bool is450 = backend is Glsl450Backend;
+                            GlsLangValidatorTool.AssertCompilesCode(set.FragmentShaderCode, "frag", is450);
+                        }
+                    }
+
+                }
+            }
+        }
+
         public void DummyTest()
         {
             string vsName = "TestShaders.VeldridShaders.VertexAndFragment.VS";
