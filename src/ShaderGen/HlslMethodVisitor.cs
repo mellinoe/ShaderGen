@@ -12,7 +12,18 @@ namespace ShaderGen
         protected override string GetFunctionDeclStr()
         {
             string returnType = _backend.CSharpToShaderType(_shaderFunction.ReturnType.Name);
-            string suffix = _shaderFunction.Type == ShaderFunctionType.FragmentEntryPoint ? " : SV_Target" : string.Empty;
+            string suffix = string.Empty;
+            if (_shaderFunction.Type == ShaderFunctionType.FragmentEntryPoint)
+            {
+                if (_shaderFunction.ReturnType.Name == "System.Numerics.Vector4")
+                {
+                    suffix = " : SV_Target";
+                }
+                else if (_shaderFunction.ReturnType.Name != "System.Void")
+                {
+                    throw new ShaderGenerationException("Unsupported fragment return type: " + _shaderFunction.ReturnType.Name);
+                }
+            }
             string fullDeclType = _backend.CSharpToShaderType(_shaderFunction.DeclaringType);
             string funcName = _shaderFunction.IsEntryPoint
                 ? _shaderFunction.Name

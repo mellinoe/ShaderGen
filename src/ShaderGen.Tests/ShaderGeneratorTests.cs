@@ -22,6 +22,7 @@ namespace ShaderGen.Tests
             yield return new object[] { "TestShaders.CustomStructResource.VS", null };
             yield return new object[] { "TestShaders.Swizzles.VS", null };
             yield return new object[] { "TestShaders.CustomMethodCalls.VS", null };
+            yield return new object[] { "TestShaders.VeldridShaders.ShadowDepth.VS", "TestShaders.VeldridShaders.ShadowDepth.FS" };
         }
 
         [Theory]

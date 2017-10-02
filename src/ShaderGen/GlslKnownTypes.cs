@@ -12,6 +12,7 @@ namespace ShaderGen
             { "System.Numerics.Vector3", "vec3" },
             { "System.Numerics.Vector4", "vec4" },
             { "System.Numerics.Matrix4x4", "mat4" },
+            { "System.Void", "void" },
         };
 
         public static string GetMappedName(string name)

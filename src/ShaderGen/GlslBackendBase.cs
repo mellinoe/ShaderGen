@@ -149,6 +149,8 @@ namespace ShaderGen
                 }
             }
 
+            string mappedReturnType = CSharpToShaderType(entryFunction.ReturnType.Name);
+
             // Declare "out" variables
             if (entryFunction.Type == ShaderFunctionType.VertexEntryPoint)
             {
@@ -177,19 +179,20 @@ namespace ShaderGen
             else
             {
                 Debug.Assert(entryFunction.Type == ShaderFunctionType.FragmentEntryPoint);
-                string mappedReturnType = CSharpToShaderType(entryFunction.ReturnType.Name);
-                if (mappedReturnType != "vec4")
+                if (mappedReturnType != "vec4" && mappedReturnType != "void")
                 {
-                    throw new ShaderGenerationException("Fragment shader must return a System.Numerics.Vector4 value.");
+                    throw new ShaderGenerationException("Fragment shader must return a System.Numerics.Vector4 value, or no value.");
                 }
 
-                WriteInOutVariable(sb, false, false, "vec4", "_outputColor_", 0);
+                if (mappedReturnType == "vec4")
+                {
+                    WriteInOutVariable(sb, false, false, "vec4", "_outputColor_", 0);
+                }
             }
 
             sb.AppendLine();
 
             string inTypeName = CSharpToShaderType(inputType.Name);
-            string outTypeName = CSharpToShaderType(entryFunction.ReturnType.Name);
 
             sb.AppendLine($"void main()");
             sb.AppendLine("{");
@@ -220,7 +223,14 @@ namespace ShaderGen
             }
 
             // Call actual function.
-            sb.AppendLine($"    {outTypeName} {CorrectIdentifier("output")} = {entryFunction.Name}({CorrectIdentifier("input")});");
+            if (mappedReturnType != "void")
+            {
+                sb.AppendLine($"    {mappedReturnType} {CorrectIdentifier("output")} = {entryFunction.Name}({CorrectIdentifier("input")});");
+            }
+            else
+            {
+                sb.Append($"    {entryFunction.Name}({CorrectIdentifier("input")});");
+            }
 
             // Assign output fields to synthetic "out" variables with normalized "fsin_#" names.
             if (entryFunction.Type == ShaderFunctionType.VertexEntryPoint)
@@ -251,7 +261,10 @@ namespace ShaderGen
             else
             {
                 Debug.Assert(entryFunction.Type == ShaderFunctionType.FragmentEntryPoint);
-                sb.AppendLine($"    _outputColor_ = {CorrectIdentifier("output")};");
+                if (mappedReturnType == "vec4")
+                {
+                    sb.AppendLine($"    _outputColor_ = {CorrectIdentifier("output")};");
+                }
             }
             sb.AppendLine("}");
         }
