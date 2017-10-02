@@ -65,6 +65,7 @@ namespace ShaderGen
         private static readonly Dictionary<string, int> s_knownTypeSizes = new Dictionary<string, int>()
         {
             { "System.Single", 4 },
+            { "System.Int32", 4 },
             { "System.Numerics.Vector2", 8 },
             { "System.Numerics.Vector3", 12 },
             { "System.Numerics.Vector4", 16 },
