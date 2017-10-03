@@ -13,7 +13,8 @@ namespace ShaderGen
     {
         private const string FragmentSemanticsSuffix = "__FRAGSEMANTICS";
 
-        private readonly List<StructureDefinition> _synthesizedStructures = new List<StructureDefinition>();
+        private readonly Dictionary<string, List<StructureDefinition>> _synthesizedStructures
+            = new Dictionary<string, List<StructureDefinition>>();
 
         public HlslBackend(Compilation compilation) : base(compilation)
         {
@@ -149,7 +150,7 @@ namespace ShaderGen
             if (function.Type == ShaderFunctionType.VertexEntryPoint)
             {
                 // HLSL vertex outputs needs to have semantics applied to the structure fields.
-                StructureDefinition output = CreateOutputStructure(GetRequiredStructureType(setName, entryPoint.Function.ReturnType));
+                StructureDefinition output = CreateOutputStructure(setName, GetRequiredStructureType(setName, entryPoint.Function.ReturnType));
                 setContext.Functions.Remove(entryPoint);
                 entryPoint = entryPoint.WithReturnType(new TypeReference(output.Name));
                 setContext.Functions.Add(entryPoint);
@@ -158,7 +159,7 @@ namespace ShaderGen
             if (function.Type == ShaderFunctionType.FragmentEntryPoint)
             {
                 // HLSL pixel shader inputs also need these semantics.
-                StructureDefinition modifiedInput = CreateOutputStructure(input);
+                StructureDefinition modifiedInput = CreateOutputStructure(setName, input);
                 setContext.Functions.Remove(entryPoint);
                 entryPoint = entryPoint.WithParameter(0, new TypeReference(modifiedInput.Name));
                 setContext.Functions.Add(entryPoint);
@@ -168,7 +169,7 @@ namespace ShaderGen
             {
                 WriteStructure(sb, sd);
             }
-            foreach (StructureDefinition sd in _synthesizedStructures)
+            foreach (StructureDefinition sd in GetSynthesizedStructures(setName))
             {
                 WriteStructure(sb, sd);
             }
@@ -222,7 +223,8 @@ namespace ShaderGen
             StructureDefinition result = GetContext(setName).Structures.SingleOrDefault(sd => sd.Name == type.Name);
             if (result == null)
             {
-                result = _synthesizedStructures.SingleOrDefault(sd => sd.Name == type.Name);
+                List<StructureDefinition> synthSDs = GetSynthesizedStructures(setName);
+                result = synthSDs.SingleOrDefault(sd => sd.Name == type.Name);
                 if (result == null)
                 {
                     if (!TryDiscoverStructure(setName, type.Name, out result))
@@ -235,7 +237,7 @@ namespace ShaderGen
             return result;
         }
 
-        private StructureDefinition CreateOutputStructure(StructureDefinition sd)
+        private StructureDefinition CreateOutputStructure(string setName, StructureDefinition sd)
         {
             if (sd.Name.EndsWith(FragmentSemanticsSuffix))
             {
@@ -243,14 +245,15 @@ namespace ShaderGen
             }
 
             string newName = sd.Name + FragmentSemanticsSuffix;
-            StructureDefinition existing = _synthesizedStructures.SingleOrDefault(ssd => ssd.Name == newName);
+            List<StructureDefinition> synthesizedStructures = GetSynthesizedStructures(setName);
+            StructureDefinition existing = synthesizedStructures.SingleOrDefault(ssd => ssd.Name == newName);
             if (existing != null)
             {
                 return existing;
             }
 
             StructureDefinition clone = new StructureDefinition(newName, sd.Fields);
-            _synthesizedStructures.Add(clone);
+            synthesizedStructures.Add(clone);
             return clone;
         }
 
@@ -278,6 +281,17 @@ namespace ShaderGen
         internal override string CorrectIdentifier(string identifier)
         {
             return identifier;
+        }
+
+        private List<StructureDefinition> GetSynthesizedStructures(string setName)
+        {
+            if (!_synthesizedStructures.TryGetValue(setName, out List<StructureDefinition> ret))
+            {
+                ret = new List<StructureDefinition>();
+                _synthesizedStructures.Add(setName, ret);
+            }
+
+            return ret;
         }
     }
 }

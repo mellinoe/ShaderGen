@@ -103,7 +103,6 @@ namespace ShaderGen
             : this(compilation, languages, Array.Empty<IShaderSetProcessor>())
         { }
 
-
         public ShaderGenerator(
             Compilation compilation,
             LanguageBackend[] languages,

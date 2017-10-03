@@ -169,6 +169,22 @@ namespace ShaderGen.Tests
             }
         }
 
+        [Fact]
+        public void MissingFunctionAttribute_Throws()
+        {
+            string vsName = "TestShaders.MissingFunctionAttribute.VS";
+
+            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            Glsl330Backend backend = new Glsl330Backend(compilation);
+            ShaderGenerator sg = new ShaderGenerator(
+                compilation,
+                vsName,
+                null,
+                backend);
+
+            Assert.Throws<ShaderGenerationException>(() => sg.GenerateShaders());
+        }
+
         public void DummyTest()
         {
             string vsName = "TestShaders.VeldridShaders.VertexAndFragment.VS";
