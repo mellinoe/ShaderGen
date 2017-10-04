@@ -165,7 +165,9 @@ namespace ShaderGen
                 setContext.Functions.Add(entryPoint);
             }
 
-            foreach (StructureDefinition sd in setContext.Structures)
+            StructureDefinition[] orderedStructures
+                = StructureDependencyGraph.GetOrderedStructureList(Compilation, setContext.Structures);
+            foreach (StructureDefinition sd in orderedStructures)
             {
                 WriteStructure(sb, sd);
             }

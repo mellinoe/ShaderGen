@@ -60,7 +60,10 @@ namespace ShaderGen
 
             WriteVersionHeader(sb);
 
-            foreach (StructureDefinition sd in context.Structures)
+            StructureDefinition[] orderedStructures
+                = StructureDependencyGraph.GetOrderedStructureList(Compilation, context.Structures);
+
+            foreach (StructureDefinition sd in orderedStructures)
             {
                 WriteStructure(sb, sd);
             }
