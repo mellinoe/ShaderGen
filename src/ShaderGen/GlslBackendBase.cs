@@ -17,13 +17,6 @@ namespace ShaderGen
         {
         }
 
-        protected override string CSharpToShaderTypeCore(string fullType)
-        {
-            return GlslKnownTypes.GetMappedName(fullType)
-                .Replace(".", "_")
-                .Replace("+", "_");
-        }
-
         protected void WriteStructure(StringBuilder sb, StructureDefinition sd)
         {
             sb.AppendLine($"struct {CSharpToShaderType(sd.Name)}");
@@ -72,22 +65,6 @@ namespace ShaderGen
                 WriteStructure(sb, sd);
             }
 
-            FunctionCallGraphDiscoverer fcgd = new FunctionCallGraphDiscoverer(
-                Compilation,
-                new TypeAndMethodName { TypeName = function.DeclaringType, MethodName = function.Name });
-            fcgd.GenerateFullGraph();
-            TypeAndMethodName[] orderedFunctionList = fcgd.GetOrderedCallList();
-
-            foreach (TypeAndMethodName name in orderedFunctionList)
-            {
-                ShaderFunctionAndBlockSyntax f = context.Functions.Single(
-                    sfabs => sfabs.Function.DeclaringType == name.TypeName && sfabs.Function.Name == name.MethodName);
-                if (!f.Function.IsEntryPoint)
-                {
-                    sb.AppendLine(new ShaderMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block));
-                }
-            }
-
             foreach (ResourceDefinition rd in context.Resources)
             {
                 switch (rd.ResourceKind)
@@ -105,6 +82,22 @@ namespace ShaderGen
                         WriteSampler(sb, rd);
                         break;
                     default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
+                }
+            }
+
+            FunctionCallGraphDiscoverer fcgd = new FunctionCallGraphDiscoverer(
+                Compilation,
+                new TypeAndMethodName { TypeName = function.DeclaringType, MethodName = function.Name });
+            fcgd.GenerateFullGraph();
+            TypeAndMethodName[] orderedFunctionList = fcgd.GetOrderedCallList();
+
+            foreach (TypeAndMethodName name in orderedFunctionList)
+            {
+                ShaderFunctionAndBlockSyntax f = context.Functions.Single(
+                    sfabs => sfabs.Function.DeclaringType == name.TypeName && sfabs.Function.Name == name.MethodName);
+                if (!f.Function.IsEntryPoint)
+                {
+                    sb.AppendLine(new ShaderMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block));
                 }
             }
 

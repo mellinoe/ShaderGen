@@ -2,9 +2,9 @@
 
 namespace ShaderGen
 {
-    public static class GlslKnownTypes
+    internal static class GlslKnownTypes
     {
-        private static readonly Dictionary<string, string> s_knownTypes = new Dictionary<string, string>()
+        private static readonly Dictionary<string, string> s_knownTypesShared = new Dictionary<string, string>()
         {
             { "System.Int32", "int" },
             { "System.Single", "float" },
@@ -15,16 +15,42 @@ namespace ShaderGen
             { "System.Void", "void" },
         };
 
-        public static string GetMappedName(string name)
+        private static readonly Dictionary<string, string> s_knownTypesGL = new Dictionary<string, string>()
         {
-            if (s_knownTypes.TryGetValue(name, out string mapped))
+            { "ShaderGen.Texture2DResource", "sampler2D" },
+            { "ShaderGen.TextureCubeResource", "samplerCube" },
+        };
+
+
+        private static readonly Dictionary<string, string> s_knownTypesVulkan = new Dictionary<string, string>()
+        {
+            { "ShaderGen.Texture2DResource", "texture2D" },
+            { "ShaderGen.TextureCubeResource", "textureCube" },
+        };
+
+
+        public static string GetMappedName(string name, bool vulkan)
+        {
+            if (s_knownTypesShared.TryGetValue(name, out string mapped))
             {
                 return mapped;
             }
+            else if (vulkan)
+            {
+                if (s_knownTypesVulkan.TryGetValue(name, out mapped))
+                {
+                    return mapped;
+                }
+            }
             else
             {
-                return name;
+                if (s_knownTypesGL.TryGetValue(name, out mapped))
+                {
+                    return mapped;
+                }
             }
+
+            return name;
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace ShaderGen
 {
-    public static class HlslKnownTypes
+    internal static class HlslKnownTypes
     {
         private static readonly Dictionary<string, string> s_knownTypes = new Dictionary<string, string>()
         {
@@ -13,6 +13,8 @@ namespace ShaderGen
             { "System.Numerics.Vector4", "float4" },
             { "System.Numerics.Matrix4x4", "float4x4" },
             { "System.Void", "void" },
+            { "ShaderGen.Texture2DResource", "Texture2D" },
+            { "ShaderGen.TextureCubeResource", "TextureCube" },
         };
 
         public static string GetMappedName(string name)

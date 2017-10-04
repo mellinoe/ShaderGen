@@ -10,6 +10,13 @@ namespace ShaderGen
         {
         }
 
+        protected override string CSharpToShaderTypeCore(string fullType)
+        {
+            return GlslKnownTypes.GetMappedName(fullType, true)
+                .Replace(".", "_")
+                .Replace("+", "_");
+        }
+
         protected override void WriteVersionHeader(StringBuilder sb)
         {
             sb.AppendLine("#version 450");

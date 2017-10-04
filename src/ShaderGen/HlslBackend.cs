@@ -180,16 +180,6 @@ namespace ShaderGen
             fcgd.GenerateFullGraph();
             TypeAndMethodName[] orderedFunctionList = fcgd.GetOrderedCallList();
 
-            foreach (TypeAndMethodName name in orderedFunctionList)
-            {
-                ShaderFunctionAndBlockSyntax f = setContext.Functions.Single(
-                    sfabs => sfabs.Function.DeclaringType == name.TypeName && sfabs.Function.Name == name.MethodName);
-                if (!f.Function.IsEntryPoint)
-                {
-                    sb.AppendLine(new HlslMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block));
-                }
-            }
-
             int uniformBinding = 0, textureBinding = 0, samplerBinding = 0;
             foreach (ResourceDefinition rd in setContext.Resources)
             {
@@ -208,6 +198,16 @@ namespace ShaderGen
                         WriteSampler(sb, rd, samplerBinding++);
                         break;
                     default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
+                }
+            }
+
+            foreach (TypeAndMethodName name in orderedFunctionList)
+            {
+                ShaderFunctionAndBlockSyntax f = setContext.Functions.Single(
+                    sfabs => sfabs.Function.DeclaringType == name.TypeName && sfabs.Function.Name == name.MethodName);
+                if (!f.Function.IsEntryPoint)
+                {
+                    sb.AppendLine(new HlslMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block));
                 }
             }
 
