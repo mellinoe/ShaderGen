@@ -149,7 +149,7 @@ namespace ShaderGen.App
             {
                 shaderGenResult = sg.GenerateShaders();
             }
-            catch (Exception e)
+            catch (Exception e) when (!Debugger.IsAttached)
             {
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine("An error was encountered while generating shader code:");
@@ -232,13 +232,22 @@ namespace ShaderGen.App
                 ProcessStartInfo psi = new ProcessStartInfo(fxcPath, args);
                 psi.RedirectStandardOutput = true;
                 psi.RedirectStandardError = true;
-                Process.Start(psi).WaitForExit();
-                path = outputPath;
-                return true;
+                Process p = Process.Start(psi);
+                p.WaitForExit();
+
+                if (p.ExitCode == 0)
+                {
+                    path = outputPath;
+                    return true;
+                }
+                else
+                {
+                    throw new ShaderGenerationException(p.StandardError.ReadToEnd());
+                }
             }
-            catch (Exception e)
+            catch (Win32Exception)
             {
-                Console.WriteLine("Failed to compile HLSL bytecode: " + e);
+                Console.WriteLine("Unable to launch fxc tool.");
             }
 
             path = null;
@@ -255,17 +264,22 @@ namespace ShaderGen.App
                 ProcessStartInfo psi = new ProcessStartInfo("glslangValidator", args);
                 psi.RedirectStandardError = true;
                 psi.RedirectStandardOutput = true;
-                Process.Start(psi).WaitForExit();
-                path = outputPath;
-                return true;
+                Process p = Process.Start(psi);
+                p.WaitForExit();
+
+                if (p.ExitCode == 0)
+                {
+                    path = outputPath;
+                    return true;
+                }
+                else
+                {
+                    throw new ShaderGenerationException(p.StandardOutput.ReadToEnd());
+                }
             }
             catch (Win32Exception)
             {
                 Console.WriteLine("Unable to launch glslangValidator tool.");
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Failed to compile SPIR-V bytecode: " + e);
             }
 
             path = null;
