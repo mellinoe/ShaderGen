@@ -11,7 +11,7 @@
 
     <Error Condition="'$(_SGExePath)' == ''" Text="The ShaderGen tool was not located or set." />
     <Error Condition="'$(ShaderOutputPath)' == ''" Text="ShaderOutputPath must be set." />
-    
+
     <WriteLinesToFile Lines="@(ReferencePath)" File="$(_SGReferencesResponsePath)" Overwrite="true" />
     <WriteLinesToFile Lines="@(Compile)" File="$(_SGSourcesResponsePath)" Overwrite="true" />
 
@@ -27,14 +27,20 @@
 
     <Delete Files="$(_SGGeneratedFilesList)" Condition="Exists($(_SGGeneratedFilesList))" ContinueOnError="true" />
 
+    <PropertyGroup>
+      <_SGContinueOnError>false</_SGContinueOnError>
+      <_SGContinueOnError Condition="'$(DesignTimeBuild)' == 'true'">true</_SGContinueOnError>
+    </PropertyGroup>
+
     <Exec Command="dotnet $(_SGExePath) $(_SGArgs)"
           WorkingDirectory="$(MSBuildProjectDirectory)"
-          StandardOutputImportance="high" />
+          StandardOutputImportance="high"
+          ContinueOnError="$(_SGContinueOnError)" />
 
     <ReadLinesFromFile
       Condition="Exists($(_SGGeneratedFilesList))"
       File="$(_SGGeneratedFilesList)">
-      <Output 
+      <Output
           TaskParameter="Lines"
           ItemName="GeneratedShader" />
     </ReadLinesFromFile>
