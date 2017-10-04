@@ -211,5 +211,25 @@ namespace ShaderGen
 
             return fullName;
         }
+
+        public static int GetArrayCountValue(VariableDeclaratorSyntax vds)
+        {
+            AttributeSyntax[] arraySizeAttrs = Utilities.GetMemberAttributes(vds, "ArraySize");
+            if (arraySizeAttrs.Length != 1)
+            {
+                throw new ShaderGenerationException(
+                    "Array fields in structs must have a constant size specified by an ArraySizeAttribute.");
+            }
+            AttributeSyntax arraySizeAttr = arraySizeAttrs[0];
+            string fullArg0 = arraySizeAttr.ArgumentList.Arguments[0].ToFullString();
+            if (int.TryParse(fullArg0, out int ret))
+            {
+                return ret;
+            }
+            else
+            {
+                throw new ShaderGenerationException("Incorrectly formatted attribute: " + arraySizeAttr.ToFullString());
+            }
+        }
     }
 }

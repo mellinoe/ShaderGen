@@ -38,19 +38,23 @@ namespace ShaderGen
 
         protected override void WriteTexture2D(StringBuilder sb, ResourceDefinition rd)
         {
+            string arraySection = rd.IsArray ? $"[{rd.ArrayElementCount}]" : string.Empty;
             sb.Append(FormatLayoutStr(rd));
             sb.Append(' ');
             sb.Append("uniform texture2D ");
             sb.Append(CorrectIdentifier(rd.Name));
+            sb.Append(arraySection);
             sb.AppendLine(";");
         }
 
         protected override void WriteTextureCube(StringBuilder sb, ResourceDefinition rd)
         {
+            string arraySection = rd.IsArray ? $"[{rd.ArrayElementCount}]" : string.Empty;
             sb.Append(FormatLayoutStr(rd));
             sb.Append(' ');
             sb.Append("uniform textureCube ");
             sb.Append(CorrectIdentifier(rd.Name));
+            sb.Append(arraySection);
             sb.AppendLine(";");
         }
 

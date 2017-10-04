@@ -83,7 +83,7 @@ namespace ShaderGen
                         int arrayElementCount = 0;
                         if (isArray)
                         {
-                            arrayElementCount = GetArrayCountValue(vds);
+                            arrayElementCount = Utilities.GetArrayCountValue(vds);
                         }
 
                         TypeReference tr = new TypeReference(typeName);
@@ -96,27 +96,6 @@ namespace ShaderGen
 
             sd = new StructureDefinition(structName.Trim(), fields.ToArray());
             return true;
-        }
-
-        private static int GetArrayCountValue(VariableDeclaratorSyntax vds)
-        {
-            AttributeSyntax[] arraySizeAttrs = Utilities.GetMemberAttributes(vds, "ArraySize");
-            if (arraySizeAttrs.Length != 1)
-            {
-                throw new ShaderGenerationException(
-                    "Array fields in structs must have a constant size specified by an ArraySizeAttribute.");
-            }
-            AttributeSyntax arraySizeAttr = arraySizeAttrs[0];
-            string fullArg0 = arraySizeAttr.ArgumentList.Arguments[0].ToFullString();
-            if (int.TryParse(fullArg0, out int ret))
-            {
-                return ret;
-            }
-            else
-            {
-                throw new ShaderGenerationException("Incorrectly formatted attribute: " + arraySizeAttr.ToFullString());
-            }
-
         }
 
         private static SemanticType GetSemanticType(VariableDeclaratorSyntax vds)
@@ -187,10 +166,11 @@ namespace ShaderGen
 
             string resourceName = vds.Identifier.Text;
             TypeInfo typeInfo = GetModel(node).GetTypeInfo(node.Type);
-            string fullTypeName = GetModel(node).GetFullTypeName(node.Type);
+            string fullTypeName = GetModel(node).GetFullTypeName(node.Type, out bool isArray);
             TypeReference tr = new TypeReference(fullTypeName);
             ShaderResourceKind kind = ClassifyResourceKind(fullTypeName);
-            ResourceDefinition rd = new ResourceDefinition(resourceName, resourceBinding, tr, kind);
+            int arrayElementCount = isArray ? Utilities.GetArrayCountValue(vds) : 0;
+            ResourceDefinition rd = new ResourceDefinition(resourceName, resourceBinding, tr, arrayElementCount, kind);
             if (kind == ShaderResourceKind.Uniform)
             {
                 ValidateResourceType(typeInfo);

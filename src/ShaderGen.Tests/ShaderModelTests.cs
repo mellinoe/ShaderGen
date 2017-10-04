@@ -77,5 +77,11 @@ namespace ShaderGen.Tests
             string vsCode = set.VertexShaderCode;
             FxcTool.AssertCompilesCode(vsCode, "vs_5_0", "VertexShaderFunc");
         }
+
+        [Fact]
+        public void TextureArrays_FillMultipleSlots()
+        {
+
+        }
     }
 }

@@ -111,13 +111,15 @@ namespace ShaderGen
 
         private void WriteTexture2D(StringBuilder sb, ResourceDefinition rd, int binding)
         {
-            sb.AppendLine($"Texture2D {CorrectIdentifier(rd.Name)} : register(t{binding});");
+            string arraySection = rd.IsArray ? $"[{rd.ArrayElementCount}]" : string.Empty;
+            sb.AppendLine($"Texture2D {CorrectIdentifier(rd.Name)}{arraySection} : register(t{binding});");
             sb.AppendLine();
         }
 
         private void WriteTextureCube(StringBuilder sb, ResourceDefinition rd, int binding)
         {
-            sb.AppendLine($"TextureCube {CorrectIdentifier(rd.Name)} : register(t{binding});");
+            string arraySection = rd.IsArray ? $"[{rd.ArrayElementCount}]" : string.Empty;
+            sb.AppendLine($"TextureCube {CorrectIdentifier(rd.Name)}{arraySection} : register(t{binding});");
             sb.AppendLine();
         }
 

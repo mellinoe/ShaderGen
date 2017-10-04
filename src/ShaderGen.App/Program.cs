@@ -251,7 +251,6 @@ namespace ShaderGen.App
             string args = $"-V -S {(isVertex ? "vert" : "frag")} {shaderPath} -o {outputPath}";
             try
             {
-
                 ProcessStartInfo psi = new ProcessStartInfo("glslangValidator", args);
                 psi.RedirectStandardError = true;
                 psi.RedirectStandardOutput = true;

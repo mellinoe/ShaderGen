@@ -22,13 +22,15 @@ namespace ShaderGen
 
         protected override void WriteTexture2D(StringBuilder sb, ResourceDefinition rd)
         {
-            sb.AppendLine($"uniform sampler2D {CorrectIdentifier(rd.Name)};");
+            string arraySection = rd.IsArray ? $"[{rd.ArrayElementCount}]" : string.Empty;
+            sb.AppendLine($"uniform sampler2D {CorrectIdentifier(rd.Name)}{arraySection};");
             sb.AppendLine();
         }
 
         protected override void WriteTextureCube(StringBuilder sb, ResourceDefinition rd)
         {
-            sb.AppendLine($"uniform samplerCube {CorrectIdentifier(rd.Name)};");
+            string arraySection = rd.IsArray ? $"[{rd.ArrayElementCount}]" : string.Empty;
+            sb.AppendLine($"uniform samplerCube {CorrectIdentifier(rd.Name)}{arraySection};");
             sb.AppendLine();
         }
 
