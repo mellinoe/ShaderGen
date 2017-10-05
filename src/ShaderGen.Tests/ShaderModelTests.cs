@@ -77,5 +77,26 @@ namespace ShaderGen.Tests
             string vsCode = set.VertexShaderCode;
             FxcTool.AssertCompilesCode(vsCode, "vs_5_0", "VertexShaderFunc");
         }
+
+        [Fact]
+        public void PointLightsInfo_CorrectSize()
+        {
+            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            HlslBackend backend = new HlslBackend(compilation);
+            ShaderGenerator sg = new ShaderGenerator(
+                compilation,
+                "TestShaders.PointLightTestShaders.VS",
+                null,
+                backend);
+
+            ShaderGenerationResult genResult = sg.GenerateShaders();
+            IReadOnlyList<GeneratedShaderSet> sets = genResult.GetOutput(backend);
+            Assert.Equal(1, sets.Count);
+            GeneratedShaderSet set = sets[0];
+            ShaderModel shaderModel = set.Model;
+
+            Assert.Equal(1, shaderModel.Resources.Length);
+            Assert.Equal(144, shaderModel.GetTypeSize(shaderModel.Resources[0].ValueType));
+        }
     }
 }

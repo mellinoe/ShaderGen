@@ -50,7 +50,8 @@ namespace ShaderGen
                 int totalSize = 0;
                 foreach (FieldDefinition fd in sd.Fields)
                 {
-                    totalSize += GetTypeSize(fd.Type);
+                    int fieldTypeSize = GetTypeSize(fd.Type);
+                    totalSize += fieldTypeSize * (Math.Max(1, fd.ArrayElementCount));
                 }
 
                 if (totalSize == 0)
