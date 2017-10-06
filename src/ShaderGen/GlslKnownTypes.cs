@@ -13,6 +13,7 @@ namespace ShaderGen
             { "System.Numerics.Vector4", "vec4" },
             { "System.Numerics.Matrix4x4", "mat4" },
             { "System.Void", "void" },
+            { "System.Boolean", "bool" },
         };
 
         private static readonly Dictionary<string, string> s_knownTypesGL = new Dictionary<string, string>()

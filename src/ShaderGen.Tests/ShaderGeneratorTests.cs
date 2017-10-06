@@ -23,6 +23,7 @@ namespace ShaderGen.Tests
             yield return new object[] { "TestShaders.Swizzles.VS", null };
             yield return new object[] { "TestShaders.CustomMethodCalls.VS", null };
             yield return new object[] { "TestShaders.VeldridShaders.ShadowDepth.VS", "TestShaders.VeldridShaders.ShadowDepth.FS" };
+            yield return new object[] { "TestShaders.ShaderBuiltinsTestShader.VS", null };
         }
 
         [Theory]
@@ -169,17 +170,23 @@ namespace ShaderGen.Tests
             }
         }
 
-        [Fact]
-        public void MissingFunctionAttribute_Throws()
+        private static IEnumerable<object[]> ErrorSets()
         {
-            string vsName = "TestShaders.MissingFunctionAttribute.VS";
+            yield return new object[] { "TestShaders.MissingFunctionAttribute.VS", null };
+            yield return new object[] { "TestShaders.PercentOperator.PercentVS", null };
+            yield return new object[] { "TestShaders.PercentOperator.PercentEqualsVS", null };
+        }
 
+        [Theory]
+        [MemberData(nameof(ErrorSets))]
+        public void ExceptedException(string vsName, string fsName)
+        {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             Glsl330Backend backend = new Glsl330Backend(compilation);
             ShaderGenerator sg = new ShaderGenerator(
                 compilation,
                 vsName,
-                null,
+                fsName,
                 backend);
 
             Assert.Throws<ShaderGenerationException>(() => sg.GenerateShaders());

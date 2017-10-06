@@ -85,10 +85,18 @@ namespace ShaderGen
 
         public override string VisitAssignmentExpression(AssignmentExpressionSyntax node)
         {
-            return Visit(node.Left)
+            string token = node.OperatorToken.ToFullString().Trim();
+            if (token == "%=")
+            {
+                throw new ShaderGenerationException(
+                    "Modulus operator not supported in shader functions. Use ShaderBuiltins.Mod instead.");
+
+            }
+
+            return base.Visit(node.Left)
                 + " "
-                + node.OperatorToken.ToFullString()
-                + Visit(node.Right)
+                + token
+                + base.Visit(node.Right)
                 + ";";
         }
 
@@ -167,6 +175,13 @@ namespace ShaderGen
 
         public override string VisitBinaryExpression(BinaryExpressionSyntax node)
         {
+            string token = node.OperatorToken.ToFullString().Trim();
+            if (token == "%")
+            {
+                throw new ShaderGenerationException(
+                    "Modulus operator not supported in shader functions. Use ShaderBuiltins.Mod instead.");
+            }
+
             return Visit(node.Left) + " "
                 + node.OperatorToken + " "
                 + Visit(node.Right);

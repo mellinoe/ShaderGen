@@ -18,6 +18,7 @@ namespace ShaderGen
                 { "Acos", SimpleNameTranslator("acos") },
                 { "Tan", SimpleNameTranslator("tan") },
                 { "Clamp", SimpleNameTranslator("clamp") },
+                { "Mod", SimpleNameTranslator("mod") },
                 { "Mul", MatrixMul },
                 { "Sample", Sample2D },
                 { "Discard", Discard },
