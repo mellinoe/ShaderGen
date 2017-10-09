@@ -59,6 +59,9 @@ namespace TestShaders
             r2 = Mod(v2, new Vector2(2, 4));
             r3 = Mod(v3, new Vector3(2, 4, 6));
             r4 = Mod(v4, new Vector4(2, 4, 6, 8));
+
+            // ClipToTextureCoordinates
+            r2 = ClipToTextureCoordinates(v4);
             return input;
         }
     }

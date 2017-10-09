@@ -23,6 +23,7 @@ namespace ShaderGen
                 { "Mod", SimpleNameTranslator("fmod") },
                 { "Sample", Sample2D },
                 { "Discard", Discard },
+                { nameof(ShaderBuiltins.ClipToTextureCoordinates), ClipToTextureCoordinates },
             };
             ret.Add("ShaderGen.ShaderBuiltins", new DictionaryTypeInvocationTranslator(builtinMappings));
 
@@ -39,7 +40,6 @@ namespace ShaderGen
 
             return ret;
         }
-
 
         public static string TranslateInvocation(string type, string method, InvocationParameterInfo[] parameters)
         {
@@ -70,6 +70,12 @@ namespace ShaderGen
         private static string Discard(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
             return $"discard;";
+        }
+
+        private static string ClipToTextureCoordinates(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            string target = parameters[0].Identifier;
+            return $"float2({target}.x / 2 + 0.5, {target}.y / -2 + 0.5)";
         }
     }
 

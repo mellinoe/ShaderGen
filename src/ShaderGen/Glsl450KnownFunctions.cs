@@ -23,6 +23,7 @@ namespace ShaderGen
                 { "Sample", Sample2D },
                 { "Discard", Discard },
                 { "Saturate", Saturate },
+                { nameof(ShaderBuiltins.ClipToTextureCoordinates), ClipToTextureCoordinates },
             };
             ret.Add("ShaderGen.ShaderBuiltins", new DictionaryTypeInvocationTranslator(builtinMappings));
 
@@ -97,6 +98,12 @@ namespace ShaderGen
             {
                 throw new ShaderGenerationException("Unhandled number of arguments to ShaderBuiltins.Discard.");
             }
+        }
+
+        private static string ClipToTextureCoordinates(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            string target = parameters[0].Identifier;
+            return $"vec2({target}.x / 2 + 0.5, {target}.y / -2 + 0.5)";
         }
     }
 }

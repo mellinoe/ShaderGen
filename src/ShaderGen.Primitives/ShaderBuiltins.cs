@@ -10,6 +10,7 @@ namespace ShaderGen
         public static Vector4 Sample(Texture2DResource texture, SamplerResource sampler, Vector2 texCoords) => throw new ShaderBuiltinException();
         public static Vector4 Sample(TextureCubeResource texture, SamplerResource sampler, Vector3 texCoords) => throw new ShaderBuiltinException();
         public static void Discard() => throw new ShaderBuiltinException();
+        public static Vector2 ClipToTextureCoordinates(Vector4 clipCoordinates) => throw new ShaderBuiltinException();
 
         // Abs
         public static float Abs(float value) => throw new ShaderBuiltinException();
