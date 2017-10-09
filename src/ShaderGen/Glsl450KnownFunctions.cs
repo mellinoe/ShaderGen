@@ -103,7 +103,7 @@ namespace ShaderGen
         private static string ClipToTextureCoordinates(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
             string target = parameters[0].Identifier;
-            return $"vec2({target}.x / 2 + 0.5, {target}.y / -2 + 0.5)";
+            return $"vec2(({target}.x / {target}.w) / 2 + 0.5, ({target}.y / {target}.w) / -2 + 0.5)";
         }
     }
 }
