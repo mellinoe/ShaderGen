@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace TestShaders
 {
-    class PointLightTestShaders
+    public class PointLightTestShaders
     {
         public PointLightsInfo PointLights;
 
