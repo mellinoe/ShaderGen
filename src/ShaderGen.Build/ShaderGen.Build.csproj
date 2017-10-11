@@ -9,7 +9,7 @@
     <PackageId>ShaderGen.Build</PackageId>
     <Description>Build-time plugin which generates shader code during a post-build event.</Description>
     <PackageTags>Shader GLSL HLSL SPIR-V Graphics OpenGL Vulkan Direct3D Game</PackageTags>
-    <PackageVersion>1.0.17</PackageVersion>
+    <PackageVersion>1.0.18</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>

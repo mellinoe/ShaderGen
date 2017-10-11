@@ -102,9 +102,22 @@ namespace ShaderGen
 
         public override string VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
         {
-            return Visit(node.Expression)
-                + node.OperatorToken.ToFullString()
-                + Visit(node.Name);
+            SymbolInfo exprSymbol = GetModel(node).GetSymbolInfo(node.Expression);
+            if (exprSymbol.Symbol.Kind == SymbolKind.NamedType)
+            {
+                // Static member access
+                string typeName = Utilities.GetFullMetadataName(exprSymbol.Symbol);
+                string targetName = Visit(node.Name);
+                return _backend.FormatInvocation(_setName, typeName, targetName, Array.Empty<InvocationParameterInfo>());
+            }
+            else
+            {
+                // Other accesses
+
+                return Visit(node.Expression)
+                    + node.OperatorToken.ToFullString()
+                    + Visit(node.Name);
+            }
         }
 
         public override string VisitExpressionStatement(ExpressionStatementSyntax node)

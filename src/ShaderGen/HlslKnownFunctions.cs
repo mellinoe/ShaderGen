@@ -35,6 +35,10 @@ namespace ShaderGen
                 { "Normalize", SimpleNameTranslator("normalize") },
                 { "Distance", SimpleNameTranslator("distance") },
                 { "ctor", VectorCtor },
+                { "Zero", VectorStaticAccessor },
+                { "One", VectorStaticAccessor },
+                { "UnitX", VectorStaticAccessor },
+                { "UnitY", VectorStaticAccessor },
             };
             ret.Add("System.Numerics.Vector2", new DictionaryTypeInvocationTranslator(v2Mappings));
 
@@ -45,6 +49,11 @@ namespace ShaderGen
                 { "Distance", SimpleNameTranslator("distance") },
                 { "Reflect", SimpleNameTranslator("reflect") },
                 { "ctor", VectorCtor },
+                { "Zero", VectorStaticAccessor },
+                { "One", VectorStaticAccessor },
+                { "UnitX", VectorStaticAccessor },
+                { "UnitY", VectorStaticAccessor },
+                { "UnitZ", VectorStaticAccessor },
             };
             ret.Add("System.Numerics.Vector3", new DictionaryTypeInvocationTranslator(v3Mappings));
 
@@ -53,6 +62,12 @@ namespace ShaderGen
                 { "Normalize", SimpleNameTranslator("normalize") },
                 { "Distance", SimpleNameTranslator("distance") },
                 { "ctor", VectorCtor },
+                { "Zero", VectorStaticAccessor },
+                { "One", VectorStaticAccessor },
+                { "UnitX", VectorStaticAccessor },
+                { "UnitY", VectorStaticAccessor },
+                { "UnitZ", VectorStaticAccessor },
+                { "UnitW", VectorStaticAccessor },
             };
             ret.Add("System.Numerics.Vector4", new DictionaryTypeInvocationTranslator(v4Mappings));
 
@@ -101,13 +116,7 @@ namespace ShaderGen
 
         private static string VectorCtor(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            string hlslName = null;
-            int elementCount = 0;
-            if (typeName == "System.Numerics.Vector2") { hlslName = "float2"; elementCount = 2; }
-            else if (typeName == "System.Numerics.Vector3") { hlslName = "float3"; elementCount = 3; }
-            else if (typeName == "System.Numerics.Vector4") { hlslName = "float4"; elementCount = 4; }
-            else { throw new ShaderGenerationException("VectorCtor translator was called on an invalid type: " + typeName); }
-
+            GetVectorTypeInfo(typeName, out string shaderType, out int elementCount);
             string paramList;
             if (parameters.Length == 0)
             {
@@ -134,7 +143,61 @@ namespace ShaderGen
                 paramList = sb.ToString();
             }
 
-            return $"{hlslName}({paramList})";
+            return $"{shaderType}({paramList})";
+        }
+
+        private static string VectorStaticAccessor(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            Debug.Assert(parameters.Length == 0);
+            GetVectorTypeInfo(typeName, out string shaderType, out int elementCount);
+            if (methodName == "Zero")
+            {
+                return $"{shaderType}({string.Join(", ", Enumerable.Repeat("0", elementCount))})";
+            }
+            else if (methodName == "One")
+            {
+                return $"{shaderType}({string.Join(", ", Enumerable.Repeat("1", elementCount))})";
+            }
+            else if (methodName == "UnitX")
+            {
+                string paramList;
+                if (elementCount == 2) { paramList = "1, 0"; }
+                else if (elementCount == 3) { paramList = "1, 0, 0"; }
+                else { paramList = "1, 0, 0, 0"; }
+                return $"{shaderType}({paramList})";
+            }
+            else if (methodName == "UnitY")
+            {
+                string paramList;
+                if (elementCount == 2) { paramList = "0, 1"; }
+                else if (elementCount == 3) { paramList = "0, 1, 0"; }
+                else { paramList = "0, 1, 0, 0"; }
+                return $"{shaderType}({paramList})";
+            }
+            else if (methodName == "UnitZ")
+            {
+                string paramList;
+                if (elementCount == 3) { paramList = "0, 0, 1"; }
+                else { paramList = "0, 0, 1, 0"; }
+                return $"{shaderType}({paramList})";
+            }
+            else if (methodName == "UnitW")
+            {
+                return $"{shaderType}(0, 0, 0, 1)";
+            }
+            else
+            {
+                Debug.Fail("Invalid static vector accessor: " + methodName);
+                return null;
+            }
+        }
+
+        private static void GetVectorTypeInfo(string name, out string shaderType, out int elementCount)
+        {
+            if (name == "System.Numerics.Vector2") { shaderType = "float2"; elementCount = 2; }
+            else if (name == "System.Numerics.Vector3") { shaderType = "float3"; elementCount = 3; }
+            else if (name == "System.Numerics.Vector4") { shaderType = "float4"; elementCount = 4; }
+            else { throw new ShaderGenerationException("VectorCtor translator was called on an invalid type: " + name); }
         }
     }
 
