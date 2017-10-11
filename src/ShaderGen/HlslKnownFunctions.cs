@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
 
 namespace ShaderGen
 {
@@ -27,14 +30,32 @@ namespace ShaderGen
             };
             ret.Add("ShaderGen.ShaderBuiltins", new DictionaryTypeInvocationTranslator(builtinMappings));
 
+            Dictionary<string, InvocationTranslator> v2Mappings = new Dictionary<string, InvocationTranslator>()
+            {
+                { "Normalize", SimpleNameTranslator("normalize") },
+                { "Distance", SimpleNameTranslator("distance") },
+                { "ctor", VectorCtor },
+            };
+            ret.Add("System.Numerics.Vector2", new DictionaryTypeInvocationTranslator(v2Mappings));
+
             Dictionary<string, InvocationTranslator> v3Mappings = new Dictionary<string, InvocationTranslator>()
             {
                 { "Normalize", SimpleNameTranslator("normalize") },
                 { "Dot", SimpleNameTranslator("dot") },
                 { "Distance", SimpleNameTranslator("distance") },
                 { "Reflect", SimpleNameTranslator("reflect") },
+                { "ctor", VectorCtor },
             };
             ret.Add("System.Numerics.Vector3", new DictionaryTypeInvocationTranslator(v3Mappings));
+
+            Dictionary<string, InvocationTranslator> v4Mappings = new Dictionary<string, InvocationTranslator>()
+            {
+                { "Normalize", SimpleNameTranslator("normalize") },
+                { "Distance", SimpleNameTranslator("distance") },
+                { "ctor", VectorCtor },
+            };
+            ret.Add("System.Numerics.Vector4", new DictionaryTypeInvocationTranslator(v4Mappings));
+
 
             ret.Add("ShaderGen.ShaderSwizzle", new SwizzleTranslator());
 
@@ -76,6 +97,44 @@ namespace ShaderGen
         {
             string target = parameters[0].Identifier;
             return $"float2(({target}.x / {target}.w) / 2 + 0.5, ({target}.y / {target}.w) / -2 + 0.5)";
+        }
+
+        private static string VectorCtor(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            string hlslName = null;
+            int elementCount = 0;
+            if (typeName == "System.Numerics.Vector2") { hlslName = "float2"; elementCount = 2; }
+            else if (typeName == "System.Numerics.Vector3") { hlslName = "float3"; elementCount = 3; }
+            else if (typeName == "System.Numerics.Vector4") { hlslName = "float4"; elementCount = 4; }
+            else { throw new ShaderGenerationException("VectorCtor translator was called on an invalid type: " + typeName); }
+
+            string paramList;
+            if (parameters.Length == 0)
+            {
+                paramList = string.Join(", ", Enumerable.Repeat("0", elementCount));
+            }
+            else if (parameters.Length == 1)
+            {
+                paramList = string.Join(", ", Enumerable.Repeat(parameters[0].Identifier, elementCount));
+            }
+            else
+            {
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < parameters.Length; i++)
+                {
+                    InvocationParameterInfo ipi = parameters[i];
+                    sb.Append(ipi.Identifier);
+
+                    if (i != parameters.Length - 1)
+                    {
+                        sb.Append(", ");
+                    }
+                }
+
+                paramList = sb.ToString();
+            }
+
+            return $"{hlslName}({paramList})";
         }
     }
 

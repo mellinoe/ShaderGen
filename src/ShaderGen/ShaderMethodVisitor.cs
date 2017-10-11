@@ -216,14 +216,9 @@ namespace ShaderGen
         {
             SymbolInfo symbolInfo = GetModel(node).GetSymbolInfo(node.Type);
             string fullName = Utilities.GetFullName(symbolInfo);
-
-            if (!Utilities.IsBasicNumericType(fullName))
-            {
-                throw new ShaderGenerationException(
-                    "Constructors can only be called on basic numeric types.");
-            }
-
-            return _backend.CSharpToShaderType(fullName) + "(" + Visit(node.ArgumentList) + ")";
+             
+            InvocationParameterInfo[] parameters = GetParameterInfos(node.ArgumentList);
+            return _backend.FormatInvocation(_setName, fullName, "ctor", parameters);
         }
 
         public override string VisitIdentifierName(IdentifierNameSyntax node)
