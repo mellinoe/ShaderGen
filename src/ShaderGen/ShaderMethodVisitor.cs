@@ -171,6 +171,26 @@ namespace ShaderGen
                         });
                     }
 
+                    if (!ims.IsStatic) // Add implicit "this" parameter.
+                    {
+                        string identifier = null;
+                        if (maes.Expression is MemberAccessExpressionSyntax subExpression)
+                        {
+                            identifier = Visit(subExpression);
+                        }
+                        else if (maes.Expression is IdentifierNameSyntax identNameSyntax)
+                        {
+                            identifier = Visit(identNameSyntax);
+                        }
+
+                        Debug.Assert(identifier != null);
+                        pis.Add(new InvocationParameterInfo
+                        {
+                            FullTypeName = containingType,
+                            Identifier = identifier
+                        });
+                    }
+
                     pis.AddRange(GetParameterInfos(node.ArgumentList));
                     return _backend.FormatInvocation(_setName, containingType, methodName, pis.ToArray());
                 }

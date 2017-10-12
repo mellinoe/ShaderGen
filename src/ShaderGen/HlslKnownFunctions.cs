@@ -32,8 +32,24 @@ namespace ShaderGen
 
             Dictionary<string, InvocationTranslator> v2Mappings = new Dictionary<string, InvocationTranslator>()
             {
-                { "Normalize", SimpleNameTranslator("normalize") },
+                { "Abs", SimpleNameTranslator("abs") },
+                { "Add", BinaryOpTranslator("+") },
+                { "Clamp", SimpleNameTranslator("clamp") },
                 { "Distance", SimpleNameTranslator("distance") },
+                { "DistanceSquared", DistanceSquared },
+                { "Divide", BinaryOpTranslator("/") },
+                { "Dot", SimpleNameTranslator("dot") },
+                { "Lerp", SimpleNameTranslator("lerp") },
+                { "Max", SimpleNameTranslator("max") },
+                { "Min", SimpleNameTranslator("min") },
+                { "Multiply", BinaryOpTranslator("*") },
+                { "Negate", Negate },
+                { "Normalize", SimpleNameTranslator("normalize") },
+                { "Reflect", SimpleNameTranslator("reflect") },
+                { "SquareRoot", SimpleNameTranslator("sqrt") },
+                { "Subtract", BinaryOpTranslator("-") },
+                { "Length", SimpleNameTranslator("length") },
+                { "LengthSquared", LengthSquared },
                 { "ctor", VectorCtor },
                 { "Zero", VectorStaticAccessor },
                 { "One", VectorStaticAccessor },
@@ -44,10 +60,25 @@ namespace ShaderGen
 
             Dictionary<string, InvocationTranslator> v3Mappings = new Dictionary<string, InvocationTranslator>()
             {
-                { "Normalize", SimpleNameTranslator("normalize") },
-                { "Dot", SimpleNameTranslator("dot") },
+                { "Abs", SimpleNameTranslator("abs") },
+                { "Add", BinaryOpTranslator("+") },
+                { "Clamp", SimpleNameTranslator("clamp") },
+                { "Cross", SimpleNameTranslator("cross") },
                 { "Distance", SimpleNameTranslator("distance") },
+                { "DistanceSquared", DistanceSquared },
+                { "Divide", BinaryOpTranslator("/") },
+                { "Dot", SimpleNameTranslator("dot") },
+                { "Lerp", SimpleNameTranslator("lerp") },
+                { "Max", SimpleNameTranslator("max") },
+                { "Min", SimpleNameTranslator("min") },
+                { "Multiply", BinaryOpTranslator("*") },
+                { "Negate", Negate },
+                { "Normalize", SimpleNameTranslator("normalize") },
                 { "Reflect", SimpleNameTranslator("reflect") },
+                { "SquareRoot", SimpleNameTranslator("sqrt") },
+                { "Subtract", BinaryOpTranslator("-") },
+                { "Length", SimpleNameTranslator("length") },
+                { "LengthSquared", LengthSquared },
                 { "ctor", VectorCtor },
                 { "Zero", VectorStaticAccessor },
                 { "One", VectorStaticAccessor },
@@ -59,8 +90,24 @@ namespace ShaderGen
 
             Dictionary<string, InvocationTranslator> v4Mappings = new Dictionary<string, InvocationTranslator>()
             {
-                { "Normalize", SimpleNameTranslator("normalize") },
+                { "Abs", SimpleNameTranslator("abs") },
+                { "Add", BinaryOpTranslator("+") },
+                { "Clamp", SimpleNameTranslator("clamp") },
                 { "Distance", SimpleNameTranslator("distance") },
+                { "DistanceSquared", DistanceSquared },
+                { "Divide", BinaryOpTranslator("/") },
+                { "Dot", SimpleNameTranslator("dot") },
+                { "Lerp", SimpleNameTranslator("lerp") },
+                { "Max", SimpleNameTranslator("max") },
+                { "Min", SimpleNameTranslator("min") },
+                { "Multiply", BinaryOpTranslator("*") },
+                { "Negate", Negate },
+                { "Normalize", SimpleNameTranslator("normalize") },
+                { "Reflect", SimpleNameTranslator("reflect") },
+                { "SquareRoot", SimpleNameTranslator("sqrt") },
+                { "Subtract", BinaryOpTranslator("-") },
+                { "Length", SimpleNameTranslator("length") },
+                { "LengthSquared", LengthSquared },
                 { "ctor", VectorCtor },
                 { "Zero", VectorStaticAccessor },
                 { "One", VectorStaticAccessor },
@@ -71,10 +118,24 @@ namespace ShaderGen
             };
             ret.Add("System.Numerics.Vector4", new DictionaryTypeInvocationTranslator(v4Mappings));
 
-
             ret.Add("ShaderGen.ShaderSwizzle", new SwizzleTranslator());
 
             return ret;
+        }
+
+        private static string LengthSquared(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return $"dot({parameters[0].Identifier}, {parameters[0].Identifier})";
+        }
+
+        private static string Negate(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return $"-{parameters[0].Identifier}";
+        }
+
+        private static string DistanceSquared(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return $"dot({parameters[0].Identifier} - {parameters[1].Identifier}, {parameters[0].Identifier} - {parameters[1].Identifier})";
         }
 
         public static string TranslateInvocation(string type, string method, InvocationParameterInfo[] parameters)
@@ -88,6 +149,14 @@ namespace ShaderGen
             }
 
             throw new ShaderGenerationException($"Reference to unknown function: {type}.{method}");
+        }
+
+        private static InvocationTranslator BinaryOpTranslator(string op)
+        {
+            return (type, method, parameters) =>
+            {
+                return $"{parameters[0].Identifier} {op} {parameters[1].Identifier}";
+            };
         }
 
         private static InvocationTranslator SimpleNameTranslator(string nameTarget)
