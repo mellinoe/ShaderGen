@@ -171,7 +171,7 @@ namespace ShaderGen
                         });
                     }
 
-                    if (!ims.IsStatic) // Add implicit "this" parameter.
+                    else if (!ims.IsStatic) // Add implicit "this" parameter.
                     {
                         string identifier = null;
                         if (maes.Expression is MemberAccessExpressionSyntax subExpression)
