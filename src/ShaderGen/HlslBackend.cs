@@ -185,13 +185,13 @@ namespace ShaderGen
             List<ResourceDefinition[]> resourcesBySet = setContext.Resources.GroupBy(rd => rd.Set)
                 .Select(g => g.ToArray()).ToList();
 
+            int uniformBinding = 0, textureBinding = 0, samplerBinding = 0;
             int setIndex = 0;
             foreach (ResourceDefinition[] set in resourcesBySet)
             {
                 Debug.Assert(set[0].Set == setIndex);
                 setIndex += 1;
 
-                int uniformBinding = 0, textureBinding = 0, samplerBinding = 0;
                 foreach (ResourceDefinition rd in set)
                 {
                     switch (rd.ResourceKind)

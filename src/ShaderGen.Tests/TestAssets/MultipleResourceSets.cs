@@ -1,5 +1,6 @@
 ﻿using ShaderGen;
 using System.Numerics;
+using static ShaderGen.ShaderBuiltins;
 
 namespace TestShaders
 {
@@ -12,6 +13,7 @@ namespace TestShaders
         [ResourceSet(2)] public Matrix4x4 Matrix2;
         [ResourceSet(3)] public Matrix4x4 Matrix4;
         [ResourceSet(4)] public Matrix4x4 Matrix3;
+        [ResourceSet(0)] public Matrix4x4 Matrix00;
 
         [ResourceSet(0)] public SamplerResource Sampler0;
         [ResourceSet(4)] public SamplerResource Sampler4;
@@ -25,7 +27,10 @@ namespace TestShaders
         [VertexShader]
         public Position4 VS(Position4 input)
         {
-            return input;
+            Position4 output;
+            Matrix4x4 result = NoAttributeMatrix * Matrix0 * Matrix1 * Matrix2 * Matrix3 * Matrix4 * Matrix00;
+            output.Position = Mul(result, input.Position);
+            return output;
         }
 
         [FragmentShader]
