@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyVersion>1.0.17</AssemblyVersion>
+    <AssemblyVersion>1.0.18</AssemblyVersion>
 
     <!-- Package stuff -->
     <PackageId>ShaderGen</PackageId>
