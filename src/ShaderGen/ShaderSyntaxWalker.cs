@@ -14,7 +14,8 @@ namespace ShaderGen
         private readonly Compilation _compilation;
         private readonly LanguageBackend[] _backends;
         private readonly ShaderSetInfo _shaderSet;
-        private int _lastResourceBinding;
+
+        private Dictionary<int, int> _setCounts = new Dictionary<int, int>();
 
         public ShaderSyntaxWalker(Compilation compilation, LanguageBackend[] backends, ShaderSetInfo ss)
             : base(SyntaxWalkerDepth.Token)
@@ -180,8 +181,6 @@ namespace ShaderGen
 
         public override void VisitVariableDeclaration(VariableDeclarationSyntax node)
         {
-            int resourceBinding = _lastResourceBinding++;
-
             if (node.Variables.Count != 1)
             {
                 throw new ShaderGenerationException("Cannot declare multiple variables together.");
@@ -201,6 +200,8 @@ namespace ShaderGen
                 set = GetAttributeFirstArgumentIntValue(resourceSetDecl);
             }
 
+            int resourceBinding = GetAndIncrementBinding(set);
+
             ResourceDefinition rd = new ResourceDefinition(resourceName, set, resourceBinding, tr, kind);
             if (kind == ShaderResourceKind.Uniform)
             {
@@ -208,6 +209,22 @@ namespace ShaderGen
             }
 
             foreach (LanguageBackend b in _backends) { b.AddResource(_shaderSet.Name, rd); }
+        }
+
+        private int GetAndIncrementBinding(int set)
+        {
+            if (!_setCounts.TryGetValue(set, out int ret))
+            {
+                ret = 0;
+                _setCounts.Add(set, ret);
+            }
+            else
+            {
+                ret += 1;
+                _setCounts[set] = ret;
+            }
+
+            return ret;
         }
 
         private void ValidateResourceType(TypeInfo typeInfo)
