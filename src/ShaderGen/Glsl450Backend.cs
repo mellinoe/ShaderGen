@@ -91,7 +91,7 @@ namespace ShaderGen
 
         private string FormatLayoutStr(ResourceDefinition rd)
         {
-            return $"layout(binding = {rd.Binding})";
+            return $"layout(set = {rd.Set}, binding = {rd.Binding})";
         }
 
         protected override void EmitGlPositionCorrection(StringBuilder sb)

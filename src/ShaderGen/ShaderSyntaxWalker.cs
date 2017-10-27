@@ -107,16 +107,20 @@ namespace ShaderGen
                     "Array fields in structs must have a constant size specified by an ArraySizeAttribute.");
             }
             AttributeSyntax arraySizeAttr = arraySizeAttrs[0];
-            string fullArg0 = arraySizeAttr.ArgumentList.Arguments[0].ToFullString();
+            return GetAttributeFirstArgumentIntValue(arraySizeAttr);
+        }
+
+        private static int GetAttributeFirstArgumentIntValue(AttributeSyntax attr)
+        {
+            string fullArg0 = attr.ArgumentList.Arguments[0].ToFullString();
             if (int.TryParse(fullArg0, out int ret))
             {
                 return ret;
             }
             else
             {
-                throw new ShaderGenerationException("Incorrectly formatted attribute: " + arraySizeAttr.ToFullString());
+                throw new ShaderGenerationException("Incorrectly formatted attribute: " + attr.ToFullString());
             }
-
         }
 
         private static SemanticType GetSemanticType(VariableDeclaratorSyntax vds)
@@ -190,7 +194,14 @@ namespace ShaderGen
             string fullTypeName = GetModel(node).GetFullTypeName(node.Type);
             TypeReference tr = new TypeReference(fullTypeName);
             ShaderResourceKind kind = ClassifyResourceKind(fullTypeName);
-            ResourceDefinition rd = new ResourceDefinition(resourceName, resourceBinding, tr, kind);
+
+            int set = 0; // Default value if not otherwise specified.
+            if (GetResourceDecl(node, out AttributeSyntax resourceSetDecl))
+            {
+                set = GetAttributeFirstArgumentIntValue(resourceSetDecl);
+            }
+
+            ResourceDefinition rd = new ResourceDefinition(resourceName, set, resourceBinding, tr, kind);
             if (kind == ShaderResourceKind.Uniform)
             {
                 ValidateResourceType(typeInfo);
@@ -231,6 +242,14 @@ namespace ShaderGen
             {
                 return ShaderResourceKind.Uniform;
             }
+        }
+
+
+        private bool GetResourceDecl(VariableDeclarationSyntax node, out AttributeSyntax attr)
+        {
+            attr = (node.Parent.DescendantNodes().OfType<AttributeSyntax>().FirstOrDefault(
+                attrSyntax => attrSyntax.ToString().Contains("Resource")));
+            return attr != null;
         }
     }
 }

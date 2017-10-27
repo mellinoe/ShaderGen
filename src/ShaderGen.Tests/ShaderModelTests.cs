@@ -98,5 +98,40 @@ namespace ShaderGen.Tests
             Assert.Equal(1, shaderModel.Resources.Length);
             Assert.Equal(144, shaderModel.GetTypeSize(shaderModel.Resources[0].ValueType));
         }
+
+        [Fact]
+        public void MultipleResourceSets_CorrectlyParsed()
+        {
+            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            HlslBackend backend = new HlslBackend(compilation);
+            ShaderGenerator sg = new ShaderGenerator(
+                compilation,
+                "TestShaders.MultipleResourceSets.VS",
+                null,
+                backend);
+
+            ShaderGenerationResult genResult = sg.GenerateShaders();
+            IReadOnlyList<GeneratedShaderSet> sets = genResult.GetOutput(backend);
+            Assert.Equal(1, sets.Count);
+            GeneratedShaderSet set = sets[0];
+            ShaderModel shaderModel = set.Model;
+
+            Assert.Equal(12, shaderModel.Resources.Length);
+
+            Assert.Equal(0, shaderModel.Resources[0].Set);
+            Assert.Equal(0, shaderModel.Resources[1].Set);
+            Assert.Equal(1, shaderModel.Resources[2].Set);
+            Assert.Equal(2, shaderModel.Resources[3].Set);
+            Assert.Equal(3, shaderModel.Resources[4].Set);
+            Assert.Equal(4, shaderModel.Resources[5].Set);
+
+            Assert.Equal(0, shaderModel.Resources[6].Set);
+            Assert.Equal(4, shaderModel.Resources[7].Set);
+            Assert.Equal(0, shaderModel.Resources[8].Set);
+
+            Assert.Equal(2, shaderModel.Resources[9].Set);
+            Assert.Equal(0, shaderModel.Resources[10].Set);
+            Assert.Equal(1, shaderModel.Resources[11].Set);
+        }
     }
 }

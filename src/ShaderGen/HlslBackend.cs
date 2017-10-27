@@ -182,24 +182,34 @@ namespace ShaderGen
             fcgd.GenerateFullGraph();
             TypeAndMethodName[] orderedFunctionList = fcgd.GetOrderedCallList();
 
-            int uniformBinding = 0, textureBinding = 0, samplerBinding = 0;
-            foreach (ResourceDefinition rd in setContext.Resources)
+            List<ResourceDefinition[]> resourcesBySet = setContext.Resources.GroupBy(rd => rd.Set)
+                .Select(g => g.ToArray()).ToList();
+
+            int setIndex = 0;
+            foreach (ResourceDefinition[] set in resourcesBySet)
             {
-                switch (rd.ResourceKind)
+                Debug.Assert(set[0].Set == setIndex);
+                setIndex += 1;
+
+                int uniformBinding = 0, textureBinding = 0, samplerBinding = 0;
+                foreach (ResourceDefinition rd in set)
                 {
-                    case ShaderResourceKind.Uniform:
-                        WriteUniform(sb, rd, uniformBinding++);
-                        break;
-                    case ShaderResourceKind.Texture2D:
-                        WriteTexture2D(sb, rd, textureBinding++);
-                        break;
-                    case ShaderResourceKind.TextureCube:
-                        WriteTextureCube(sb, rd, textureBinding++);
-                        break;
-                    case ShaderResourceKind.Sampler:
-                        WriteSampler(sb, rd, samplerBinding++);
-                        break;
-                    default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
+                    switch (rd.ResourceKind)
+                    {
+                        case ShaderResourceKind.Uniform:
+                            WriteUniform(sb, rd, uniformBinding++);
+                            break;
+                        case ShaderResourceKind.Texture2D:
+                            WriteTexture2D(sb, rd, textureBinding++);
+                            break;
+                        case ShaderResourceKind.TextureCube:
+                            WriteTextureCube(sb, rd, textureBinding++);
+                            break;
+                        case ShaderResourceKind.Sampler:
+                            WriteSampler(sb, rd, samplerBinding++);
+                            break;
+                        default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
+                    }
                 }
             }
 
