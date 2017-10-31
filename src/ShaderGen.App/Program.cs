@@ -158,6 +158,7 @@ namespace ShaderGen.App
                 return -1;
             }
 
+            Encoding outputEncoding = new UTF8Encoding(false);
             List<string> generatedFilePaths = new List<string>();
             foreach (LanguageBackend lang in languages)
             {
@@ -170,7 +171,7 @@ namespace ShaderGen.App
                     {
                         string vsOutName = name + "-vertex." + extension;
                         string vsOutPath = Path.Combine(outputPath, vsOutName);
-                        File.WriteAllText(vsOutPath, set.VertexShaderCode);
+                        File.WriteAllText(vsOutPath, set.VertexShaderCode, outputEncoding);
                         bool succeeded = CompileCode(lang, vsOutPath, set.VertexFunction.Name, true, out string genPath);
                         if (succeeded)
                         {
@@ -185,7 +186,7 @@ namespace ShaderGen.App
                     {
                         string fsOutName = name + "-fragment." + extension;
                         string fsOutPath = Path.Combine(outputPath, fsOutName);
-                        File.WriteAllText(fsOutPath, set.FragmentShaderCode);
+                        File.WriteAllText(fsOutPath, set.FragmentShaderCode, outputEncoding);
                         bool succeeded = CompileCode(lang, fsOutPath, set.FragmentFunction.Name, false, out string genPath);
                         if (succeeded)
                         {
