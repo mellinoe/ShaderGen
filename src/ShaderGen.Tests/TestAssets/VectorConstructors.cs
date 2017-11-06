@@ -6,7 +6,7 @@ namespace TestShaders
     public class VectorConstructors
     {
         [VertexShader]
-        Position4 VS(Position4 input)
+        SystemPosition4 VS(Position4 input)
         {
             Vector2 v2 = new Vector2();
             v2 = new Vector2(1);
@@ -23,7 +23,9 @@ namespace TestShaders
             v4 = new Vector4(v2, 3, 4);
             v4 = new Vector4(1, 2, 3, 4);
 
-            return input;
+            SystemPosition4 output;
+            output.Position = input.Position;
+            return output;
         }
     }
 }

@@ -54,7 +54,7 @@ namespace ShaderGen.Tests
 
             StructureDefinition fsInput = shaderModel.GetStructureDefinition(
                 nameof(TestShaders) + "." + nameof(TestVertexShader) + "+" + nameof(TestVertexShader.VertexOutput));
-            Assert.Equal(SemanticType.Position, fsInput.Fields[0].SemanticType);
+            Assert.Equal(SemanticType.SystemPosition, fsInput.Fields[0].SemanticType);
             Assert.Equal(SemanticType.TextureCoordinate, fsInput.Fields[1].SemanticType);
         }
 

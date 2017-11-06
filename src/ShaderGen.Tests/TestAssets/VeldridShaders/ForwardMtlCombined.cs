@@ -68,7 +68,7 @@ namespace TestShaders.VeldridShaders
 
         public struct PixelInput
         {
-            [VertexSemantic(SemanticType.Position)] public Vector4 Position;
+            [VertexSemantic(SemanticType.SystemPosition)] public Vector4 Position;
             [VertexSemantic(SemanticType.Position)] public Vector3 Position_WorldSpace;
             [VertexSemantic(SemanticType.TextureCoordinate)] public Vector4 LightPosition;
             [VertexSemantic(SemanticType.Normal)] public Vector3 Normal;

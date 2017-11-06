@@ -16,4 +16,10 @@ namespace TestShaders
         [PositionSemantic] public Vector4 Position;
         [TextureCoordinateSemantic] public Vector2 TextureCoord;
     }
+
+    public struct SystemPosition4Texture2
+    {
+        [SystemPositionSemantic] public Vector4 Position;
+        [TextureCoordinateSemantic] public Vector2 TextureCoord;
+    }
 }

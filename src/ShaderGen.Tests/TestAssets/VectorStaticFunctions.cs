@@ -6,7 +6,7 @@ namespace TestShaders
     public class VectorStaticFunctions
     {
         [VertexShader]
-        Position4 VS(Position4 input)
+        SystemPosition4 VS(Position4 input)
         {
             Vector2 v2 = new Vector2(1, 2);
             Vector2 r2 = Vector2.Abs(v2);
@@ -77,7 +77,9 @@ namespace TestShaders
             r = v4.Length();
             r = v4.LengthSquared();
 
-            return input;
+            SystemPosition4 output;
+            output.Position = input.Position;
+            return output;
         }
     }
 }

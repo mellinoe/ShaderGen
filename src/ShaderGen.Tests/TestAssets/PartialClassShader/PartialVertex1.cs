@@ -7,7 +7,7 @@ namespace TestShaders
     {
         struct FragmentInput
         {
-            [VertexSemantic(SemanticType.Position)] public Vector4 Position;
+            [VertexSemantic(SemanticType.SystemPosition)] public Vector4 Position;
             [VertexSemantic(SemanticType.Color)] public Vector4 Color;
         }
 

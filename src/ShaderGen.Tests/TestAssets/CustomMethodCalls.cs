@@ -6,10 +6,13 @@ namespace TestShaders
     public class CustomMethodCalls
     {
         [VertexShader]
-        Position4 VS(Position4 input)
+        SystemPosition4 VS(Position4 input)
         {
             Position4 reversed = Reverse(input);
-            return ShufflePosition4(reversed);
+            Position4 shuffled = ShufflePosition4(reversed);
+            SystemPosition4 output;
+            output.Position = shuffled.Position;
+            return output;
         }
 
         private Position4 Reverse(Position4 vert)

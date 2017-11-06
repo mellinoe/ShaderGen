@@ -117,9 +117,11 @@ namespace ShaderGen
         {
             ParameterDefinition input = entryFunction.Parameters[0];
             StructureDefinition inputType = GetRequiredStructureType(setName, input.Type);
-            StructureDefinition outputType = entryFunction.Type == ShaderFunctionType.VertexEntryPoint
-                ? GetRequiredStructureType(setName, entryFunction.ReturnType)
-                : null; // Hacky but meh
+            StructureDefinition outputType =
+                entryFunction.ReturnType.Name != "System.Numerics.Vector4"
+                && entryFunction.ReturnType.Name != "System.Void"
+                    ? GetRequiredStructureType(setName, entryFunction.ReturnType)
+                    : null;
 
             // Declare "in" variables
             int inVarIndex = 0;
@@ -128,7 +130,7 @@ namespace ShaderGen
             {
                 if (entryFunction.Type == ShaderFunctionType.FragmentEntryPoint
                     && fragCoordName == null
-                    && field.SemanticType == SemanticType.Position)
+                    && field.SemanticType == SemanticType.SystemPosition)
                 {
                     fragCoordName = field.Name;
                 }
@@ -150,13 +152,11 @@ namespace ShaderGen
             // Declare "out" variables
             if (entryFunction.Type == ShaderFunctionType.VertexEntryPoint)
             {
-                bool skippedFirstPositionSemantic = false;
                 int outVarIndex = 0;
                 foreach (FieldDefinition field in outputType.Fields)
                 {
-                    if (field.SemanticType == SemanticType.Position && !skippedFirstPositionSemantic)
+                    if (field.SemanticType == SemanticType.SystemPosition)
                     {
-                        skippedFirstPositionSemantic = true;
                         continue;
                     }
                     else
@@ -175,14 +175,22 @@ namespace ShaderGen
             else
             {
                 Debug.Assert(entryFunction.Type == ShaderFunctionType.FragmentEntryPoint);
-                if (mappedReturnType != "vec4" && mappedReturnType != "void")
-                {
-                    throw new ShaderGenerationException("Fragment shader must return a System.Numerics.Vector4 value, or no value.");
-                }
 
                 if (mappedReturnType == "vec4")
                 {
                     WriteInOutVariable(sb, false, false, "vec4", "_outputColor_", 0);
+                }
+                else if (mappedReturnType != "void")
+                {
+                    // Composite struct -- declare an out variable for each.
+                    int colorTargetIndex = 0;
+                    foreach (FieldDefinition field in outputType.Fields)
+                    {
+                        Debug.Assert(field.SemanticType == SemanticType.ColorTarget);
+                        Debug.Assert(field.Type.Name == "System.Numerics.Vector4");
+                        int index = colorTargetIndex++;
+                        sb.AppendLine($"    layout(location = {index}) out vec4 _outputColor_{index};");
+                    }
                 }
             }
 
@@ -205,7 +213,7 @@ namespace ShaderGen
                 }
                 else
                 {
-                    if (field.SemanticType == SemanticType.Position && !foundSystemPosition)
+                    if (field.SemanticType == SemanticType.SystemPosition && !foundSystemPosition)
                     {
                         Debug.Assert(field.Name == fragCoordName);
                         foundSystemPosition = true;
@@ -232,12 +240,12 @@ namespace ShaderGen
             if (entryFunction.Type == ShaderFunctionType.VertexEntryPoint)
             {
                 inoutIndex = 0;
-                FieldDefinition positionSemanticField = null;
+                FieldDefinition systemPositionField = null;
                 foreach (FieldDefinition field in outputType.Fields)
                 {
-                    if (positionSemanticField == null && field.SemanticType == SemanticType.Position)
+                    if (systemPositionField == null && field.SemanticType == SemanticType.SystemPosition)
                     {
-                        positionSemanticField = field;
+                        systemPositionField = field;
                     }
                     else
                     {
@@ -245,13 +253,13 @@ namespace ShaderGen
                     }
                 }
 
-                if (positionSemanticField == null)
+                if (systemPositionField == null)
                 {
                     // TODO: Should be caught earlier.
-                    throw new ShaderGenerationException("At least one vertex output must have a position semantic.");
+                    throw new ShaderGenerationException("Vertex functions must output a SystemPosition semantic.");
                 }
 
-                sb.AppendLine($"    gl_Position = {CorrectIdentifier("output")}.{CorrectIdentifier(positionSemanticField.Name)};");
+                sb.AppendLine($"    gl_Position = {CorrectIdentifier("output")}.{CorrectIdentifier(systemPositionField.Name)};");
                 EmitGlPositionCorrection(sb);
             }
             else
@@ -260,6 +268,16 @@ namespace ShaderGen
                 if (mappedReturnType == "vec4")
                 {
                     sb.AppendLine($"    _outputColor_ = {CorrectIdentifier("output")};");
+                }
+                else if (mappedReturnType != "void")
+                {
+                    // Composite struct -- assign each field to output
+                    int colorTargetIndex = 0;
+                    foreach (FieldDefinition field in outputType.Fields)
+                    {
+                        Debug.Assert(field.SemanticType == SemanticType.ColorTarget);
+                        sb.AppendLine($"    _outputColor_{colorTargetIndex++} = {CorrectIdentifier("output")}.{CorrectIdentifier(field.Name)};");
+                    }
                 }
             }
             sb.AppendLine("}");

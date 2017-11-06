@@ -27,7 +27,7 @@ namespace TestShaders
 
         public struct FragmentInput
         {
-            [VertexSemantic(SemanticType.Position)]
+            [VertexSemantic(SemanticType.SystemPosition)]
             public Vector4 Position;
         }
     }

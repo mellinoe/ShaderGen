@@ -8,5 +8,7 @@
         TextureCoordinate,
         Color,
         Tangent,
+        SystemPosition,
+        ColorTarget,
     }
 }

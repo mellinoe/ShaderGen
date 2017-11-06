@@ -30,7 +30,7 @@ namespace TestShaders.VeldridShaders
 
         public struct FragmentInput
         {
-            [PositionSemantic]
+            [SystemPositionSemantic]
             public Vector4 Position;
         }
     }

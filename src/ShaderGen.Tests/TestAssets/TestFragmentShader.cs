@@ -14,7 +14,7 @@ namespace TestShaders
 
         public struct VertexOutput
         {
-            [VertexSemantic(SemanticType.Position)]
+            [VertexSemantic(SemanticType.SystemPosition)]
             public Vector4 Position;
             [VertexSemantic(SemanticType.Color)]
             public Vector4 Color;

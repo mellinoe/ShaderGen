@@ -11,11 +11,6 @@ namespace ShaderGen
 {
     public class HlslBackend : LanguageBackend
     {
-        private const string FragmentSemanticsSuffix = "__FRAGSEMANTICS";
-
-        private readonly Dictionary<string, List<StructureDefinition>> _synthesizedStructures
-            = new Dictionary<string, List<StructureDefinition>>();
-
         public HlslBackend(Compilation compilation) : base(compilation)
         {
         }
@@ -29,7 +24,6 @@ namespace ShaderGen
 
         protected void WriteStructure(StringBuilder sb, StructureDefinition sd)
         {
-            bool fragmentSemantics = sd.Name.EndsWith(FragmentSemanticsSuffix);
             sb.AppendLine($"struct {CSharpToShaderType(sd.Name)}");
             sb.AppendLine("{");
             HlslSemanticTracker tracker = new HlslSemanticTracker();
@@ -44,7 +38,7 @@ namespace ShaderGen
                 {
                     fb.Append('['); fb.Append(arrayCount); fb.Append(']');
                 }
-                fb.Append(HlslSemantic(field.SemanticType, fragmentSemantics, ref tracker));
+                fb.Append(HlslSemantic(field.SemanticType, ref tracker));
                 fb.Append(';');
                 sb.Append("    ");
                 sb.AppendLine(fb.ToString());
@@ -54,27 +48,13 @@ namespace ShaderGen
             sb.AppendLine();
         }
 
-        private string HlslSemantic(SemanticType semanticType, bool fragmentSemantics, ref HlslSemanticTracker tracker)
+        private string HlslSemantic(SemanticType semanticType, ref HlslSemanticTracker tracker)
         {
             switch (semanticType)
             {
                 case SemanticType.None:
                     return string.Empty;
                 case SemanticType.Position:
-                    if (fragmentSemantics)
-                    {
-                        if (!tracker.emittedSvPosition)
-                        {
-                            tracker.emittedSvPosition = true;
-                            return " : SV_POSITION";
-                        }
-                        else
-                        {
-                            int val = tracker.Position++;
-                            return " : POSITION" + val.ToString();
-                        }
-                    }
-                    else
                     {
                         int val = tracker.Position++;
                         return " : POSITION" + val.ToString();
@@ -98,6 +78,15 @@ namespace ShaderGen
                     {
                         int val = tracker.Tangent++;
                         return " : TANGENT" + val.ToString();
+                    }
+                case SemanticType.SystemPosition:
+                    {
+                        return " : SV_Position";
+                    }
+                case SemanticType.ColorTarget:
+                    {
+                        int val = tracker.ColorTarget++;
+                        return " : SV_Target" + val.ToString();
                     }
                 default: throw new ShaderGenerationException("Invalid semantic type: " + semanticType);
             }
@@ -145,33 +134,9 @@ namespace ShaderGen
 
             ValidateRequiredSemantics(setName, entryPoint.Function, function.Type);
 
-            StructureDefinition input = GetRequiredStructureType(setName, entryPoint.Function.Parameters[0].Type);
-
-            if (function.Type == ShaderFunctionType.VertexEntryPoint)
-            {
-                // HLSL vertex outputs needs to have semantics applied to the structure fields.
-                StructureDefinition output = CreateOutputStructure(setName, GetRequiredStructureType(setName, entryPoint.Function.ReturnType));
-                setContext.Functions.Remove(entryPoint);
-                entryPoint = entryPoint.WithReturnType(new TypeReference(output.Name));
-                setContext.Functions.Add(entryPoint);
-            }
-
-            if (function.Type == ShaderFunctionType.FragmentEntryPoint)
-            {
-                // HLSL pixel shader inputs also need these semantics.
-                StructureDefinition modifiedInput = CreateOutputStructure(setName, input);
-                setContext.Functions.Remove(entryPoint);
-                entryPoint = entryPoint.WithParameter(0, new TypeReference(modifiedInput.Name));
-                setContext.Functions.Add(entryPoint);
-            }
-
             StructureDefinition[] orderedStructures
                 = StructureDependencyGraph.GetOrderedStructureList(Compilation, setContext.Structures);
             foreach (StructureDefinition sd in orderedStructures)
-            {
-                WriteStructure(sb, sd);
-            }
-            foreach (StructureDefinition sd in GetSynthesizedStructures(setName))
             {
                 WriteStructure(sb, sd);
             }
@@ -235,38 +200,13 @@ namespace ShaderGen
             StructureDefinition result = GetContext(setName).Structures.SingleOrDefault(sd => sd.Name == type.Name);
             if (result == null)
             {
-                List<StructureDefinition> synthSDs = GetSynthesizedStructures(setName);
-                result = synthSDs.SingleOrDefault(sd => sd.Name == type.Name);
-                if (result == null)
+                if (!TryDiscoverStructure(setName, type.Name, out result))
                 {
-                    if (!TryDiscoverStructure(setName, type.Name, out result))
-                    {
-                        throw new ShaderGenerationException("Type referred by was not discovered: " + type.Name);
-                    }
+                    throw new ShaderGenerationException("Type referred by was not discovered: " + type.Name);
                 }
             }
 
             return result;
-        }
-
-        private StructureDefinition CreateOutputStructure(string setName, StructureDefinition sd)
-        {
-            if (sd.Name.EndsWith(FragmentSemanticsSuffix))
-            {
-                return sd;
-            }
-
-            string newName = sd.Name + FragmentSemanticsSuffix;
-            List<StructureDefinition> synthesizedStructures = GetSynthesizedStructures(setName);
-            StructureDefinition existing = synthesizedStructures.SingleOrDefault(ssd => ssd.Name == newName);
-            if (existing != null)
-            {
-                return existing;
-            }
-
-            StructureDefinition clone = new StructureDefinition(newName, sd.Fields);
-            synthesizedStructures.Add(clone);
-            return clone;
         }
 
         protected override string FormatInvocationCore(string setName, string type, string method, InvocationParameterInfo[] parameterInfos)
@@ -286,24 +226,12 @@ namespace ShaderGen
             public int Normal;
             public int Tangent;
             public int Color;
-
-            public bool emittedSvPosition;
+            public int ColorTarget;
         }
 
         internal override string CorrectIdentifier(string identifier)
         {
             return identifier;
-        }
-
-        private List<StructureDefinition> GetSynthesizedStructures(string setName)
-        {
-            if (!_synthesizedStructures.TryGetValue(setName, out List<StructureDefinition> ret))
-            {
-                ret = new List<StructureDefinition>();
-                _synthesizedStructures.Add(setName, ret);
-            }
-
-            return ret;
         }
     }
 }

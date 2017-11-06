@@ -6,7 +6,7 @@ namespace TestShaders
     public class VectorStaticProperties
     {
         [VertexShader]
-        Position4 VS(Position4 input)
+        SystemPosition4 VS(Position4 input)
         {
             Vector2 v2 = Vector2.Zero;
             v2 = Vector2.One;
@@ -26,7 +26,9 @@ namespace TestShaders
             v4 = Vector4.UnitZ;
             v4 = Vector4.UnitW;
 
-            return input;
+            SystemPosition4 output;
+            output.Position = input.Position;
+            return output;
         }
     }
 }

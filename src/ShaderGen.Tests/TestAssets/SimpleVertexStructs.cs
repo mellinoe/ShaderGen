@@ -7,4 +7,9 @@ namespace TestShaders
     {
         [PositionSemantic] public Vector4 Position;
     }
+
+    public struct SystemPosition4
+    {
+        [SystemPositionSemantic] public Vector4 Position;
+    }
 }

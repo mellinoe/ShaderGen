@@ -7,9 +7,11 @@ namespace TestShaders
     {
         public PointLightsInfo PointLights;
 
-        [VertexShader] Position4 VS(Position4 input)
+        [VertexShader] SystemPosition4 VS(Position4 input)
         {
-            return input;
+            SystemPosition4 output;
+            output.Position = input.Position;
+            return output;
         }
     }
 

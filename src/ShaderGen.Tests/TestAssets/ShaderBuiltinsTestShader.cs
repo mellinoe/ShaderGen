@@ -7,7 +7,7 @@ namespace TestShaders
     public class ShaderBuiltinsTestShader
     {
         [VertexShader]
-        public Position4 VS(Position4 input)
+        public SystemPosition4 VS(Position4 input)
         {
             float f = 0;
             Vector2 v2 = new Vector2(0, 0);
@@ -62,7 +62,10 @@ namespace TestShaders
 
             // ClipToTextureCoordinates
             r2 = ClipToTextureCoordinates(v4);
-            return input;
+
+            SystemPosition4 output;
+            output.Position = input.Position;
+            return output;
         }
     }
 }

@@ -12,7 +12,7 @@ namespace ShaderGen
         }
     }
 
-    public class PositionSemanticAttribute: VertexSemanticAttribute
+    public class PositionSemanticAttribute : VertexSemanticAttribute
     {
         public PositionSemanticAttribute() : base(SemanticType.Position) { }
     }
@@ -35,5 +35,15 @@ namespace ShaderGen
     public class TangentSemanticAttribute : VertexSemanticAttribute
     {
         public TangentSemanticAttribute() : base(SemanticType.Tangent) { }
+    }
+
+    public class SystemPositionSemanticAttribute : VertexSemanticAttribute
+    {
+        public SystemPositionSemanticAttribute() : base(SemanticType.SystemPosition) { }
+    }
+
+    public class ColorTargetSemanticAttribute : VertexSemanticAttribute
+    {
+        public ColorTargetSemanticAttribute() : base(SemanticType.ColorTarget) { }
     }
 }

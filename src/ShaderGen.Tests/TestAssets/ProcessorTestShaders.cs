@@ -19,8 +19,14 @@ namespace TestShaders
 #pragma warning restore 0649
 
         [VertexShader]
-        Position4 VS(Position4 input) { return input; }
+        SystemPosition4 VS(Position4 input)
+        {
+            SystemPosition4 output;
+            output.Position = input.Position;
+            return output;
+        }
+
         [FragmentShader]
-        Vector4 FS(Position4 input) { return input.Position; }
+        Vector4 FS(SystemPosition4 input) { return input.Position; }
     }
 }

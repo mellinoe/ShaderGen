@@ -149,7 +149,11 @@ namespace ShaderGen
                 throw new ShaderGenerationException("Too many vertex semantics applied to field: " + vds.ToFullString());
             }
 
-            if (CheckSingleAttribute(vds, "PositionSemantic"))
+            if (CheckSingleAttribute(vds, "SystemPositionSemantic"))
+            {
+                return SemanticType.SystemPosition;
+            }
+            else if (CheckSingleAttribute(vds, "PositionSemantic"))
             {
                 return SemanticType.Position;
             }
@@ -168,6 +172,10 @@ namespace ShaderGen
             else if (CheckSingleAttribute(vds, "TangentSemantic"))
             {
                 return SemanticType.Tangent;
+            }
+            else if (CheckSingleAttribute(vds, "ColorTargetSemantic"))
+            {
+                return SemanticType.ColorTarget;
             }
 
             return SemanticType.None;

@@ -25,16 +25,19 @@ namespace TestShaders
 #pragma warning restore 0649
 
         [VertexShader]
-        public Position4 VS(Position4 input)
+        public SystemPosition4 VS(Position4 input)
         {
-            Position4 output;
+            Vector4 outputPos;
             Matrix4x4 result = NoAttributeMatrix * Matrix0 * Matrix1 * Matrix2 * Matrix3 * Matrix4 * Matrix00;
-            output.Position = Mul(result, input.Position);
+            outputPos = Mul(result, input.Position);
+
+            SystemPosition4 output;
+            output.Position = outputPos;
             return output;
         }
 
         [FragmentShader]
-        public Vector4 FS(Position4 input)
+        public Vector4 FS(SystemPosition4 input)
         {
             return input.Position;
         }

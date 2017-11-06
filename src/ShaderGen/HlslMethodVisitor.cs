@@ -19,10 +19,6 @@ namespace ShaderGen
                 {
                     suffix = " : SV_Target";
                 }
-                else if (_shaderFunction.ReturnType.Name != "System.Void")
-                {
-                    throw new ShaderGenerationException("Unsupported fragment return type: " + _shaderFunction.ReturnType.Name);
-                }
             }
             string fullDeclType = _backend.CSharpToShaderType(_shaderFunction.DeclaringType);
             string funcName = _shaderFunction.IsEntryPoint
