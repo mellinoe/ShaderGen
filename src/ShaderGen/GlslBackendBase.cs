@@ -81,6 +81,9 @@ namespace ShaderGen
                     case ShaderResourceKind.TextureCube:
                         WriteTextureCube(sb, rd);
                         break;
+                    case ShaderResourceKind.Texture2DMS:
+                        WriteTexture2DMS(sb, rd);
+                        break;
                     case ShaderResourceKind.Sampler:
                         WriteSampler(sb, rd);
                         break;
@@ -333,6 +336,7 @@ namespace ShaderGen
         protected abstract void WriteSampler(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteTexture2D(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteTextureCube(StringBuilder sb, ResourceDefinition rd);
+        protected abstract void WriteTexture2DMS(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteInOutVariable(
             StringBuilder sb,
             bool isInVar,

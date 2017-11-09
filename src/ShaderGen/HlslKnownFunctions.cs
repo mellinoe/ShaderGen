@@ -25,6 +25,7 @@ namespace ShaderGen
                 { "Clamp", SimpleNameTranslator("clamp") },
                 { "Mod", SimpleNameTranslator("fmod") },
                 { "Sample", Sample2D },
+                { "Load", Load },
                 { "Discard", Discard },
                 { nameof(ShaderBuiltins.ClipToTextureCoordinates), ClipToTextureCoordinates },
             };
@@ -170,6 +171,11 @@ namespace ShaderGen
         private static string Sample2D(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
             return $"{parameters[0].Identifier}.Sample({parameters[1].Identifier}, {parameters[2].Identifier})";
+        }
+
+        private static string Load(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return $"{parameters[0].Identifier}.Load({parameters[2].Identifier}, {parameters[3].Identifier})";
         }
 
         private static string Discard(string typeName, string methodName, InvocationParameterInfo[] parameters)

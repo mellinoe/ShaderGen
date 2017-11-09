@@ -61,6 +61,15 @@ namespace ShaderGen
             sb.AppendLine(";");
         }
 
+        protected override void WriteTexture2DMS(StringBuilder sb, ResourceDefinition rd)
+        {
+            sb.Append(FormatLayoutStr(rd));
+            sb.Append(' ');
+            sb.Append("uniform texture2DMS ");
+            sb.Append(CorrectIdentifier(rd.Name));
+            sb.AppendLine(";");
+        }
+
         protected override void WriteInOutVariable(
             StringBuilder sb,
             bool isInVar,

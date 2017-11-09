@@ -25,6 +25,7 @@ namespace ShaderGen
                 { "Mod", SimpleNameTranslator("mod") },
                 { "Mul", MatrixMul },
                 { "Sample", Sample2D },
+                { "Load", Load },
                 { "Discard", Discard },
                 { "Saturate", Saturate },
                 { nameof(ShaderBuiltins.ClipToTextureCoordinates), ClipToTextureCoordinates },
@@ -187,6 +188,11 @@ namespace ShaderGen
             {
                 throw new NotImplementedException();
             }
+        }
+
+        private static string Load(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return $"texelFetch(sampler2DMS({parameters[0].Identifier}, {parameters[1].Identifier}), ivec2({parameters[2].Identifier}), {parameters[3].Identifier})";
         }
 
         private static string Discard(string typeName, string methodName, InvocationParameterInfo[] parameters)

@@ -39,6 +39,12 @@ namespace ShaderGen
             sb.AppendLine();
         }
 
+        protected override void WriteTexture2DMS(StringBuilder sb, ResourceDefinition rd)
+        {
+            sb.AppendLine($"uniform sampler2DMS {CorrectIdentifier(rd.Name)};");
+            sb.AppendLine();
+        }
+
         protected override void WriteUniform(StringBuilder sb, ResourceDefinition rd)
         {
             sb.AppendLine($"uniform {rd.Name}");
