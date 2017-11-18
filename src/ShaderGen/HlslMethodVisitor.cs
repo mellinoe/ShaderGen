@@ -1,4 +1,6 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System;
+using Microsoft.CodeAnalysis;
+using System.Collections.Generic;
 
 namespace ShaderGen
 {
@@ -24,8 +26,54 @@ namespace ShaderGen
             string funcName = _shaderFunction.IsEntryPoint
                 ? _shaderFunction.Name
                 : fullDeclType + "_" + _shaderFunction.Name;
-            string functionDeclStr = $"{returnType} {funcName}({GetParameterDeclList()}){suffix}";
+            string baseParameterList = GetParameterDeclList();
+            string builtinParameterList = GetBuiltinParameterList();
+            string fullParameterList = string.Empty;
+            if (!string.IsNullOrEmpty(baseParameterList))
+            {
+                if (!string.IsNullOrEmpty(builtinParameterList))
+                {
+                    fullParameterList = string.Join(", ", baseParameterList, builtinParameterList);
+                }
+                else
+                {
+                    fullParameterList = baseParameterList;
+                }
+            }
+            else if (!string.IsNullOrEmpty(builtinParameterList))
+            {
+                fullParameterList = builtinParameterList;
+            }
+            string functionDeclStr = $"{returnType} {funcName}({fullParameterList}){suffix}";
             return functionDeclStr;
+        }
+
+        private string GetBuiltinParameterList()
+        {
+            if (!_shaderFunction.IsEntryPoint)
+            {
+                return string.Empty;
+            }
+
+            List<string> values = new List<string>();
+            if (_shaderFunction.UsesVertexID)
+            {
+                values.Add("uint _builtins_VertexID : SV_VertexID");
+            }
+            if (_shaderFunction.UsesInstanceID)
+            {
+                values.Add("uint _builtins_InstanceID : SV_InstanceID");
+            }
+            if (_shaderFunction.UsesDispatchThreadID)
+            {
+                values.Add("uint3 _builtins_DispatchThreadID : SV_DispatchThreadID");
+            }
+            if (_shaderFunction.UsesGroupThreadID)
+            {
+                values.Add("uint3 _builtins_GroupThreadID : SV_GroupThreadID");
+            }
+
+            return string.Join(", ", values);
         }
     }
 }

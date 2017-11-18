@@ -14,6 +14,10 @@ namespace ShaderGen
         public ParameterDefinition[] Parameters { get; }
         public bool IsEntryPoint => Type != ShaderFunctionType.Normal;
         public ShaderFunctionType Type { get; }
+        public bool UsesVertexID { get; internal set; }
+        public bool UsesInstanceID { get; internal set; }
+        public bool UsesDispatchThreadID { get; internal set; }
+        public bool UsesGroupThreadID { get; internal set; }
 
         public ShaderFunction(
             string declaringType,

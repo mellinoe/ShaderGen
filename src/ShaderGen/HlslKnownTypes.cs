@@ -6,6 +6,7 @@ namespace ShaderGen
     {
         private static readonly Dictionary<string, string> s_knownTypes = new Dictionary<string, string>()
         {
+            { "System.UInt32", "uint" },
             { "System.Int32", "int" },
             { "System.Single", "float" },
             { "System.Numerics.Vector2", "float2" },
@@ -16,6 +17,7 @@ namespace ShaderGen
             { "ShaderGen.Texture2DResource", "Texture2D" },
             { "ShaderGen.TextureCubeResource", "TextureCube" },
             { "System.Boolean", "bool" },
+            { "ShaderGen.UInt3", "uint3" },
         };
 
         public static string GetMappedName(string name)

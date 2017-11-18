@@ -28,6 +28,10 @@ namespace ShaderGen
                 { "Discard", Discard },
                 { "Saturate", Saturate },
                 { nameof(ShaderBuiltins.ClipToTextureCoordinates), ClipToTextureCoordinates },
+                { "VertexID", VertexID },
+                { "InstanceID", InstanceID },
+                { "DispatchThreadID", DispatchThreadID },
+                { "GroupThreadID", GroupThreadID },
             };
             ret.Add("ShaderGen.ShaderBuiltins", new DictionaryTypeInvocationTranslator(builtinMappings));
 
@@ -204,6 +208,26 @@ namespace ShaderGen
         {
             string target = parameters[0].Identifier;
             return $"vec2(({target}.x / {target}.w) / 2 + 0.5, ({target}.y / {target}.w) / 2 + 0.5)";
+        }
+
+        private static string VertexID(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return "uint(gl_VertexID)";
+        }
+
+        private static string InstanceID(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return "uint(gl_InstanceID)";
+        }
+
+        private static string DispatchThreadID(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return "gl_GlobalInvocationID";
+        }
+
+        private static string GroupThreadID(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return "gl_LocalInvocationID";
         }
 
         private static string VectorCtor(string typeName, string methodName, InvocationParameterInfo[] parameters)

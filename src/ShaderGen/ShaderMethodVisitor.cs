@@ -35,9 +35,10 @@ namespace ShaderGen
         {
             _containingTypeName = Utilities.GetFullNestedTypePrefix(node, out bool _);
             StringBuilder sb = new StringBuilder();
+            string blockResult = VisitBlock(node); // Visit block first in order to discover builtin variables.
             string functionDeclStr = GetFunctionDeclStr();
             sb.AppendLine(functionDeclStr);
-            sb.AppendLine(VisitBlock(node));
+            sb.AppendLine(blockResult);
             return sb.ToString();
         }
 
@@ -259,12 +260,37 @@ namespace ShaderGen
             SymbolInfo symbolInfo = GetModel(node).GetSymbolInfo(node);
             ISymbol symbol = symbolInfo.Symbol;
             string containingTypeName = Utilities.GetFullName(symbolInfo.Symbol.ContainingType);
+            if (containingTypeName == "ShaderGen.ShaderBuiltins")
+            {
+                TryRecognizeBuiltInVariable(symbolInfo);
+            }
             if (symbol.Kind == SymbolKind.Field && containingTypeName == _containingTypeName)
             {
                 return _backend.CorrectFieldAccess(symbolInfo);
             }
             string mapped = _backend.CSharpToShaderIdentifierName(symbolInfo);
             return _backend.CorrectIdentifier(mapped);
+        }
+
+        private void TryRecognizeBuiltInVariable(SymbolInfo symbolInfo)
+        {
+            string name = symbolInfo.Symbol.Name;
+            if (name == "VertexID")
+            {
+                _shaderFunction.UsesVertexID = true;
+            }
+            else if (name == "InstanceID")
+            {
+                _shaderFunction.UsesInstanceID = true;
+            }
+            else if (name == "DispatchThreadID")
+            {
+                _shaderFunction.UsesDispatchThreadID = true;
+            }
+            else if (name == "GroupThreadID")
+            {
+                _shaderFunction.UsesGroupThreadID = true;
+            }
         }
 
         public override string VisitLiteralExpression(LiteralExpressionSyntax node)

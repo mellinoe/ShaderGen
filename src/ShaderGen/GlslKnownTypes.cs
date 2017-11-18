@@ -6,6 +6,7 @@ namespace ShaderGen
     {
         private static readonly Dictionary<string, string> s_knownTypesShared = new Dictionary<string, string>()
         {
+            { "System.UInt32", "uint" },
             { "System.Int32", "int" },
             { "System.Single", "float" },
             { "System.Numerics.Vector2", "vec2" },
@@ -14,6 +15,7 @@ namespace ShaderGen
             { "System.Numerics.Matrix4x4", "mat4" },
             { "System.Void", "void" },
             { "System.Boolean", "bool" },
+            { "ShaderGen.UInt3", "uvec3" },
         };
 
         private static readonly Dictionary<string, string> s_knownTypesGL = new Dictionary<string, string>()

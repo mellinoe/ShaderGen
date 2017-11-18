@@ -56,8 +56,6 @@ namespace ShaderGen
 
             ValidateRequiredSemantics(setName, entryPoint.Function, function.Type);
 
-            StructureDefinition input = GetRequiredStructureType(setName, entryPoint.Function.Parameters[0].Type);
-
             WriteVersionHeader(sb);
 
             StructureDefinition[] orderedStructures
@@ -118,35 +116,44 @@ namespace ShaderGen
 
         private void WriteMainFunction(string setName, StringBuilder sb, ShaderFunction entryFunction)
         {
-            ParameterDefinition input = entryFunction.Parameters[0];
-            StructureDefinition inputType = GetRequiredStructureType(setName, input.Type);
+            ParameterDefinition input = entryFunction.Parameters.Length > 0
+                ? entryFunction.Parameters[0]
+                : null;
+            StructureDefinition inputType = input != null
+                ? GetRequiredStructureType(setName, input.Type)
+                : null;
             StructureDefinition outputType =
                 entryFunction.ReturnType.Name != "System.Numerics.Vector4"
                 && entryFunction.ReturnType.Name != "System.Void"
                     ? GetRequiredStructureType(setName, entryFunction.ReturnType)
                     : null;
 
-            // Declare "in" variables
-            int inVarIndex = 0;
             string fragCoordName = null;
-            foreach (FieldDefinition field in inputType.Fields)
+
+            if (inputType != null)
             {
-                if (entryFunction.Type == ShaderFunctionType.FragmentEntryPoint
-                    && fragCoordName == null
-                    && field.SemanticType == SemanticType.SystemPosition)
+                // Declare "in" variables
+                int inVarIndex = 0;
+                fragCoordName = null;
+                foreach (FieldDefinition field in inputType.Fields)
                 {
-                    fragCoordName = field.Name;
-                }
-                else
-                {
-                    WriteInOutVariable(
-                        sb,
-                        true,
-                        entryFunction.Type == ShaderFunctionType.VertexEntryPoint,
-                        CSharpToShaderType(field.Type.Name),
-                        CorrectIdentifier(field.Name),
-                        inVarIndex);
-                    inVarIndex += 1;
+                    if (entryFunction.Type == ShaderFunctionType.FragmentEntryPoint
+                        && fragCoordName == null
+                        && field.SemanticType == SemanticType.SystemPosition)
+                    {
+                        fragCoordName = field.Name;
+                    }
+                    else
+                    {
+                        WriteInOutVariable(
+                            sb,
+                            true,
+                            entryFunction.Type == ShaderFunctionType.VertexEntryPoint,
+                            CSharpToShaderType(field.Type.Name),
+                            CorrectIdentifier(field.Name),
+                            inVarIndex);
+                        inVarIndex += 1;
+                    }
                 }
             }
 
@@ -199,50 +206,55 @@ namespace ShaderGen
 
             sb.AppendLine();
 
-            string inTypeName = CSharpToShaderType(inputType.Name);
-
             sb.AppendLine($"void main()");
             sb.AppendLine("{");
-            sb.AppendLine($"    {inTypeName} {CorrectIdentifier("input")};");
-
-            // Assign synthetic "in" variables (with real field name) to structure passed to actual function.
-            int inoutIndex = 0;
-            bool foundSystemPosition = false;
-            foreach (FieldDefinition field in inputType.Fields)
+            if (inputType != null)
             {
-                if (entryFunction.Type == ShaderFunctionType.VertexEntryPoint)
+                string inTypeName = CSharpToShaderType(inputType.Name);
+                sb.AppendLine($"    {inTypeName} {CorrectIdentifier("input")};");
+
+                // Assign synthetic "in" variables (with real field name) to structure passed to actual function.
+                int inoutIndex = 0;
+                bool foundSystemPosition = false;
+                foreach (FieldDefinition field in inputType.Fields)
                 {
-                    sb.AppendLine($"    {CorrectIdentifier("input")}.{CorrectIdentifier(field.Name)} = {CorrectIdentifier(field.Name)};");
-                }
-                else
-                {
-                    if (field.SemanticType == SemanticType.SystemPosition && !foundSystemPosition)
+                    if (entryFunction.Type == ShaderFunctionType.VertexEntryPoint)
                     {
-                        Debug.Assert(field.Name == fragCoordName);
-                        foundSystemPosition = true;
-                        sb.AppendLine($"    {CorrectIdentifier("input")}.{CorrectIdentifier(field.Name)} = gl_FragCoord;");
+                        sb.AppendLine($"    {CorrectIdentifier("input")}.{CorrectIdentifier(field.Name)} = {CorrectIdentifier(field.Name)};");
                     }
                     else
                     {
-                        sb.AppendLine($"    {CorrectIdentifier("input")}.{CorrectIdentifier(field.Name)} = fsin_{inoutIndex++};");
+                        if (field.SemanticType == SemanticType.SystemPosition && !foundSystemPosition)
+                        {
+                            Debug.Assert(field.Name == fragCoordName);
+                            foundSystemPosition = true;
+                            sb.AppendLine($"    {CorrectIdentifier("input")}.{CorrectIdentifier(field.Name)} = gl_FragCoord;");
+                        }
+                        else
+                        {
+                            sb.AppendLine($"    {CorrectIdentifier("input")}.{CorrectIdentifier(field.Name)} = fsin_{inoutIndex++};");
+                        }
                     }
                 }
             }
 
             // Call actual function.
+            string invocationStr = inputType != null
+                ? $"{entryFunction.Name}({CorrectIdentifier("input")})"
+                : $"{entryFunction.Name}()";
             if (mappedReturnType != "void")
             {
-                sb.AppendLine($"    {mappedReturnType} {CorrectIdentifier("output")} = {entryFunction.Name}({CorrectIdentifier("input")});");
+                sb.AppendLine($"    {mappedReturnType} {CorrectIdentifier("output")} = {invocationStr};");
             }
             else
             {
-                sb.Append($"    {entryFunction.Name}({CorrectIdentifier("input")});");
+                sb.Append($"    {invocationStr};");
             }
 
             // Assign output fields to synthetic "out" variables with normalized "fsin_#" names.
             if (entryFunction.Type == ShaderFunctionType.VertexEntryPoint)
             {
-                inoutIndex = 0;
+                int inoutIndex = 0;
                 FieldDefinition systemPositionField = null;
                 foreach (FieldDefinition field in outputType.Fields)
                 {

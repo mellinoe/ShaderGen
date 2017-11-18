@@ -30,6 +30,7 @@ namespace ShaderGen.Tests
             yield return new object[] { "TestShaders.MultipleResourceSets.VS", null };
             yield return new object[] { "TestShaders.MultipleColorOutputs.VS", "TestShaders.MultipleColorOutputs.FS" };
             yield return new object[] { "TestShaders.MultisampleTexture.VS", null };
+            yield return new object[] { "TestShaders.BuiltInVariables.VS", null };
         }
 
         [Theory]

@@ -62,6 +62,11 @@ namespace ShaderGen
         public static Vector3 Tan(Vector3 value) => throw new ShaderBuiltinException();
         public static Vector4 Tan(Vector4 value) => throw new ShaderBuiltinException();
 
+        // Built-in variables
+        public static uint VertexID => throw new ShaderBuiltinException();
+        public static uint InstanceID => throw new ShaderBuiltinException();
+        public static UInt3 DispatchThreadID => throw new ShaderBuiltinException();
+        public static UInt3 GroupThreadID => throw new ShaderBuiltinException();
     }
 
     internal class ShaderBuiltinException : Exception { }
