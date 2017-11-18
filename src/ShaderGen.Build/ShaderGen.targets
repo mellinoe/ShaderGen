@@ -39,15 +39,28 @@
 
     <ReadLinesFromFile
       Condition="Exists($(_SGGeneratedFilesList))"
-      File="$(_SGGeneratedFilesList)">
+      File="$(_SGGeneratedFilesList)"
+      ContinueOnError="$(_SGContinueOnError)">
       <Output
           TaskParameter="Lines"
           ItemName="GeneratedShader" />
     </ReadLinesFromFile>
 
     <CallTarget Condition="'@(ShaderGenPostTargets)' != ''"
-                Targets="@(ShaderGenPostTargets)" />
+                Targets="@(ShaderGenPostTargets)"
+                ContinueOnError="$(_SGContinueOnError)" />
 
+  </Target>
+
+  <Target Name="IncludeGeneratedShaderContent"
+    AfterTargets="AssignTargetPaths"
+    Condition="'$(ShaderContentIncludePath)' != ''">
+    <ItemGroup>
+      <ContentWithTargetPath Include="@(GeneratedShader)">
+        <TargetPath>$(ShaderContentIncludePath)\%(FileName)%(Extension)</TargetPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </ContentWithTargetPath>
+    </ItemGroup>
   </Target>
 
 </Project>
