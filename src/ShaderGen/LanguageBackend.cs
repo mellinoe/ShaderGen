@@ -52,7 +52,11 @@ namespace ShaderGen
         {
             BackendContext context = GetContext(setName);
 
-            foreach (ResourceDefinition rd in context.Resources.Where(rd => rd.ResourceKind == ShaderResourceKind.Uniform))
+            foreach (ResourceDefinition rd in context.Resources
+                .Where(rd => 
+                    rd.ResourceKind == ShaderResourceKind.Uniform 
+                    || rd.ResourceKind == ShaderResourceKind.RWStructuredBuffer
+                    || rd.ResourceKind == ShaderResourceKind.StructuredBuffer))
             {
                 ForceTypeDiscovery(setName, rd.ValueType);
             }
