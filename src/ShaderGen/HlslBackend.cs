@@ -125,6 +125,16 @@ namespace ShaderGen
             sb.AppendLine();
         }
 
+        private void WriteStructuredBuffer(StringBuilder sb, ResourceDefinition rd, int binding)
+        {
+            sb.AppendLine($"StructuredBuffer<{CSharpToShaderType(rd.ValueType.Name)}> {CorrectIdentifier(rd.Name)}: register(t{binding});");
+        }
+
+        private void WriteRWStructuredBuffer(StringBuilder sb, ResourceDefinition rd, int binding)
+        {
+            sb.AppendLine($"RWStructuredBuffer<{CSharpToShaderType(rd.ValueType.Name)}> {CorrectIdentifier(rd.Name)}: register(u{binding});");
+        }
+
         protected override string GenerateFullTextCore(string setName, ShaderFunction function)
         {
             Debug.Assert(function.IsEntryPoint);
@@ -156,7 +166,7 @@ namespace ShaderGen
             List<ResourceDefinition[]> resourcesBySet = setContext.Resources.GroupBy(rd => rd.Set)
                 .Select(g => g.ToArray()).ToList();
 
-            int uniformBinding = 0, textureBinding = 0, samplerBinding = 0;
+            int uniformBinding = 0, textureBinding = 0, samplerBinding = 0, uavBinding = function.ColorOutputCount;
             int setIndex = 0;
             foreach (ResourceDefinition[] set in resourcesBySet)
             {
@@ -181,6 +191,12 @@ namespace ShaderGen
                             break;
                         case ShaderResourceKind.Sampler:
                             WriteSampler(sb, rd, samplerBinding++);
+                            break;
+                        case ShaderResourceKind.StructuredBuffer:
+                            WriteStructuredBuffer(sb, rd, textureBinding++);
+                            break;
+                        case ShaderResourceKind.RWStructuredBuffer:
+                            WriteRWStructuredBuffer(sb, rd, uavBinding++);
                             break;
                         default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
                     }
@@ -226,6 +242,11 @@ namespace ShaderGen
         protected override string CSharpToIdentifierNameCore(string typeName, string identifier)
         {
             return HlslKnownIdentifiers.GetMappedIdentifier(typeName, identifier);
+        }
+
+        internal override string GetComputeGroupCountsDeclaration(UInt3 groupCounts)
+        {
+            return $"[numthreads({groupCounts.X}, {groupCounts.Y}, {groupCounts.Z})]";
         }
 
         private struct HlslSemanticTracker

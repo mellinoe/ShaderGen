@@ -47,6 +47,7 @@ namespace ShaderGen
             return ret;
         }
 
+
         internal ShaderModel GetShaderModel(string setName)
         {
             BackendContext context = GetContext(setName);
@@ -266,6 +267,7 @@ namespace ShaderGen
         protected abstract string CSharpToIdentifierNameCore(string typeName, string identifier);
         protected abstract string GenerateFullTextCore(string setName, ShaderFunction function);
         protected abstract string FormatInvocationCore(string setName, string type, string method, InvocationParameterInfo[] parameterInfos);
+        internal abstract string GetComputeGroupCountsDeclaration(UInt3 groupCounts);
 
         internal string CorrectLiteral(string literal)
         {

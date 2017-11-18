@@ -1,6 +1,9 @@
-﻿namespace ShaderGen
+﻿using System;
+
+namespace ShaderGen
 {
-    public class ComputeShaderAttribute
+    [AttributeUsage(AttributeTargets.Method)]
+    public class ComputeShaderAttribute : Attribute
     {
         public uint GroupCountX { get; }
         public uint GroupCountY { get; }

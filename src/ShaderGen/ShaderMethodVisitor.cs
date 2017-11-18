@@ -37,6 +37,12 @@ namespace ShaderGen
             StringBuilder sb = new StringBuilder();
             string blockResult = VisitBlock(node); // Visit block first in order to discover builtin variables.
             string functionDeclStr = GetFunctionDeclStr();
+
+            if (_shaderFunction.Type == ShaderFunctionType.ComputeEntryPoint)
+            {
+                sb.AppendLine(_backend.GetComputeGroupCountsDeclaration(_shaderFunction.ComputeGroupCounts));
+            }
+
             sb.AppendLine(functionDeclStr);
             sb.AppendLine(blockResult);
             return sb.ToString();
@@ -107,6 +113,13 @@ namespace ShaderGen
             if (exprSymbol.Symbol.Kind == SymbolKind.NamedType)
             {
                 // Static member access
+                SymbolInfo symbolInfo = GetModel(node).GetSymbolInfo(node);
+                ISymbol symbol = symbolInfo.Symbol;
+                if (symbol.Kind == SymbolKind.Property)
+                {
+                    return Visit(node.Name);
+                }
+
                 string typeName = Utilities.GetFullMetadataName(exprSymbol.Symbol);
                 string targetName = Visit(node.Name);
                 return _backend.FormatInvocation(_setName, typeName, targetName, Array.Empty<InvocationParameterInfo>());
@@ -250,7 +263,7 @@ namespace ShaderGen
         {
             SymbolInfo symbolInfo = GetModel(node).GetSymbolInfo(node.Type);
             string fullName = Utilities.GetFullName(symbolInfo);
-             
+
             InvocationParameterInfo[] parameters = GetParameterInfos(node.ArgumentList);
             return _backend.FormatInvocation(_setName, fullName, "ctor", parameters);
         }
@@ -268,6 +281,11 @@ namespace ShaderGen
             {
                 return _backend.CorrectFieldAccess(symbolInfo);
             }
+            else if (symbol.Kind == SymbolKind.Property)
+            {
+                return _backend.FormatInvocation(_setName, containingTypeName, symbol.Name, Array.Empty<InvocationParameterInfo>());
+            }
+
             string mapped = _backend.CSharpToShaderIdentifierName(symbolInfo);
             return _backend.CorrectIdentifier(mapped);
         }

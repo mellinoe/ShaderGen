@@ -5,5 +5,6 @@
         Normal = 0,
         VertexEntryPoint,
         FragmentEntryPoint,
+        ComputeEntryPoint,
     }
 }

@@ -17,7 +17,7 @@ namespace ShaderGen
                 .Replace("+", "_");
         }
 
-        protected override void WriteVersionHeader(StringBuilder sb)
+        protected override void WriteVersionHeader(ShaderFunction function, StringBuilder sb)
         {
             sb.AppendLine("#version 450");
             sb.AppendLine("#extension GL_ARB_separate_shader_objects : enable");
@@ -32,6 +32,16 @@ namespace ShaderGen
             sb.AppendLine($"    {CSharpToShaderType(rd.ValueType.Name)} field_{CorrectIdentifier(rd.Name.Trim())};");
             sb.AppendLine("};");
             sb.AppendLine();
+        }
+
+        protected override void WriteStructuredBuffer(StringBuilder sb, ResourceDefinition rd, bool isReadOnly)
+        {
+            string layout = FormatLayoutStr(rd, "std140");
+            string readOnlyStr = isReadOnly ? " readonly" : " ";
+            sb.AppendLine($"{layout}{readOnlyStr} buffer {rd.Name}");
+            sb.AppendLine("{");
+            sb.AppendLine($"    {CSharpToShaderType(rd.ValueType.Name)} field_{CorrectIdentifier(rd.Name.Trim())}[];");
+            sb.AppendLine("};");
         }
 
         protected override void WriteSampler(StringBuilder sb, ResourceDefinition rd)
@@ -98,9 +108,10 @@ namespace ShaderGen
             return Glsl450KnownFunctions.TranslateInvocation(type, method, parameterInfos);
         }
 
-        private string FormatLayoutStr(ResourceDefinition rd)
+        private string FormatLayoutStr(ResourceDefinition rd, string storageSpec = null)
         {
-            return $"layout(set = {rd.Set}, binding = {rd.Binding})";
+            string storageSpecPart = storageSpec != null ? $"{storageSpec}, " : string.Empty;
+            return $"layout({storageSpecPart}set = {rd.Set}, binding = {rd.Binding})";
         }
 
         protected override void EmitGlPositionCorrection(StringBuilder sb)

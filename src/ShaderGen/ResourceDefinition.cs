@@ -8,12 +8,12 @@
         public TypeReference ValueType { get; }
         public ShaderResourceKind ResourceKind { get; }
 
-        public ResourceDefinition(string name, int set, int binding, TypeReference type, ShaderResourceKind kind)
+        public ResourceDefinition(string name, int set, int binding, TypeReference valueType, ShaderResourceKind kind)
         {
             Name = name;
             Set = set;
             Binding = binding;
-            ValueType = type;
+            ValueType = valueType;
             ResourceKind = kind;
         }
     }

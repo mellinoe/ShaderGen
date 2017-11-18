@@ -10,7 +10,19 @@ namespace ShaderGen
         private readonly List<ShaderSetInfo> _shaderSets = new List<ShaderSetInfo>();
         public override void VisitAttribute(AttributeSyntax node)
         {
-            if (node.Name.ToFullString().Contains("ShaderSet"))
+            // TODO: Only look at assembly-level attributes.
+            if (node.Name.ToFullString().Contains("ComputeShaderSet"))
+            {
+                string name = GetStringParam(node, 0);
+                string cs = GetStringParam(node, 1);
+                if (!TypeAndMethodName.Get(cs, out TypeAndMethodName csName))
+                {
+                    throw new ShaderGenerationException("ComputeShaderSetAttribute has an incomplete or invalid compute shader name.");
+                }
+
+                _shaderSets.Add(new ShaderSetInfo(name, csName));
+            }
+            else if (node.Name.ToFullString().Contains("ShaderSet"))
             {
                 string name = GetStringParam(node, 0);
 

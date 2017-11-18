@@ -33,6 +33,11 @@ namespace ShaderGen.Tests
             yield return new object[] { "TestShaders.BuiltInVariables.VS", null };
         }
 
+        private static IEnumerable<object[]> ComputeShaders()
+        {
+            yield return new object[] { "TestShaders.SimpleCompute.CS" };
+        }
+
         [Theory]
         [MemberData(nameof(ShaderSets))]
         public void HlslEndToEnd(string vsName, string fsName)
@@ -172,7 +177,18 @@ namespace ShaderGen.Tests
                             GlsLangValidatorTool.AssertCompilesCode(set.FragmentShaderCode, "frag", is450);
                         }
                     }
-
+                    if (set.ComputeFunction != null)
+                    {
+                        if (backend is HlslBackend)
+                        {
+                            FxcTool.AssertCompilesCode(set.ComputeShaderCode, "cs_5_0", set.ComputeFunction.Name);
+                        }
+                        else
+                        {
+                            bool is450 = backend is Glsl450Backend;
+                            GlsLangValidatorTool.AssertCompilesCode(set.ComputeShaderCode, "comp", is450);
+                        }
+                    }
                 }
             }
         }

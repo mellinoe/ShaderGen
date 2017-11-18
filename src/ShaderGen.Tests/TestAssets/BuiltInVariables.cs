@@ -1,5 +1,6 @@
 ﻿using ShaderGen;
 using System.Numerics;
+using static ShaderGen.ShaderBuiltins;
 
 namespace TestShaders
 {
@@ -9,10 +10,10 @@ namespace TestShaders
         SystemPosition4 VS()
         {
             uint vertexID = ShaderBuiltins.VertexID;
-            uint instanceID = ShaderBuiltins.InstanceID;
+            uint instanceID = InstanceID;
 
             SystemPosition4 output;
-            output.Position = new Vector4(vertexID, instanceID, 0, 1);
+            output.Position = new Vector4(vertexID, instanceID, ShaderBuiltins.VertexID, 1);
             return output;
         }
     }

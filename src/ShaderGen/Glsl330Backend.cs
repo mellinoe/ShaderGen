@@ -17,9 +17,10 @@ namespace ShaderGen
                 .Replace("+", "_");
         }
 
-        protected override void WriteVersionHeader(StringBuilder sb)
+        protected override void WriteVersionHeader(ShaderFunction function, StringBuilder sb)
         {
-            sb.AppendLine("#version 330 core");
+            string version = function.Type == ShaderFunctionType.ComputeEntryPoint ? "430" : "330 core";
+            sb.AppendLine($"#version {version}");
             sb.AppendLine();
         }
 
@@ -52,6 +53,15 @@ namespace ShaderGen
             sb.AppendLine($"    {CSharpToShaderType(rd.ValueType.Name)} field_{CorrectIdentifier(rd.Name.Trim())};");
             sb.AppendLine("};");
             sb.AppendLine();
+        }
+
+        protected override void WriteStructuredBuffer(StringBuilder sb, ResourceDefinition rd, bool isReadOnly)
+        {
+            string readOnlyStr = isReadOnly ? " readonly" : " ";
+            sb.AppendLine($"layout(std140){readOnlyStr} buffer {rd.Name}");
+            sb.AppendLine("{");
+            sb.AppendLine($"    {CSharpToShaderType(rd.ValueType.Name)} field_{CorrectIdentifier(rd.Name.Trim())}[];");
+            sb.AppendLine("};");
         }
 
         protected override string FormatInvocationCore(string setName, string type, string method, InvocationParameterInfo[] parameterInfos)

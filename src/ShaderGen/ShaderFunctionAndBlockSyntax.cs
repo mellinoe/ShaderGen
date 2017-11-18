@@ -13,17 +13,5 @@ namespace ShaderGen
             Function = function;
             Block = block;
         }
-
-        public ShaderFunctionAndBlockSyntax WithReturnType(TypeReference returnType)
-        {
-            ShaderFunction sf = Function.WithReturnType(returnType);
-            return new ShaderFunctionAndBlockSyntax(sf, Block);
-        }
-
-        public ShaderFunctionAndBlockSyntax WithParameter(int index, TypeReference type)
-        {
-            ShaderFunction sf = Function.WithParameter(index, type);
-            return new ShaderFunctionAndBlockSyntax(sf, Block);
-        }
     }
 }

@@ -1,10 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
-using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.IO;
 using System.Diagnostics;
 
 namespace ShaderGen
@@ -12,6 +9,7 @@ namespace ShaderGen
     public abstract class GlslBackendBase : LanguageBackend
     {
         protected readonly HashSet<string> _uniformNames = new HashSet<string>();
+        protected readonly HashSet<string> _ssboNames = new HashSet<string>();
 
         public GlslBackendBase(Compilation compilation) : base(compilation)
         {
@@ -56,7 +54,7 @@ namespace ShaderGen
 
             ValidateRequiredSemantics(setName, entryPoint.Function, function.Type);
 
-            WriteVersionHeader(sb);
+            WriteVersionHeader(function, sb);
 
             StructureDefinition[] orderedStructures
                 = StructureDependencyGraph.GetOrderedStructureList(Compilation, context.Structures);
@@ -84,6 +82,10 @@ namespace ShaderGen
                         break;
                     case ShaderResourceKind.Sampler:
                         WriteSampler(sb, rd);
+                        break;
+                    case ShaderResourceKind.StructuredBuffer:
+                    case ShaderResourceKind.RWStructuredBuffer:
+                        WriteStructuredBuffer(sb, rd, rd.ResourceKind == ShaderResourceKind.StructuredBuffer);
                         break;
                     default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
                 }
@@ -184,7 +186,8 @@ namespace ShaderGen
             }
             else
             {
-                Debug.Assert(entryFunction.Type == ShaderFunctionType.FragmentEntryPoint);
+                Debug.Assert(entryFunction.Type == ShaderFunctionType.FragmentEntryPoint
+                    || entryFunction.Type == ShaderFunctionType.ComputeEntryPoint);
 
                 if (mappedReturnType == "vec4")
                 {
@@ -248,7 +251,7 @@ namespace ShaderGen
             }
             else
             {
-                sb.Append($"    {invocationStr};");
+                sb.AppendLine($"    {invocationStr};");
             }
 
             // Assign output fields to synthetic "out" variables with normalized "fsin_#" names.
@@ -277,9 +280,8 @@ namespace ShaderGen
                 sb.AppendLine($"    gl_Position = {CorrectIdentifier("output")}.{CorrectIdentifier(systemPositionField.Name)};");
                 EmitGlPositionCorrection(sb);
             }
-            else
+            else if (entryFunction.Type == ShaderFunctionType.FragmentEntryPoint)
             {
-                Debug.Assert(entryFunction.Type == ShaderFunctionType.FragmentEntryPoint);
                 if (mappedReturnType == "vec4")
                 {
                     sb.AppendLine($"    _outputColor_ = {CorrectIdentifier("output")};");
@@ -319,6 +321,11 @@ namespace ShaderGen
             {
                 _uniformNames.Add(rd.Name);
             }
+            if (rd.ResourceKind == ShaderResourceKind.StructuredBuffer
+                || rd.ResourceKind == ShaderResourceKind.RWStructuredBuffer)
+            {
+                _ssboNames.Add(rd.Name);
+            }
 
             base.AddResource(setName, rd);
         }
@@ -328,7 +335,7 @@ namespace ShaderGen
             string originalName = symbolInfo.Symbol.Name;
             string mapped = CSharpToShaderIdentifierName(symbolInfo);
             string identifier = CorrectIdentifier(mapped);
-            if (_uniformNames.Contains(originalName))
+            if (_uniformNames.Contains(originalName) || _ssboNames.Contains(originalName))
             {
                 return "field_" + identifier;
             }
@@ -338,17 +345,24 @@ namespace ShaderGen
             }
         }
 
+        internal override string GetComputeGroupCountsDeclaration(UInt3 groupCounts)
+        {
+            return $"layout(local_size_x = {groupCounts.X}, local_size_y = {groupCounts.Y}, local_size_z = {groupCounts.Z}) in;";
+        }
+
         private static readonly HashSet<string> s_glslKeywords = new HashSet<string>()
         {
             "input", "output",
         };
 
-        protected abstract void WriteVersionHeader(StringBuilder sb);
+        protected abstract void WriteVersionHeader(ShaderFunction function, StringBuilder sb);
         protected abstract void WriteUniform(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteSampler(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteTexture2D(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteTextureCube(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteTexture2DMS(StringBuilder sb, ResourceDefinition rd);
+        protected abstract void WriteStructuredBuffer(StringBuilder sb, ResourceDefinition rd, bool isReadOnly);
+
         protected abstract void WriteInOutVariable(
             StringBuilder sb,
             bool isInVar,

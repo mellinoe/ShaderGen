@@ -34,6 +34,13 @@ namespace ShaderGen
             };
             ret.Add("System.Numerics.Vector4", v4Mappings);
 
+            Dictionary<string, string> uint3Mappings = new Dictionary<string, string>()
+            {
+                { "X", "x" },
+                { "Y", "y" },
+                { "Z", "z" },
+            };
+            ret.Add("ShaderGen.UInt3", uint3Mappings);
 
             return ret;
         }

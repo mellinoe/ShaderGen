@@ -7,5 +7,7 @@
         TextureCube,
         Texture2DMS,
         Sampler,
+        StructuredBuffer,
+        RWStructuredBuffer,
     }
 }

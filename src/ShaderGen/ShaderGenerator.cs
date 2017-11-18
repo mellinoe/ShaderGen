@@ -173,6 +173,7 @@ namespace ShaderGen
         {
             TypeAndMethodName vertexFunctionName = ss.VertexShader;
             TypeAndMethodName fragmentFunctionName = ss.FragmentShader;
+            TypeAndMethodName computeFunctionName = ss.ComputeShader;
 
             HashSet<SyntaxTree> treesToVisit = new HashSet<SyntaxTree>();
             if (vertexFunctionName != null)
@@ -182,6 +183,10 @@ namespace ShaderGen
             if (fragmentFunctionName != null)
             {
                 GetTrees(treesToVisit, fragmentFunctionName.TypeName);
+            }
+            if (computeFunctionName != null)
+            {
+                GetTrees(treesToVisit, computeFunctionName.TypeName);
             }
 
             foreach (LanguageBackend language in _languages)
@@ -204,20 +209,28 @@ namespace ShaderGen
                 ShaderFunction fsFunc = (ss.FragmentShader != null)
                     ? model.GetFunction(ss.FragmentShader.FullName)
                     : null;
+                ShaderFunction csFunc = (ss.ComputeShader != null)
+                    ? model.GetFunction(ss.ComputeShader.FullName)
+                    : null;
+                string vsCode = null;
+                string fsCode = null;
+                string csCode = null;
+                if (vsFunc != null)
                 {
-                    string vsCode = null;
-                    string fsCode = null;
-                    if (vsFunc != null)
-                    {
-                        vsCode = language.GetCode(ss.Name, vsFunc);
-                    }
-                    if (fsFunc != null)
-                    {
-                        fsCode = language.GetCode(ss.Name, fsFunc);
-                    }
-
-                    result.AddShaderSet(language, new GeneratedShaderSet(ss.Name, vsCode, fsCode, vsFunc, fsFunc, model));
+                    vsCode = language.GetCode(ss.Name, vsFunc);
                 }
+                if (fsFunc != null)
+                {
+                    fsCode = language.GetCode(ss.Name, fsFunc);
+                }
+                if (csFunc != null)
+                {
+                    csCode = language.GetCode(ss.Name, csFunc);
+                }
+
+                result.AddShaderSet(
+                    language,
+                    new GeneratedShaderSet(ss.Name, vsCode, fsCode, csCode, vsFunc, fsFunc, csFunc, model));
             }
         }
 
