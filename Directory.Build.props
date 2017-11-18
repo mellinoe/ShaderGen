@@ -5,6 +5,7 @@
     <BinDir>$(RepositoryRootDirectory)bin</BinDir>
     <OutputPath>$([System.IO.Path]::GetFullPath('$(RepositoryRootDirectory)bin\$(Configuration)'))\$(MSBuildProjectName)</OutputPath>
     <BaseIntermediateOutputPath>$([System.IO.Path]::GetFullPath('$(RepositoryRootDirectory)bin\obj\$(MSBuildProjectName)'))\</BaseIntermediateOutputPath>
+    <PackageOutputPath>$(BinDir)\Packages\$(Configuration)</PackageOutputPath>
   </PropertyGroup>
   <PropertyGroup>
     <!-- NuGet Package common properties. -->
