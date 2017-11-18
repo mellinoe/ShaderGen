@@ -2,16 +2,14 @@
 {
     public class RWStructuredBuffer<T> where T : struct
     {
-        public T this[int index]
+        public ref T this[int index]
         {
             get => throw new ShaderBuiltinException();
-            set => throw new ShaderBuiltinException();
         }
 
-        public T this[uint index]
+        public ref T this[uint index]
         {
             get => throw new ShaderBuiltinException();
-            set => throw new ShaderBuiltinException();
         }
     }
 }

@@ -13,6 +13,7 @@ namespace TestShaders
         public void CS()
         {
             StructuredInOut[DispatchThreadID.X] = StructuredInput[DispatchThreadID.Y];
+            StructuredInOut[DispatchThreadID.Y].Z = 1;
         }
     }
 }
