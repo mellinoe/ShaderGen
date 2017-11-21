@@ -16,9 +16,9 @@
     <WriteLinesToFile Lines="@(Compile)" File="$(_SGSourcesResponsePath)" Overwrite="true" />
 
     <PropertyGroup>
-      <_SGArgs>$(_SGArgs) --ref "$(_SGReferencesResponsePath)"</_SGArgs>
-      <_SGArgs>$(_SGArgs) --src "$(_SGSourcesResponsePath)"</_SGArgs>
-      <_SGArgs>$(_SGArgs) --out "$(ShaderOutputPath)"</_SGArgs>
+      <_SGArgs>$(_SGArgs) --ref " $(_SGReferencesResponsePath) "</_SGArgs>
+      <_SGArgs>$(_SGArgs) --src " $(_SGSourcesResponsePath) "</_SGArgs>
+      <_SGArgs>$(_SGArgs) --out " $(ShaderOutputPath) "</_SGArgs>
       <_SGArgs>$(_SGArgs) --genlist "$(_SGGeneratedFilesList)"</_SGArgs>
       <_SGArgs Condition="'$(ListAllShaderPaths)' == 'true'">$(_SGArgs) --listall</_SGArgs>
       <_SGArgs Condition="'$(ShaderProcessorAssembly)' != ''">$(_SGArgs) --processor "$(ShaderProcessorAssembly)"</_SGArgs>

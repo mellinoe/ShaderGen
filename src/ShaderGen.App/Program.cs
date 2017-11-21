@@ -64,7 +64,7 @@ namespace ShaderGen.App
                 }
                 catch
                 {
-                    Console.Error.WriteLine("Unable to create the output directory.");
+                    Console.Error.WriteLine($"Unable to create the output directory \"{outputPath}\".");
                     return -1;
                 }
             }
