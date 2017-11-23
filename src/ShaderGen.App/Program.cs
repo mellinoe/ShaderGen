@@ -46,6 +46,12 @@ namespace ShaderGen.App
                 syntax.DefineOption("processorargs", ref processorArgs, false, "Custom information passed to IShaderSetProcessor.");
             });
 
+            referenceItemsResponsePath = NormalizePath(referenceItemsResponsePath);
+            compileItemsResponsePath = NormalizePath(compileItemsResponsePath);
+            outputPath = NormalizePath(outputPath);
+            genListFilePath = NormalizePath(genListFilePath);
+            processorPath = NormalizePath(processorPath);
+
             if (!File.Exists(referenceItemsResponsePath))
             {
                 Console.Error.WriteLine("Reference items response file does not exist: " + referenceItemsResponsePath);
@@ -233,6 +239,18 @@ namespace ShaderGen.App
             File.WriteAllLines(genListFilePath, generatedFilePaths);
 
             return 0;
+        }
+
+        private static string NormalizePath(string path)
+        {
+            if (path == null)
+            {
+                return null;
+            }
+            else
+            {
+                return path.Trim();
+            }
         }
 
         private static bool CompileCode(LanguageBackend lang, string shaderPath, string entryPoint, ShaderFunctionType type, out string path)
