@@ -13,6 +13,8 @@ namespace TestShaders
             input.Position = input.Position.WWXY();
             input.TextureCoord = input.TextureCoord.YY();
 
+            input.Position = Vector4.Normalize(input.Position).XYZW();
+
             SystemPosition4Texture2 output;
             output.Position = input.Position;
             output.TextureCoord = input.TextureCoord;

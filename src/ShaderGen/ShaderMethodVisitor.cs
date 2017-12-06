@@ -166,16 +166,7 @@ namespace ShaderGen
                     List<InvocationParameterInfo> pis = new List<InvocationParameterInfo>();
                     if (ims.IsExtensionMethod)
                     {
-                        string identifier = null;
-                        // Extension method invocation, ie: swizzle:
-                        if (maes.Expression is MemberAccessExpressionSyntax subExpression)
-                        {
-                            identifier = Visit(subExpression);
-                        }
-                        else if (maes.Expression is IdentifierNameSyntax identNameSyntax)
-                        {
-                            identifier = Visit(identNameSyntax);
-                        }
+                        string identifier = Visit(maes.Expression);
 
                         Debug.Assert(identifier != null);
                         // Might need FullTypeName here too.
