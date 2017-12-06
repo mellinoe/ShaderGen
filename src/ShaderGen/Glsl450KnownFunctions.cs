@@ -124,6 +124,14 @@ namespace ShaderGen
             };
             ret.Add("System.Numerics.Vector4", new DictionaryTypeInvocationTranslator(v4Mappings));
 
+            Dictionary<string, InvocationTranslator> mathfMappings = new Dictionary<string, InvocationTranslator>()
+            {
+                { "Max", SimpleNameTranslator("max") },
+                { "Min", SimpleNameTranslator("min") },
+                { "Pow", SimpleNameTranslator("pow") },
+            };
+            ret.Add("System.MathF", new DictionaryTypeInvocationTranslator(mathfMappings));
+
             ret.Add("ShaderGen.ShaderSwizzle", new SwizzleTranslator());
 
             return ret;

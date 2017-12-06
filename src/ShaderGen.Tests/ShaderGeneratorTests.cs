@@ -31,6 +31,7 @@ namespace ShaderGen.Tests
             yield return new object[] { "TestShaders.MultipleColorOutputs.VS", "TestShaders.MultipleColorOutputs.FS" };
             yield return new object[] { "TestShaders.MultisampleTexture.VS", null };
             yield return new object[] { "TestShaders.BuiltInVariables.VS", null };
+            yield return new object[] { "TestShaders.MathFunctions.VS", null };
         }
 
         private static IEnumerable<object[]> ComputeShaders()

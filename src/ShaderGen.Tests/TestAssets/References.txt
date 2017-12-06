@@ -75,7 +75,7 @@
 {nupkgdir}/netstandard.library/2.0.0/build/netstandard2.0/ref/System.Resources.Writer.dll 
 {nupkgdir}/netstandard.library/2.0.0/build/netstandard2.0/ref/System.Runtime.CompilerServices.VisualC.dll 
 {nupkgdir}/netstandard.library/2.0.0/build/netstandard2.0/ref/System.Runtime.dll 
-{nupkgdir}/netstandard.library/2.0.0/build/netstandard2.0/ref/System.Runtime.Extensions.dll 
+{nupkgdir}/microsoft.netcore.app/2.0.0/ref/netcoreapp2.0/System.Runtime.Extensions.dll 
 {nupkgdir}/netstandard.library/2.0.0/build/netstandard2.0/ref/System.Runtime.Handles.dll 
 {nupkgdir}/netstandard.library/2.0.0/build/netstandard2.0/ref/System.Runtime.InteropServices.dll 
 {nupkgdir}/netstandard.library/2.0.0/build/netstandard2.0/ref/System.Runtime.InteropServices.RuntimeInformation.dll 
