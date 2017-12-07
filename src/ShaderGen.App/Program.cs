@@ -284,17 +284,21 @@ namespace ShaderGen.App
                 ProcessStartInfo psi = new ProcessStartInfo(fxcPath, args);
                 psi.RedirectStandardOutput = true;
                 psi.RedirectStandardError = true;
-                Process p = Process.Start(psi);
-                p.WaitForExit();
+                Process p = new Process() { StartInfo = psi };
+                p.Start();
+                var stdOut = p.StandardOutput.ReadToEndAsync();
+                var stdErr = p.StandardError.ReadToEndAsync();
+                bool exited = p.WaitForExit(2000);
 
-                if (p.ExitCode == 0)
+                if (exited && p.ExitCode == 0)
                 {
                     path = outputPath;
                     return true;
                 }
                 else
                 {
-                    throw new ShaderGenerationException(p.StandardError.ReadToEnd());
+                    string message = $"StdOut: {stdOut.Result}, StdErr: {stdErr.Result}";
+                    Console.WriteLine($"Failed to compile HLSL: {message}.");
                 }
             }
             catch (Win32Exception)
