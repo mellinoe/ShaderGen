@@ -284,21 +284,41 @@ namespace ShaderGen
         private void TryRecognizeBuiltInVariable(SymbolInfo symbolInfo)
         {
             string name = symbolInfo.Symbol.Name;
-            if (name == "VertexID")
+            if (name == nameof(ShaderBuiltins.VertexID))
             {
+                if (_shaderFunction.Type != ShaderFunctionType.VertexEntryPoint)
+                {
+                    throw new ShaderGenerationException("VertexID can only be used within Vertex shaders.");
+                }
                 _shaderFunction.UsesVertexID = true;
             }
-            else if (name == "InstanceID")
+            else if (name == nameof(ShaderBuiltins.InstanceID))
             {
                 _shaderFunction.UsesInstanceID = true;
             }
-            else if (name == "DispatchThreadID")
+            else if (name == nameof(ShaderBuiltins.DispatchThreadID))
             {
+                if (_shaderFunction.Type != ShaderFunctionType.ComputeEntryPoint)
+                {
+                    throw new ShaderGenerationException("DispatchThreadID can only be used within Vertex shaders.");
+                }
                 _shaderFunction.UsesDispatchThreadID = true;
             }
-            else if (name == "GroupThreadID")
+            else if (name == nameof(ShaderBuiltins.GroupThreadID))
             {
+                if (_shaderFunction.Type != ShaderFunctionType.ComputeEntryPoint)
+                {
+                    throw new ShaderGenerationException("GroupThreadID can only be used within Vertex shaders.");
+                }
                 _shaderFunction.UsesGroupThreadID = true;
+            }
+            else if (name == nameof(ShaderBuiltins.IsFrontFace))
+            {
+                if (_shaderFunction.Type != ShaderFunctionType.FragmentEntryPoint)
+                {
+                    throw new ShaderGenerationException("IsFrontFace can only be used within Fragment shaders.");
+                }
+                _shaderFunction.UsesFrontFace = true;
             }
         }
 

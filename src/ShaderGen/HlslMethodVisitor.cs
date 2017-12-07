@@ -72,6 +72,10 @@ namespace ShaderGen
             {
                 values.Add("uint3 _builtins_GroupThreadID : SV_GroupThreadID");
             }
+            if (_shaderFunction.UsesFrontFace)
+            {
+                values.Add("bool _builtins_IsFrontFace : SV_IsFrontFace");
+            }
 
             return string.Join(", ", values);
         }

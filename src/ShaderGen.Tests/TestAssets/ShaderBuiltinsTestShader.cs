@@ -65,7 +65,20 @@ namespace TestShaders
 
             SystemPosition4 output;
             output.Position = input.Position;
+
             return output;
+        }
+
+        [FragmentShader]
+        public Vector4 FS(SystemPosition4 input)
+        {
+            Vector4 ret = Vector4.Zero;
+            if (IsFrontFace)
+            {
+                ret += Vector4.One;
+            }
+
+            return ret;
         }
     }
 }

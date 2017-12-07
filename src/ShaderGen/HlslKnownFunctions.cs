@@ -32,6 +32,7 @@ namespace ShaderGen
                 { "InstanceID", InstanceID },
                 { "DispatchThreadID", DispatchThreadID },
                 { "GroupThreadID", GroupThreadID },
+                { "IsFrontFace", IsFrontFace },
             };
             ret.Add("ShaderGen.ShaderBuiltins", new DictionaryTypeInvocationTranslator(builtinMappings));
 
@@ -203,22 +204,27 @@ namespace ShaderGen
 
         private static string VertexID(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"_builtins_VertexID";
+            return "_builtins_VertexID";
         }
 
         private static string InstanceID(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"_builtins_InstanceID";
+            return "_builtins_InstanceID";
         }
 
         private static string DispatchThreadID(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"_builtins_DispatchThreadID";
+            return "_builtins_DispatchThreadID";
         }
 
         private static string GroupThreadID(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"_builtins_GroupThreadID";
+            return "_builtins_GroupThreadID";
+        }
+
+        private static string IsFrontFace(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return "_builtins_IsFrontFace";
         }
 
         private static string VectorCtor(string typeName, string methodName, InvocationParameterInfo[] parameters)

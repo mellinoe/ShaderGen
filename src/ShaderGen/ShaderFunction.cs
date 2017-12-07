@@ -20,6 +20,7 @@ namespace ShaderGen
         public bool UsesInstanceID { get; internal set; }
         public bool UsesDispatchThreadID { get; internal set; }
         public bool UsesGroupThreadID { get; internal set; }
+        public bool UsesFrontFace { get; internal set; }
 
         public ShaderFunction(
             string declaringType,

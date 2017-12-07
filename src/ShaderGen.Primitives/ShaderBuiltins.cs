@@ -67,6 +67,7 @@ namespace ShaderGen
         public static uint InstanceID => throw new ShaderBuiltinException();
         public static UInt3 DispatchThreadID => throw new ShaderBuiltinException();
         public static UInt3 GroupThreadID => throw new ShaderBuiltinException();
+        public static bool IsFrontFace => throw new ShaderBuiltinException();
     }
 
     internal class ShaderBuiltinException : Exception { }

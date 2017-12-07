@@ -32,6 +32,7 @@ namespace ShaderGen
                 { "InstanceID", InstanceID },
                 { "DispatchThreadID", DispatchThreadID },
                 { "GroupThreadID", GroupThreadID },
+                { "IsFrontFace", IsFrontFace },
             };
             ret.Add("ShaderGen.ShaderBuiltins", new DictionaryTypeInvocationTranslator(builtinMappings));
 
@@ -236,6 +237,11 @@ namespace ShaderGen
         private static string GroupThreadID(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
             return "gl_LocalInvocationID";
+        }
+
+        private static string IsFrontFace(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return "gl_FrontFacing";
         }
 
         private static string VectorCtor(string typeName, string methodName, InvocationParameterInfo[] parameters)
