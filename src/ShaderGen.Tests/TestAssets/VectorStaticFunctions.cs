@@ -8,6 +8,12 @@ namespace TestShaders
         [VertexShader]
         SystemPosition4 VS(Position4 input)
         {
+            Matrix4x4 testMatrix = new Matrix4x4(
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1);
+
             Vector2 v2 = new Vector2(1, 2);
             Vector2 r2 = Vector2.Abs(v2);
             r2 = Vector2.Add(v2, v2);
@@ -30,6 +36,7 @@ namespace TestShaders
             r2 = Vector2.Subtract(v2, v2);
             r = v2.Length();
             r = v2.LengthSquared();
+            r2 = Vector2.Transform(v2, testMatrix);
 
             Vector3 v3 = new Vector3(1, 2, 3);
             Vector3 r3 = Vector3.Abs(v3);
@@ -54,6 +61,7 @@ namespace TestShaders
             r3 = Vector3.Subtract(v3, v3);
             r = v3.Length();
             r = v3.LengthSquared();
+            r3 = Vector3.Transform(v3, testMatrix);
 
             Vector4 v4 = new Vector4(1, 2, 3, 4);
             Vector4 r4 = Vector4.Abs(v4);
@@ -76,6 +84,9 @@ namespace TestShaders
             r4 = Vector4.Subtract(v4, v4);
             r = v4.Length();
             r = v4.LengthSquared();
+            r4 = Vector4.Transform(v2, testMatrix);
+            r4 = Vector4.Transform(v3, testMatrix);
+            r4 = Vector4.Transform(v4, testMatrix);
 
             SystemPosition4 output;
             output.Position = input.Position;

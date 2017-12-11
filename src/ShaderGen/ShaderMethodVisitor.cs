@@ -127,10 +127,21 @@ namespace ShaderGen
             else
             {
                 // Other accesses
+                bool isIndexerAccess = _backend.IsIndexerAccess(GetModel(node).GetSymbolInfo(node.Name));
+                string expr = Visit(node.Expression);
+                string name = Visit(node.Name);
 
-                return Visit(node.Expression)
-                    + node.OperatorToken.ToFullString()
-                    + Visit(node.Name);
+                if (!isIndexerAccess)
+                {
+                    return Visit(node.Expression)
+                        + node.OperatorToken.ToFullString()
+                        + Visit(node.Name);
+                }
+                else
+                {
+                    return Visit(node.Expression)
+                        + Visit(node.Name);
+                }
             }
         }
 

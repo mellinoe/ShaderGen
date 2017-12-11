@@ -61,6 +61,7 @@ namespace ShaderGen
                 { "One", VectorStaticAccessor },
                 { "UnitX", VectorStaticAccessor },
                 { "UnitY", VectorStaticAccessor },
+                { "Transform", Vector2Transform },
             };
             ret.Add("System.Numerics.Vector2", new DictionaryTypeInvocationTranslator(v2Mappings));
 
@@ -91,6 +92,7 @@ namespace ShaderGen
                 { "UnitX", VectorStaticAccessor },
                 { "UnitY", VectorStaticAccessor },
                 { "UnitZ", VectorStaticAccessor },
+                { "Transform", Vector3Transform },
             };
             ret.Add("System.Numerics.Vector3", new DictionaryTypeInvocationTranslator(v3Mappings));
 
@@ -121,8 +123,15 @@ namespace ShaderGen
                 { "UnitY", VectorStaticAccessor },
                 { "UnitZ", VectorStaticAccessor },
                 { "UnitW", VectorStaticAccessor },
+                { "Transform", Vector4Transform },
             };
             ret.Add("System.Numerics.Vector4", new DictionaryTypeInvocationTranslator(v4Mappings));
+
+            Dictionary<string, InvocationTranslator> m4x4Mappings = new Dictionary<string, InvocationTranslator>()
+            {
+                { "ctor", MatrixCtor }
+            };
+            ret.Add("System.Numerics.Matrix4x4", new DictionaryTypeInvocationTranslator(m4x4Mappings));
 
             Dictionary<string, InvocationTranslator> mathfMappings = new Dictionary<string, InvocationTranslator>()
             {
@@ -150,6 +159,17 @@ namespace ShaderGen
         private static string DistanceSquared(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
             return $"dot({parameters[0].Identifier} - {parameters[1].Identifier}, {parameters[0].Identifier} - {parameters[1].Identifier})";
+        }
+
+        private static string MatrixCtor(string typeName, string methodName, InvocationParameterInfo[] p)
+        {
+            string paramList = string.Join(", ",
+                p[0].Identifier, p[1].Identifier, p[2].Identifier, p[3].Identifier,
+                p[4].Identifier, p[5].Identifier, p[6].Identifier, p[7].Identifier,
+                p[8].Identifier, p[9].Identifier, p[10].Identifier, p[11].Identifier,
+                p[12].Identifier, p[13].Identifier, p[14].Identifier, p[15].Identifier);
+
+            return $"{{ {paramList} }}";
         }
 
         public static string TranslateInvocation(string type, string method, InvocationParameterInfo[] parameters)
@@ -303,6 +323,35 @@ namespace ShaderGen
                 Debug.Fail("Invalid static vector accessor: " + methodName);
                 return null;
             }
+        }
+
+        private static string Vector2Transform(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return $"mul({parameters[1].Identifier}, float4({parameters[0].Identifier}, 0, 1)).xy";
+        }
+
+        private static string Vector3Transform(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return $"mul({parameters[1].Identifier}, float4({parameters[0].Identifier}, 1)).xyz";
+        }
+
+        private static string Vector4Transform(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            string vecParam;
+            if (parameters[0].FullTypeName == "System.Numerics.Vector2")
+            {
+                vecParam = $"float4({parameters[0].Identifier}, 0, 1)";
+            }
+            else if (parameters[0].FullTypeName == "System.Numerics.Vector3")
+            {
+                vecParam = $"float4({parameters[0].Identifier}, 1)";
+            }
+            else
+            {
+                vecParam = parameters[0].Identifier;
+            }
+
+            return $"mul({parameters[1].Identifier}, {vecParam})";
         }
 
         private static void GetVectorTypeInfo(string name, out string shaderType, out int elementCount)

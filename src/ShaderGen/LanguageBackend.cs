@@ -146,6 +146,13 @@ namespace ShaderGen
             }
         }
 
+        internal virtual bool IsIndexerAccess(SymbolInfo member)
+        {
+            return Utilities.GetFullMetadataName(member.Symbol.ContainingType) == "System.Numerics.Matrix4x4"
+                && member.Symbol.Name[0] == 'M'
+                && char.IsDigit(member.Symbol.Name[1]);
+        }
+
         internal virtual void AddResource(string setName, ResourceDefinition rd)
         {
             if (rd == null)

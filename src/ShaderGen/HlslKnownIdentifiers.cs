@@ -34,6 +34,27 @@ namespace ShaderGen
             };
             ret.Add("System.Numerics.Vector4", v4Mappings);
 
+            Dictionary<string, string> m4x4Mappings = new Dictionary<string, string>()
+            {
+                { "M11", "[0][0]" },
+                { "M12", "[0][1]" },
+                { "M13", "[0][2]" },
+                { "M14", "[0][3]" },
+                { "M21", "[1][0]" },
+                { "M22", "[1][1]" },
+                { "M23", "[1][2]" },
+                { "M24", "[1][3]" },
+                { "M31", "[2][0]" },
+                { "M32", "[2][1]" },
+                { "M33", "[2][2]" },
+                { "M34", "[2][3]" },
+                { "M41", "[3][0]" },
+                { "M42", "[3][1]" },
+                { "M43", "[3][2]" },
+                { "M44", "[3][3]" },
+            };
+            ret.Add("System.Numerics.Matrix4x4", m4x4Mappings);
+
             Dictionary<string, string> uint3Mappings = new Dictionary<string, string>()
             {
                 { "X", "x" },
