@@ -48,7 +48,7 @@ namespace ShaderGen
 
         protected override void WriteUniform(StringBuilder sb, ResourceDefinition rd)
         {
-            sb.AppendLine($"uniform {rd.Name}");
+            sb.AppendLine($"layout(std140) uniform {rd.Name}");
             sb.AppendLine("{");
             sb.AppendLine($"    {CSharpToShaderType(rd.ValueType.Name)} field_{CorrectIdentifier(rd.Name.Trim())};");
             sb.AppendLine("};");
