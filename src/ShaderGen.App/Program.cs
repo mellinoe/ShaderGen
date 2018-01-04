@@ -119,11 +119,13 @@ namespace ShaderGen.App
             HlslBackend hlsl = new HlslBackend(compilation);
             Glsl330Backend glsl330 = new Glsl330Backend(compilation);
             Glsl450Backend glsl450 = new Glsl450Backend(compilation);
+            MetalBackend metal = new MetalBackend(compilation);
             LanguageBackend[] languages = new LanguageBackend[]
             {
                 hlsl,
                 glsl330,
-                glsl450
+                glsl450,
+                metal,
             };
 
             List<IShaderSetProcessor> processors = new List<IShaderSetProcessor>();
@@ -387,6 +389,10 @@ namespace ShaderGen.App
             else if (lang.GetType() == typeof(Glsl450Backend))
             {
                 return "450.glsl";
+            }
+            else if (lang.GetType() == typeof(MetalBackend))
+            {
+                return "metal";
             }
 
             throw new InvalidOperationException("Invalid backend type: " + lang.GetType().Name);
