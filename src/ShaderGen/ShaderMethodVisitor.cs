@@ -411,7 +411,12 @@ namespace ShaderGen
 
         protected string GetParameterDeclList()
         {
-            return string.Join(", ", _shaderFunction.Parameters.Select(pd => $"{_backend.CSharpToShaderType(pd.Type.Name)} {_backend.CorrectIdentifier(pd.Name)}"));
+            return string.Join(", ", _shaderFunction.Parameters.Select(FormatParameter));
+        }
+
+        protected virtual string FormatParameter(ParameterDefinition pd)
+        {
+            return $"{_backend.CSharpToShaderType(pd.Type.Name)} {_backend.CorrectIdentifier(pd.Name)}";
         }
 
         private InvocationParameterInfo[] GetParameterInfos(ArgumentListSyntax argumentList)

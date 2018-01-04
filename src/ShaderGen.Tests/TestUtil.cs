@@ -102,6 +102,10 @@ namespace ShaderGen.Tests
             {
                 dirs.Add(@"C:\Program Files\dotnet\sdk\NuGetFallbackFolder");
             }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                dirs.Add("/usr/local/share/dotnet/sdk/NuGetFallbackFolder");
+            }
             else
             {
                 dirs.Add("/usr/share/dotnet/sdk/NuGetFallbackFolder");

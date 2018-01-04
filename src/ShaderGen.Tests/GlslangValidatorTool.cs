@@ -32,7 +32,7 @@ namespace ShaderGen.Tests
             if (result.ExitCode != 0)
             {
                 string message = result.StdOut;
-                throw new InvalidOperationException("HLSL compilation failed: " + message);
+                throw new InvalidOperationException("GLSL compilation failed: " + message);
             }
         }
 
