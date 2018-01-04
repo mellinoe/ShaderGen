@@ -193,10 +193,10 @@ namespace ShaderGen
         private static string MatrixCtor(string typeName, string methodName, InvocationParameterInfo[] p)
         {
             string paramList = string.Join(", ",
-                p[0].Identifier, p[1].Identifier, p[2].Identifier, p[3].Identifier,
-                p[4].Identifier, p[5].Identifier, p[6].Identifier, p[7].Identifier,
-                p[8].Identifier, p[9].Identifier, p[10].Identifier, p[11].Identifier,
-                p[12].Identifier, p[13].Identifier, p[14].Identifier, p[15].Identifier);
+                $"float4({p[0].Identifier}, {p[1].Identifier}, {p[2].Identifier}, {p[3].Identifier})",
+                $"float4({p[4].Identifier}, {p[5].Identifier}, {p[6].Identifier}, {p[7].Identifier})",
+                $"float4({p[8].Identifier}, {p[9].Identifier}, {p[10].Identifier}, {p[11].Identifier})",
+                $"float4({p[12].Identifier}, {p[13].Identifier}, {p[14].Identifier}, {p[15].Identifier})");
 
             return $"{{ {paramList} }}";
         }

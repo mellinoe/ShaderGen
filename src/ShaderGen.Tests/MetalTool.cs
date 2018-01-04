@@ -58,7 +58,7 @@ namespace ShaderGen.Tests
         {
             StringBuilder args = new StringBuilder();
             args.Append("-x metal ");
-
+            args.Append("-mmacosx-version-min=10.12 ");
             if (output != null)
             {
                 args.Append(" -o "); args.Append(output);
