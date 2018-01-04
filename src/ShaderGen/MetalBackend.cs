@@ -179,6 +179,52 @@ namespace ShaderGen
                 WriteStructure(sb, sd);
             }
 
+            sb.AppendLine("struct ShaderContainer {");
+
+            List<string> structFields = new List<string>();
+            List<string> ctorParams = new List<string>();
+            List<string> ctorAssignments = new List<string>();
+
+            // ParameterDefinition[] entryParameters = entryPoint.Function.Parameters;
+            // if (entryParameters.Length > 0)
+            // {
+            //     Debug.Assert(entryParameters.Length == 1);
+            //     ParameterDefinition firstParam = entryParameters[0];
+            //     structFields.Add($"thread {CSharpToShaderType(firstParam.Type.Name)}& {firstParam.Name};");
+            //     ctorParams.Add($"thread {CSharpToShaderType(firstParam.Type.Name)}& {firstParam.Name}_param");
+            //     ctorAssignments.Add($"{firstParam.Name}({firstParam.Name}_param)");
+            // }
+            // List<(string Type, string Name, string Attribute)> builtins = GetBuiltinParameterList(entryPoint.Function);
+            // foreach (var builtin in builtins)
+            // {
+            //     structFields.Add($"thread {builtin.Type} {builtin.Name};");
+            //     ctorParams.Add($"thread {builtin.Type} {builtin.Name}_param");
+            //     ctorAssignments.Add($"{builtin.Name}({builtin.Name}_param)");
+            // }
+            foreach (ResourceDefinition resource in setContext.Resources)
+            {
+                structFields.Add(GetResourceField(resource));
+                ctorParams.Add(GetResourceCtorParam(resource));
+                ctorAssignments.Add($"{resource.Name}({resource.Name}_param)");
+            }
+
+            foreach (string sf in structFields)
+            {
+                sb.AppendLine(sf);
+            }
+
+            sb.AppendLine($"ShaderContainer(");
+            string ctorParamsStr = string.Join(", ", ctorParams);
+            sb.AppendLine(ctorParamsStr);
+            sb.AppendLine($")");
+            string allCtorAssignments = string.Join(", ", ctorAssignments);
+            if (!string.IsNullOrEmpty(allCtorAssignments))
+            {
+                sb.AppendLine(":");
+                sb.AppendLine(allCtorAssignments);
+            }
+            sb.AppendLine("{}");
+
             FunctionCallGraphDiscoverer fcgd = new FunctionCallGraphDiscoverer(
                 Compilation,
                 new TypeAndMethodName { TypeName = function.DeclaringType, MethodName = function.Name });
@@ -200,7 +246,132 @@ namespace ShaderGen
                 .VisitFunction(entryPoint.Block);
             sb.AppendLine(result);
 
+            sb.AppendLine("};"); // Close the global containing struct.
+
+            // Emit the out function call which creates the container struct and calls the real shader function.
+            string type = entryPoint.Function.Type == ShaderFunctionType.VertexEntryPoint
+                ? "vertex"
+                : entryPoint.Function.Type == ShaderFunctionType.FragmentEntryPoint
+                    ? "fragment"
+                    : "kernel";
+
+            ShaderFunction entryFunction = entryPoint.Function;
+            string returnType = CSharpToShaderType(entryFunction.ReturnType.Name);
+            string fullDeclType = CSharpToShaderType(entryFunction.DeclaringType);
+            string funcName = entryFunction.Name;
+            string baseParameterList = string.Join(", ", entryFunction.Parameters.Select(FormatParameter));
+            string resourceParameterList = GetResourceParameterList(entryFunction, setName);
+            string builtinParameterList = string.Join(
+                ", ",
+                MetalBackend.GetBuiltinParameterList(entryFunction).Select(b => $"{b.Type} {b.Name} {b.Attribute}"));
+            string fullParameterList = string.Join(
+                ", ",
+                new string[]
+                {
+                    baseParameterList, resourceParameterList, builtinParameterList
+                }.Where(s => !string.IsNullOrEmpty(s)));
+
+            string functionDeclStr = $"{type} {returnType} {funcName}({fullParameterList})";
+
+            string containerArgs = string.Join(", ", setContext.Resources.Select(
+                rd => rd.Name));
+
+            string entryFuncArgs = string.Join(
+                ", ",
+                MetalBackend.GetBuiltinParameterList(entryFunction).Select(b => $"{b.Name}"));
+
+            if (entryFunction.Parameters.Length > 0)
+            {
+                Debug.Assert(entryFunction.Parameters.Length == 1);
+                entryFuncArgs = Utilities.JoinIgnoreNull(
+                    ", ",
+                    new string[] { $"{entryFunction.Parameters[0].Name}", entryFuncArgs });
+            }
+
+            sb.AppendLine(functionDeclStr);
+            sb.AppendLine("{");
+            sb.AppendLine($"return ShaderContainer({containerArgs}).{entryFunction.Name}({entryFuncArgs});");
+            sb.AppendLine("}");
+
             return sb.ToString();
+        }
+
+        private string FormatParameter(ParameterDefinition pd)
+        {
+            return $"{CSharpToShaderType(pd.Type.Name)} {CorrectIdentifier(pd.Name)} [[ stage_in ]]";
+        }
+
+        public static List<(string Type, string Name, string Attribute)> GetBuiltinParameterList(ShaderFunction function)
+        {
+            List<(string, string, string)> values = new List<(string, string, string)>();
+            if (function.UsesVertexID)
+            {
+                values.Add(("uint", "_builtins_VertexID", "[[ vertex_id ]]"));
+            }
+            if (function.UsesInstanceID)
+            {
+                values.Add(("uint", "_builtins_InstanceID", "[[ instance_id ]]"));
+            }
+            if (function.UsesDispatchThreadID)
+            {
+                values.Add(("uint3", "_builtins_DispatchThreadID", "[[ thread_position_in_grid ]]"));
+            }
+            if (function.UsesGroupThreadID)
+            {
+                values.Add(("uint3", "_builtins_GroupThreadID", "[[ thread_position_in_threadgroup ]]"));
+            }
+            if (function.UsesFrontFace)
+            {
+                values.Add(("bool", "_builtins_IsFrontFace", "[[ front_facing ]]"));
+            }
+
+            return values;
+        }
+
+        private string GetResourceField(ResourceDefinition rd)
+        {
+            switch (rd.ResourceKind)
+            {
+                case ShaderResourceKind.Texture2D:
+                    return $"thread texture2d<float> {rd.Name};";
+                case ShaderResourceKind.Texture2DMS:
+                    return $"thread texture2d_ms<float> {rd.Name};";
+                case ShaderResourceKind.TextureCube:
+                    return $"thread texturecube<float> {rd.Name};";
+                case ShaderResourceKind.Sampler:
+                    return $"thread sampler {rd.Name};";
+                case ShaderResourceKind.Uniform:
+                case ShaderResourceKind.StructuredBuffer:
+                    return $"constant {CSharpToShaderType(rd.ValueType.Name)}& {rd.Name};";
+                case ShaderResourceKind.RWStructuredBuffer:
+                    return $"device {CSharpToShaderType(rd.ValueType.Name)}* {rd.Name};";
+                default:
+                    Debug.Fail("Invalid ResourceKind: " + rd.ResourceKind);
+                    throw new InvalidOperationException();
+            }
+        }
+
+        private string GetResourceCtorParam(ResourceDefinition rd)
+        {
+            switch (rd.ResourceKind)
+            {
+                case ShaderResourceKind.Texture2D:
+                    return $"thread texture2d<float> {rd.Name}_param";
+                case ShaderResourceKind.Texture2DMS:
+                    return $"thread texture2d_ms<float> {rd.Name}_param";
+                case ShaderResourceKind.TextureCube:
+                    return $"thread texturecube<float> {rd.Name}_param";
+                case ShaderResourceKind.Sampler:
+                    return $"thread sampler {rd.Name}_param";
+                case ShaderResourceKind.Uniform:
+                case ShaderResourceKind.StructuredBuffer:
+                    return $"constant {CSharpToShaderType(rd.ValueType.Name)}& {rd.Name}_param";
+                case ShaderResourceKind.RWStructuredBuffer:
+                    return $"device {CSharpToShaderType(rd.ValueType.Name)}* {rd.Name}_param";
+                default:
+                    Debug.Fail("Invalid ResourceKind: " + rd.ResourceKind);
+                    throw new InvalidOperationException();
+            }
         }
 
         protected override StructureDefinition GetRequiredStructureType(string setName, TypeReference type)

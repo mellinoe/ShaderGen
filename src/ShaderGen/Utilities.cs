@@ -211,5 +211,10 @@ namespace ShaderGen
 
             return fullName;
         }
+
+        internal static string JoinIgnoreNull(string separator, IEnumerable<string> value)
+        {
+            return string.Join(separator, value.Where(s => !string.IsNullOrEmpty(s)));
+        }
     }
 }
