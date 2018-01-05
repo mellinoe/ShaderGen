@@ -178,12 +178,13 @@ namespace ShaderGen
                     if (ims.IsExtensionMethod)
                     {
                         string identifier = Visit(maes.Expression);
-
+                        string identifierType = Utilities.GetFullTypeName(GetModel(maes.Expression), maes.Expression);
                         Debug.Assert(identifier != null);
                         // Might need FullTypeName here too.
                         pis.Add(new InvocationParameterInfo()
                         {
-                            Identifier = identifier
+                            Identifier = identifier,
+                            FullTypeName = identifierType,
                         });
                     }
 

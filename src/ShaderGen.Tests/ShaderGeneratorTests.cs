@@ -35,6 +35,7 @@ namespace ShaderGen.Tests
             yield return new object[] { "TestShaders.MathFunctions.VS", null };
             yield return new object[] { "TestShaders.Matrix4x4Members.VS", null };
             yield return new object[] { "TestShaders.CustomMethodUsingUniform.VS", null };
+            yield return new object[] { "TestShaders.PointLightTestShaders.VS", null };
         }
 
         public static IEnumerable<object[]> ComputeShaders()

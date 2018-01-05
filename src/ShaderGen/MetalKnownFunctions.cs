@@ -141,7 +141,7 @@ namespace ShaderGen
             };
             ret.Add("System.MathF", new DictionaryTypeInvocationTranslator(mathfMappings));
 
-            ret.Add("ShaderGen.ShaderSwizzle", new SwizzleTranslator());
+            ret.Add("ShaderGen.ShaderSwizzle", new MetalSwizzleTranslator());
 
             return ret;
         }

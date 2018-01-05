@@ -10,6 +10,8 @@ namespace TestShaders
         [VertexShader] SystemPosition4 VS(Position4 input)
         {
             SystemPosition4 output;
+            PointLightInfo a = PointLights.PointLights[0];
+            Vector4 position = new Vector4(a.Position.XYZ(), 10);
             output.Position = input.Position;
             return output;
         }

@@ -15,11 +15,19 @@ namespace ShaderGen
         {
         }
 
-        protected override string CSharpToShaderTypeCore(string fullType)
+        private string CSharpToShaderTypeCore(string fullType, bool packed)
         {
-            return MetalKnownTypes.GetMappedName(fullType)
+            string mapped = packed
+                ? MetalKnownTypes.GetPackedName(fullType)
+                : MetalKnownTypes.GetMappedName(fullType);
+            return mapped
                 .Replace(".", "_")
                 .Replace("+", "_");
+        }
+
+        protected override string CSharpToShaderTypeCore(string fullType)
+        {
+            return CSharpToShaderTypeCore(fullType, false);
         }
 
         protected void WriteStructure(StringBuilder sb, StructureDefinition sd)
@@ -31,7 +39,8 @@ namespace ShaderGen
             uint colorTarget = 0;
             foreach (FieldDefinition field in sd.Fields)
             {
-                fb.Append(CSharpToShaderType(field.Type.Name.Trim()));
+                string typeName = CSharpToShaderTypeCore(field.Type.Name, field.SemanticType == SemanticType.None);
+                fb.Append(typeName);
                 fb.Append(' ');
                 fb.Append(CorrectIdentifier(field.Name.Trim()));
                 int arrayCount = field.ArrayElementCount;
@@ -185,22 +194,6 @@ namespace ShaderGen
             List<string> ctorParams = new List<string>();
             List<string> ctorAssignments = new List<string>();
 
-            // ParameterDefinition[] entryParameters = entryPoint.Function.Parameters;
-            // if (entryParameters.Length > 0)
-            // {
-            //     Debug.Assert(entryParameters.Length == 1);
-            //     ParameterDefinition firstParam = entryParameters[0];
-            //     structFields.Add($"thread {CSharpToShaderType(firstParam.Type.Name)}& {firstParam.Name};");
-            //     ctorParams.Add($"thread {CSharpToShaderType(firstParam.Type.Name)}& {firstParam.Name}_param");
-            //     ctorAssignments.Add($"{firstParam.Name}({firstParam.Name}_param)");
-            // }
-            // List<(string Type, string Name, string Attribute)> builtins = GetBuiltinParameterList(entryPoint.Function);
-            // foreach (var builtin in builtins)
-            // {
-            //     structFields.Add($"thread {builtin.Type} {builtin.Name};");
-            //     ctorParams.Add($"thread {builtin.Type} {builtin.Name}_param");
-            //     ctorAssignments.Add($"{builtin.Name}({builtin.Name}_param)");
-            // }
             foreach (ResourceDefinition resource in setContext.Resources)
             {
                 structFields.Add(GetResourceField(resource));
@@ -386,6 +379,22 @@ namespace ShaderGen
             }
 
             return result;
+        }
+
+        internal override bool IsIndexerAccess(SymbolInfo member)
+        {
+            string containingType =  Utilities.GetFullMetadataName(member.Symbol.ContainingType);
+            char memberNameFirstChar = member.Symbol.Name[0];
+            return 
+                (containingType == "System.Numerics.Matrix4x4"
+                    && memberNameFirstChar == 'M'
+                    && char.IsDigit(member.Symbol.Name[1]))
+                    ||
+                ((containingType.StartsWith("System.Numerics.Vector") || containingType == "ShaderGen.UInt3")
+                    && (memberNameFirstChar == 'X'
+                        || memberNameFirstChar == 'Y'
+                        || memberNameFirstChar == 'Z'
+                        || memberNameFirstChar == 'W'));
         }
 
         protected override string FormatInvocationCore(string setName, string type, string method, InvocationParameterInfo[] parameterInfos)

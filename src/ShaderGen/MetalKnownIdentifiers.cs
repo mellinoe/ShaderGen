@@ -12,25 +12,25 @@ namespace ShaderGen
 
             Dictionary<string, string> v2Mappings = new Dictionary<string, string>()
             {
-                { "X", "x" },
-                { "Y", "y" },
+                { "X", "[0]" },
+                { "Y", "[1]" },
             };
             ret.Add("System.Numerics.Vector2", v2Mappings);
 
             Dictionary<string, string> v3Mappings = new Dictionary<string, string>()
             {
-                { "X", "x" },
-                { "Y", "y" },
-                { "Z", "z" },
+                { "X", "[0]" },
+                { "Y", "[1]" },
+                { "Z", "[2]" },
             };
             ret.Add("System.Numerics.Vector3", v3Mappings);
 
             Dictionary<string, string> v4Mappings = new Dictionary<string, string>()
             {
-                { "X", "x" },
-                { "Y", "y" },
-                { "Z", "z" },
-                { "W", "w" },
+                { "X", "[0]" },
+                { "Y", "[1]" },
+                { "Z", "[2]" },
+                { "W", "[3]" },
             };
             ret.Add("System.Numerics.Vector4", v4Mappings);
 
@@ -57,9 +57,9 @@ namespace ShaderGen
 
             Dictionary<string, string> uint3Mappings = new Dictionary<string, string>()
             {
-                { "X", "x" },
-                { "Y", "y" },
-                { "Z", "z" },
+                { "X", "[0]" },
+                { "Y", "[1]" },
+                { "Z", "[2]" },
             };
             ret.Add("ShaderGen.UInt3", uint3Mappings);
 

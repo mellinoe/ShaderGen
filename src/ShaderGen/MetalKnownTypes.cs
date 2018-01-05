@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace ShaderGen
 {
@@ -20,6 +21,22 @@ namespace ShaderGen
             { "ShaderGen.UInt3", "uint3" },
         };
 
+        private static readonly Dictionary<string, string> s_mappedToPackedTypes = new Dictionary<string, string>()
+        {
+            { "float2", "packed_float2" },
+            { "float3", "packed_float3" },
+            { "float4", "packed_float4" },
+            { "uint3", "packed_uint3" },
+        };
+
+        private static readonly Dictionary<string, string> s_csharpToUnpackedTypes = new Dictionary<string, string>()
+        {
+            { "System.Numerics.Vector2", "float2" },
+            { "System.Numerics.Vector3", "float3" },
+            { "System.Numerics.Vector4", "float4" },
+            { "ShaderGen.UInt3", "uint3" },
+        };
+
         public static string GetMappedName(string name)
         {
             if (s_knownTypes.TryGetValue(name, out string mapped))
@@ -30,6 +47,24 @@ namespace ShaderGen
             {
                 return name;
             }
+        }
+
+        public static string GetPackedName(string name)
+        {
+            string mappedName = GetMappedName(name);
+            if (s_mappedToPackedTypes.TryGetValue(mappedName, out string packed))
+            {
+                return packed;
+            }
+            else
+            {
+                return mappedName;
+            }
+        }
+
+        internal static bool GetUnpackedType(string typeName, out string unpackCast)
+        {
+            return s_csharpToUnpackedTypes.TryGetValue(typeName, out unpackCast);
         }
     }
 }
