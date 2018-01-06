@@ -7,14 +7,27 @@ namespace ShaderGen
     public class ShaderModel
     {
         public StructureDefinition[] Structures { get; }
-        public ResourceDefinition[] Resources { get; }
+        public ResourceDefinition[] AllResources { get; }
         public ShaderFunction[] Functions { get; }
 
-        public ShaderModel(StructureDefinition[] structures, ResourceDefinition[] resources, ShaderFunction[] functions)
+        public ResourceDefinition[] VertexResources { get; }
+        public ResourceDefinition[] FragmentResources { get; }
+        public ResourceDefinition[] ComputeResources { get; }
+
+        public ShaderModel(
+            StructureDefinition[] structures,
+            ResourceDefinition[] resources,
+            ShaderFunction[] functions,
+            ResourceDefinition[] vertexResources,
+            ResourceDefinition[] fragmentResources,
+            ResourceDefinition[] computeResources)
         {
             Structures = structures;
-            Resources = resources;
+            AllResources = resources;
             Functions = functions;
+            VertexResources = vertexResources;
+            FragmentResources = fragmentResources;
+            ComputeResources = computeResources;
         }
 
         public StructureDefinition GetStructureDefinition(TypeReference typeRef) => GetStructureDefinition(typeRef.Name);

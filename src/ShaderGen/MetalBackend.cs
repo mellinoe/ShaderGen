@@ -70,7 +70,7 @@ namespace ShaderGen
             sb.AppendLine();
         }
 
-        internal string GetResourceParameterList(ShaderFunction function, string setName)
+        internal string GetResourceParameterList(ShaderFunction function, string setName, HashSet<ResourceDefinition> resourcesUsed)
         {
             BackendContext setContext = GetContext(setName);
 
@@ -98,25 +98,53 @@ namespace ShaderGen
                     switch (rd.ResourceKind)
                     {
                         case ShaderResourceKind.Uniform:
-                            resourceArgList.Add(WriteUniform(rd, bufferBinding++));
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                resourceArgList.Add(WriteUniform(rd, bufferBinding));
+                            }
+                            bufferBinding++;
                             break;
                         case ShaderResourceKind.Texture2D:
-                            resourceArgList.Add(WriteTexture2D(rd, textureBinding++));
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                resourceArgList.Add(WriteTexture2D(rd, textureBinding));
+                            }
+                            textureBinding++;
                             break;
                         case ShaderResourceKind.TextureCube:
-                            resourceArgList.Add(WriteTextureCube(rd, textureBinding++));
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                resourceArgList.Add(WriteTextureCube(rd, textureBinding));
+                            }
+                            textureBinding++;
                             break;
                         case ShaderResourceKind.Texture2DMS:
-                            resourceArgList.Add(WriteTexture2DMS(rd, textureBinding++));
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                resourceArgList.Add(WriteTexture2DMS(rd, textureBinding));
+                            }
+                            textureBinding++;
                             break;
                         case ShaderResourceKind.Sampler:
-                            resourceArgList.Add(WriteSampler(rd, samplerBinding++));
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                resourceArgList.Add(WriteSampler(rd, samplerBinding));
+                            }
+                            samplerBinding++;
                             break;
                         case ShaderResourceKind.StructuredBuffer:
-                            resourceArgList.Add(WriteStructuredBuffer(rd, bufferBinding++));
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                resourceArgList.Add(WriteStructuredBuffer(rd, bufferBinding));
+                            }
+                            bufferBinding++;
                             break;
                         case ShaderResourceKind.RWStructuredBuffer:
-                            resourceArgList.Add(WriteRWStructuredBuffer(rd, bufferBinding++));
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                resourceArgList.Add(WriteRWStructuredBuffer(rd, bufferBinding));
+                            }
+                            bufferBinding++;
                             break;
                         default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
                     }
@@ -161,11 +189,12 @@ namespace ShaderGen
             return $"device {CSharpToShaderType(rd.ValueType.Name)} *{rd.Name} [[ buffer({binding}) ]]";
         }
 
-        protected override string GenerateFullTextCore(string setName, ShaderFunction function)
+        protected override MethodProcessResult GenerateFullTextCore(string setName, ShaderFunction function)
         {
             Debug.Assert(function.IsEntryPoint);
 
             StringBuilder sb = new StringBuilder();
+            HashSet<ResourceDefinition> resourcesUsed = new HashSet<ResourceDefinition>();
             BackendContext setContext = GetContext(setName);
             ShaderFunctionAndBlockSyntax entryPoint = setContext.Functions.SingleOrDefault(
                 sfabs => sfabs.Function.Name == function.Name);
@@ -188,13 +217,44 @@ namespace ShaderGen
                 WriteStructure(sb, sd);
             }
 
-            sb.AppendLine("struct ShaderContainer {");
+            FunctionCallGraphDiscoverer fcgd = new FunctionCallGraphDiscoverer(
+                Compilation,
+                new TypeAndMethodName { TypeName = function.DeclaringType, MethodName = function.Name });
+            fcgd.GenerateFullGraph();
+            // TODO: Necessary for Metal?
+            TypeAndMethodName[] orderedFunctionList = fcgd.GetOrderedCallList();
+
+            StringBuilder functionsSB = new StringBuilder();
+            foreach (TypeAndMethodName name in orderedFunctionList)
+            {
+                ShaderFunctionAndBlockSyntax f = setContext.Functions.Single(
+                    sfabs => sfabs.Function.DeclaringType == name.TypeName && sfabs.Function.Name == name.MethodName);
+                if (!f.Function.IsEntryPoint)
+                {
+                    MethodProcessResult processResult = new MetalMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block);
+                    foreach (ResourceDefinition rd in processResult.ResourcesUsed)
+                    {
+                        resourcesUsed.Add(rd);
+                    }
+                    functionsSB.AppendLine();
+                }
+            }
+
+            MethodProcessResult entryResult = new MetalMethodVisitor(Compilation, setName, entryPoint.Function, this)
+                .VisitFunction(entryPoint.Block);
+            foreach (ResourceDefinition rd in entryResult.ResourcesUsed)
+            {
+                resourcesUsed.Add(rd);
+            }
+
+            StringBuilder containerSB = new StringBuilder();
+            containerSB.AppendLine("struct ShaderContainer {");
 
             List<string> structFields = new List<string>();
             List<string> ctorParams = new List<string>();
             List<string> ctorAssignments = new List<string>();
 
-            foreach (ResourceDefinition resource in setContext.Resources)
+            foreach (ResourceDefinition resource in resourcesUsed)
             {
                 structFields.Add(GetResourceField(resource));
                 ctorParams.Add(GetResourceCtorParam(resource));
@@ -203,43 +263,28 @@ namespace ShaderGen
 
             foreach (string sf in structFields)
             {
-                sb.AppendLine(sf);
+                containerSB.AppendLine(sf);
             }
 
-            sb.AppendLine($"ShaderContainer(");
+            containerSB.AppendLine(functionsSB.ToString());
+
+            // Emit the ctor definition
+            containerSB.AppendLine($"ShaderContainer(");
             string ctorParamsStr = string.Join(", ", ctorParams);
-            sb.AppendLine(ctorParamsStr);
-            sb.AppendLine($")");
+            containerSB.AppendLine(ctorParamsStr);
+            containerSB.AppendLine($")");
             string allCtorAssignments = string.Join(", ", ctorAssignments);
             if (!string.IsNullOrEmpty(allCtorAssignments))
             {
-                sb.AppendLine(":");
-                sb.AppendLine(allCtorAssignments);
+                containerSB.AppendLine(":");
+                containerSB.AppendLine(allCtorAssignments);
             }
-            sb.AppendLine("{}");
+            containerSB.AppendLine("{}");
 
-            FunctionCallGraphDiscoverer fcgd = new FunctionCallGraphDiscoverer(
-                Compilation,
-                new TypeAndMethodName { TypeName = function.DeclaringType, MethodName = function.Name });
-            fcgd.GenerateFullGraph();
-            // TODO: Necessary for Metal?
-            TypeAndMethodName[] orderedFunctionList = fcgd.GetOrderedCallList();
+            containerSB.AppendLine(entryResult.FullText);
 
-            foreach (TypeAndMethodName name in orderedFunctionList)
-            {
-                ShaderFunctionAndBlockSyntax f = setContext.Functions.Single(
-                    sfabs => sfabs.Function.DeclaringType == name.TypeName && sfabs.Function.Name == name.MethodName);
-                if (!f.Function.IsEntryPoint)
-                {
-                    sb.AppendLine(new MetalMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block));
-                }
-            }
-
-            string result = new MetalMethodVisitor(Compilation, setName, entryPoint.Function, this)
-                .VisitFunction(entryPoint.Block);
-            sb.AppendLine(result);
-
-            sb.AppendLine("};"); // Close the global containing struct.
+            containerSB.AppendLine("};"); // Close the global containing struct.
+            sb.AppendLine(containerSB.ToString());
 
             // Emit the out function call which creates the container struct and calls the real shader function.
             string type = entryPoint.Function.Type == ShaderFunctionType.VertexEntryPoint
@@ -253,10 +298,10 @@ namespace ShaderGen
             string fullDeclType = CSharpToShaderType(entryFunction.DeclaringType);
             string funcName = entryFunction.Name;
             string baseParameterList = string.Join(", ", entryFunction.Parameters.Select(FormatParameter));
-            string resourceParameterList = GetResourceParameterList(entryFunction, setName);
+            string resourceParameterList = GetResourceParameterList(entryFunction, setName, resourcesUsed);
             string builtinParameterList = string.Join(
                 ", ",
-                MetalBackend.GetBuiltinParameterList(entryFunction).Select(b => $"{b.Type} {b.Name} {b.Attribute}"));
+                GetBuiltinParameterList(entryFunction).Select(b => $"{b.Type} {b.Name} {b.Attribute}"));
             string fullParameterList = string.Join(
                 ", ",
                 new string[]
@@ -286,7 +331,7 @@ namespace ShaderGen
             sb.AppendLine($"return ShaderContainer({containerArgs}).{entryFunction.Name}({entryFuncArgs});");
             sb.AppendLine("}");
 
-            return sb.ToString();
+            return new MethodProcessResult(sb.ToString(), resourcesUsed);
         }
 
         private string FormatParameter(ParameterDefinition pd)
@@ -383,9 +428,9 @@ namespace ShaderGen
 
         internal override bool IsIndexerAccess(SymbolInfo member)
         {
-            string containingType =  Utilities.GetFullMetadataName(member.Symbol.ContainingType);
+            string containingType = Utilities.GetFullMetadataName(member.Symbol.ContainingType);
             char memberNameFirstChar = member.Symbol.Name[0];
-            return 
+            return
                 (containingType == "System.Numerics.Matrix4x4"
                     && memberNameFirstChar == 'M'
                     && char.IsDigit(member.Symbol.Name[1]))

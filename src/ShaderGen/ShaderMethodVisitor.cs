@@ -16,6 +16,7 @@ namespace ShaderGen
         protected readonly LanguageBackend _backend;
         protected readonly ShaderFunction _shaderFunction;
         private string _containingTypeName;
+        private HashSet<ResourceDefinition> _resourcesUsed = new HashSet<ResourceDefinition>();
 
         public ShaderMethodVisitor(
             Compilation compilation,
@@ -31,7 +32,7 @@ namespace ShaderGen
 
         private SemanticModel GetModel(SyntaxNode node) => _compilation.GetSemanticModel(node.SyntaxTree);
 
-        public string VisitFunction(BlockSyntax node)
+        public MethodProcessResult VisitFunction(BlockSyntax node)
         {
             _containingTypeName = Utilities.GetFullNestedTypePrefix(node, out bool _);
             StringBuilder sb = new StringBuilder();
@@ -45,7 +46,7 @@ namespace ShaderGen
 
             sb.AppendLine(functionDeclStr);
             sb.AppendLine(blockResult);
-            return sb.ToString();
+            return new MethodProcessResult(sb.ToString(), _resourcesUsed);
         }
 
         public override string VisitBlock(BlockSyntax node)
@@ -282,6 +283,9 @@ namespace ShaderGen
             }
             if (symbol.Kind == SymbolKind.Field && containingTypeName == _containingTypeName)
             {
+                string symbolName = symbol.Name;
+                ResourceDefinition referencedResource = _backend.GetContext(_setName).Resources.Single(rd => rd.Name == symbolName);
+                _resourcesUsed.Add(referencedResource);
                 return _backend.CorrectFieldAccess(symbolInfo);
             }
             else if (symbol.Kind == SymbolKind.Property)

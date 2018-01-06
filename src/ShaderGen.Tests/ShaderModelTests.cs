@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
+using System.Linq;
 using TestShaders;
 using Xunit;
 
@@ -24,7 +25,7 @@ namespace ShaderGen.Tests
             ShaderModel shaderModel = sets[0].Model;
 
             Assert.Equal(2, shaderModel.Structures.Length);
-            Assert.Equal(3, shaderModel.Resources.Length);
+            Assert.Equal(3, shaderModel.AllResources.Length);
             ShaderFunction vsEntry = shaderModel.GetFunction(functionName);
             Assert.Equal("VS", vsEntry.Name);
             Assert.Equal(1, vsEntry.Parameters.Length);
@@ -95,8 +96,8 @@ namespace ShaderGen.Tests
             GeneratedShaderSet set = sets[0];
             ShaderModel shaderModel = set.Model;
 
-            Assert.Equal(1, shaderModel.Resources.Length);
-            Assert.Equal(144, shaderModel.GetTypeSize(shaderModel.Resources[0].ValueType));
+            Assert.Equal(1, shaderModel.AllResources.Length);
+            Assert.Equal(144, shaderModel.GetTypeSize(shaderModel.AllResources[0].ValueType));
         }
 
         [Fact]
@@ -116,36 +117,67 @@ namespace ShaderGen.Tests
             GeneratedShaderSet set = sets[0];
             ShaderModel shaderModel = set.Model;
 
-            Assert.Equal(13, shaderModel.Resources.Length);
+            Assert.Equal(13, shaderModel.AllResources.Length);
 
-            Assert.Equal(0, shaderModel.Resources[0].Set);
-            Assert.Equal(0, shaderModel.Resources[0].Binding);
-            Assert.Equal(0, shaderModel.Resources[1].Set);
-            Assert.Equal(1, shaderModel.Resources[1].Binding);
-            Assert.Equal(1, shaderModel.Resources[2].Set);
-            Assert.Equal(0, shaderModel.Resources[2].Binding);
-            Assert.Equal(2, shaderModel.Resources[3].Set);
-            Assert.Equal(0, shaderModel.Resources[3].Binding);
-            Assert.Equal(3, shaderModel.Resources[4].Set);
-            Assert.Equal(0, shaderModel.Resources[4].Binding);
-            Assert.Equal(4, shaderModel.Resources[5].Set);
-            Assert.Equal(0, shaderModel.Resources[5].Binding);
-            Assert.Equal(0, shaderModel.Resources[6].Set);
-            Assert.Equal(2, shaderModel.Resources[6].Binding);
+            Assert.Equal(0, shaderModel.AllResources[0].Set);
+            Assert.Equal(0, shaderModel.AllResources[0].Binding);
+            Assert.Equal(0, shaderModel.AllResources[1].Set);
+            Assert.Equal(1, shaderModel.AllResources[1].Binding);
+            Assert.Equal(1, shaderModel.AllResources[2].Set);
+            Assert.Equal(0, shaderModel.AllResources[2].Binding);
+            Assert.Equal(2, shaderModel.AllResources[3].Set);
+            Assert.Equal(0, shaderModel.AllResources[3].Binding);
+            Assert.Equal(3, shaderModel.AllResources[4].Set);
+            Assert.Equal(0, shaderModel.AllResources[4].Binding);
+            Assert.Equal(4, shaderModel.AllResources[5].Set);
+            Assert.Equal(0, shaderModel.AllResources[5].Binding);
+            Assert.Equal(0, shaderModel.AllResources[6].Set);
+            Assert.Equal(2, shaderModel.AllResources[6].Binding);
 
-            Assert.Equal(0, shaderModel.Resources[7].Set);
-            Assert.Equal(3, shaderModel.Resources[7].Binding);
-            Assert.Equal(4, shaderModel.Resources[8].Set);
-            Assert.Equal(1, shaderModel.Resources[8].Binding);
-            Assert.Equal(0, shaderModel.Resources[9].Set);
-            Assert.Equal(4, shaderModel.Resources[9].Binding);
+            Assert.Equal(0, shaderModel.AllResources[7].Set);
+            Assert.Equal(3, shaderModel.AllResources[7].Binding);
+            Assert.Equal(4, shaderModel.AllResources[8].Set);
+            Assert.Equal(1, shaderModel.AllResources[8].Binding);
+            Assert.Equal(0, shaderModel.AllResources[9].Set);
+            Assert.Equal(4, shaderModel.AllResources[9].Binding);
 
-            Assert.Equal(2, shaderModel.Resources[10].Set);
-            Assert.Equal(1, shaderModel.Resources[10].Binding);
-            Assert.Equal(0, shaderModel.Resources[11].Set);
-            Assert.Equal(5, shaderModel.Resources[11].Binding);
-            Assert.Equal(1, shaderModel.Resources[12].Set);
-            Assert.Equal(1, shaderModel.Resources[12].Binding);
+            Assert.Equal(2, shaderModel.AllResources[10].Set);
+            Assert.Equal(1, shaderModel.AllResources[10].Binding);
+            Assert.Equal(0, shaderModel.AllResources[11].Set);
+            Assert.Equal(5, shaderModel.AllResources[11].Binding);
+            Assert.Equal(1, shaderModel.AllResources[12].Set);
+            Assert.Equal(1, shaderModel.AllResources[12].Binding);
+        }
+
+        [Fact]
+        public void ResourcesUsedInStages()
+        {
+            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            HlslBackend backend = new HlslBackend(compilation);
+            ShaderGenerator sg = new ShaderGenerator(
+                compilation,
+                "TestShaders.UsedResourcesShaders.VS",
+                "TestShaders.UsedResourcesShaders.FS",
+                backend);
+
+            ShaderGenerationResult genResult = sg.GenerateShaders();
+            IReadOnlyList<GeneratedShaderSet> sets = genResult.GetOutput(backend);
+            Assert.Equal(1, sets.Count);
+            GeneratedShaderSet set = sets[0];
+            ShaderModel shaderModel = set.Model;
+
+            Assert.Equal(4, shaderModel.VertexResources.Length);
+            Assert.Contains(shaderModel.VertexResources, rd => rd.Name == "VS_M0");
+            Assert.Contains(shaderModel.VertexResources, rd => rd.Name == "VS_M1");
+            Assert.Contains(shaderModel.VertexResources, rd => rd.Name == "VS_T0");
+            Assert.Contains(shaderModel.VertexResources, rd => rd.Name == "VS_S0");
+
+            Assert.Equal(5, shaderModel.FragmentResources.Length);
+            Assert.Contains(shaderModel.FragmentResources, rd => rd.Name == "FS_M0");
+            Assert.Contains(shaderModel.FragmentResources, rd => rd.Name == "FS_M1");
+            Assert.Contains(shaderModel.FragmentResources, rd => rd.Name == "FS_T0");
+            Assert.Contains(shaderModel.FragmentResources, rd => rd.Name == "FS_S0");
+            Assert.Contains(shaderModel.FragmentResources, rd => rd.Name == "FS_M2_Indirect");
         }
     }
 }

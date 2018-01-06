@@ -40,10 +40,11 @@ namespace ShaderGen
         }
 
 
-        protected override string GenerateFullTextCore(string setName, ShaderFunction function)
+        protected override MethodProcessResult GenerateFullTextCore(string setName, ShaderFunction function)
         {
             BackendContext context = GetContext(setName);
             StringBuilder sb = new StringBuilder();
+            HashSet<ResourceDefinition> resourcesUsed = new HashSet<ResourceDefinition>();
 
             ShaderFunctionAndBlockSyntax entryPoint = context.Functions.SingleOrDefault(
                 sfabs => sfabs.Function.Name == function.Name);
@@ -103,17 +104,26 @@ namespace ShaderGen
                     sfabs => sfabs.Function.DeclaringType == name.TypeName && sfabs.Function.Name == name.MethodName);
                 if (!f.Function.IsEntryPoint)
                 {
-                    sb.AppendLine(new ShaderMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block));
+                    MethodProcessResult processResult = new ShaderMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block);
+                    foreach (ResourceDefinition rd in processResult.ResourcesUsed)
+                    {
+                        resourcesUsed.Add(rd);
+                    }
+                    sb.AppendLine(processResult.FullText);
                 }
             }
 
-            string result = new ShaderMethodVisitor(Compilation, setName, entryPoint.Function, this)
+            MethodProcessResult result = new ShaderMethodVisitor(Compilation, setName, entryPoint.Function, this)
                 .VisitFunction(entryPoint.Block);
-            sb.AppendLine(result);
+            foreach (ResourceDefinition rd in result.ResourcesUsed)
+            {
+                resourcesUsed.Add(rd);
+            }
+            sb.AppendLine(result.FullText);
 
             WriteMainFunction(setName, sb, entryPoint.Function);
 
-            return sb.ToString();
+            return new MethodProcessResult(sb.ToString(), resourcesUsed);
         }
 
         private void WriteMainFunction(string setName, StringBuilder sb, ShaderFunction entryFunction)

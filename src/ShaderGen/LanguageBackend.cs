@@ -20,7 +20,8 @@ namespace ShaderGen
 
         internal Dictionary<string, BackendContext> Contexts = new Dictionary<string, BackendContext>();
 
-        private readonly Dictionary<ShaderFunction, string> _fullTextShaders = new Dictionary<ShaderFunction, string>();
+        private readonly Dictionary<ShaderFunction, MethodProcessResult> _processedFunctions
+            = new Dictionary<ShaderFunction, MethodProcessResult>();
 
         internal LanguageBackend(Compilation compilation)
         {
@@ -53,8 +54,8 @@ namespace ShaderGen
             BackendContext context = GetContext(setName);
 
             foreach (ResourceDefinition rd in context.Resources
-                .Where(rd => 
-                    rd.ResourceKind == ShaderResourceKind.Uniform 
+                .Where(rd =>
+                    rd.ResourceKind == ShaderResourceKind.Uniform
                     || rd.ResourceKind == ShaderResourceKind.RWStructuredBuffer
                     || rd.ResourceKind == ShaderResourceKind.StructuredBuffer))
             {
@@ -69,19 +70,40 @@ namespace ShaderGen
                 }
             }
 
+            ResourceDefinition[] vertexResources = null;
+            ResourceDefinition[] fragmentResources = null;
+            ResourceDefinition[] computeResources = null;
+
             // HACK: Discover all method input structures.
             foreach (ShaderFunctionAndBlockSyntax sf in context.Functions.ToArray())
             {
                 if (sf.Function.IsEntryPoint)
                 {
-                    GetCode(setName, sf.Function);
+                    MethodProcessResult processedFunction = ProcessEntryFunction(setName, sf.Function);
+
+                    if (sf.Function.Type == ShaderFunctionType.VertexEntryPoint)
+                    {
+                        vertexResources = processedFunction.ResourcesUsed.ToArray();
+                    }
+                    else if (sf.Function.Type == ShaderFunctionType.FragmentEntryPoint)
+                    {
+                        fragmentResources = processedFunction.ResourcesUsed.ToArray();
+                    }
+                    else
+                    {
+                        Debug.Assert(sf.Function.Type == ShaderFunctionType.ComputeEntryPoint);
+                        computeResources = processedFunction.ResourcesUsed.ToArray();
+                    }
                 }
             }
 
             return new ShaderModel(
                 context.Structures.ToArray(),
                 context.Resources.ToArray(),
-                context.Functions.Select(sfabs => sfabs.Function).ToArray());
+                context.Functions.Select(sfabs => sfabs.Function).ToArray(),
+                vertexResources,
+                fragmentResources,
+                computeResources);
         }
 
         private void ForceTypeDiscovery(string setName, TypeReference fd)
@@ -101,14 +123,14 @@ namespace ShaderGen
             }
         }
 
-        public string GetCode(string setName, ShaderFunction function)
+        public MethodProcessResult ProcessEntryFunction(string setName, ShaderFunction function)
         {
             if (function == null)
             {
                 throw new ArgumentNullException(nameof(function));
             }
 
-            if (!_fullTextShaders.TryGetValue(function, out string result))
+            if (!_processedFunctions.TryGetValue(function, out MethodProcessResult result))
             {
                 if (!function.IsEntryPoint)
                 {
@@ -116,7 +138,7 @@ namespace ShaderGen
                 }
 
                 result = GenerateFullTextCore(setName, function);
-                _fullTextShaders.Add(function, result);
+                _processedFunctions.Add(function, result);
             }
 
             return result;
@@ -276,7 +298,7 @@ namespace ShaderGen
         internal abstract string CorrectIdentifier(string identifier);
         protected abstract string CSharpToShaderTypeCore(string fullType);
         protected abstract string CSharpToIdentifierNameCore(string typeName, string identifier);
-        protected abstract string GenerateFullTextCore(string setName, ShaderFunction function);
+        protected abstract MethodProcessResult GenerateFullTextCore(string setName, ShaderFunction function);
         protected abstract string FormatInvocationCore(string setName, string type, string method, InvocationParameterInfo[] parameterInfos);
         internal abstract string GetComputeGroupCountsDeclaration(UInt3 groupCounts);
 

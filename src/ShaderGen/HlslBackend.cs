@@ -135,11 +135,13 @@ namespace ShaderGen
             sb.AppendLine($"RWStructuredBuffer<{CSharpToShaderType(rd.ValueType.Name)}> {CorrectIdentifier(rd.Name)}: register(u{binding});");
         }
 
-        protected override string GenerateFullTextCore(string setName, ShaderFunction function)
+        protected override MethodProcessResult GenerateFullTextCore(string setName, ShaderFunction function)
         {
             Debug.Assert(function.IsEntryPoint);
 
             StringBuilder sb = new StringBuilder();
+            HashSet<ResourceDefinition> resourcesUsed = new HashSet<ResourceDefinition>();
+
             BackendContext setContext = GetContext(setName);
             ShaderFunctionAndBlockSyntax entryPoint = setContext.Functions.SingleOrDefault(
                 sfabs => sfabs.Function.Name == function.Name);
@@ -166,6 +168,30 @@ namespace ShaderGen
             List<ResourceDefinition[]> resourcesBySet = setContext.Resources.GroupBy(rd => rd.Set)
                 .Select(g => g.ToArray()).ToList();
 
+            StringBuilder functionsSB = new StringBuilder();
+            foreach (TypeAndMethodName name in orderedFunctionList)
+            {
+                ShaderFunctionAndBlockSyntax f = setContext.Functions.Single(
+                    sfabs => sfabs.Function.DeclaringType == name.TypeName && sfabs.Function.Name == name.MethodName);
+                if (!f.Function.IsEntryPoint)
+                {
+                    MethodProcessResult processResult = new HlslMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block);
+                    foreach (ResourceDefinition rd in processResult.ResourcesUsed)
+                    {
+                        resourcesUsed.Add(rd);
+                    }
+                    functionsSB.AppendLine(processResult.FullText);
+                }
+            }
+
+            MethodProcessResult result = new HlslMethodVisitor(Compilation, setName, entryPoint.Function, this)
+                .VisitFunction(entryPoint.Block);
+            foreach (ResourceDefinition rd in result.ResourcesUsed)
+            {
+                resourcesUsed.Add(rd);
+            }
+
+            // Emit all of the resources now, because we've learned which ones are actually used by this function.
             int uniformBinding = 0, textureBinding = 0, samplerBinding = 0, uavBinding = function.ColorOutputCount;
             int setIndex = 0;
             foreach (ResourceDefinition[] set in resourcesBySet)
@@ -178,46 +204,65 @@ namespace ShaderGen
                     switch (rd.ResourceKind)
                     {
                         case ShaderResourceKind.Uniform:
-                            WriteUniform(sb, rd, uniformBinding++);
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                WriteUniform(sb, rd, uniformBinding);
+                            }
+                            uniformBinding++;
                             break;
                         case ShaderResourceKind.Texture2D:
-                            WriteTexture2D(sb, rd, textureBinding++);
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                WriteTexture2D(sb, rd, textureBinding);
+                            }
+                            textureBinding++;
                             break;
                         case ShaderResourceKind.TextureCube:
-                            WriteTextureCube(sb, rd, textureBinding++);
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                WriteTextureCube(sb, rd, textureBinding);
+                            }
+                            textureBinding++;
                             break;
                         case ShaderResourceKind.Texture2DMS:
-                            WriteTexture2DMS(sb, rd, textureBinding++);
+                            if (resourcesUsed.Contains(rd))
+                            {
+
+                                WriteTexture2DMS(sb, rd, textureBinding);
+                            }
+                            textureBinding++;
                             break;
                         case ShaderResourceKind.Sampler:
-                            WriteSampler(sb, rd, samplerBinding++);
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                WriteSampler(sb, rd, samplerBinding);
+                            }
+                            samplerBinding++;
                             break;
                         case ShaderResourceKind.StructuredBuffer:
-                            WriteStructuredBuffer(sb, rd, textureBinding++);
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                WriteStructuredBuffer(sb, rd, textureBinding);
+                            }
+                            textureBinding++;
                             break;
                         case ShaderResourceKind.RWStructuredBuffer:
-                            WriteRWStructuredBuffer(sb, rd, uavBinding++);
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                WriteRWStructuredBuffer(sb, rd, uavBinding);
+                            }
+                            uavBinding++;
                             break;
                         default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
                     }
                 }
             }
 
-            foreach (TypeAndMethodName name in orderedFunctionList)
-            {
-                ShaderFunctionAndBlockSyntax f = setContext.Functions.Single(
-                    sfabs => sfabs.Function.DeclaringType == name.TypeName && sfabs.Function.Name == name.MethodName);
-                if (!f.Function.IsEntryPoint)
-                {
-                    sb.AppendLine(new HlslMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block));
-                }
-            }
+            // Resources need to be defined before the function that uses them -- so append this after the resources.
+            sb.Append(functionsSB.ToString());
+            sb.AppendLine(result.FullText);
 
-            string result = new HlslMethodVisitor(Compilation, setName, entryPoint.Function, this)
-                .VisitFunction(entryPoint.Block);
-            sb.AppendLine(result);
-
-            return sb.ToString();
+            return new MethodProcessResult(sb.ToString(), resourcesUsed);
         }
 
         protected override StructureDefinition GetRequiredStructureType(string setName, TypeReference type)
