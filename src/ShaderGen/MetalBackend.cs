@@ -236,7 +236,7 @@ namespace ShaderGen
                     {
                         resourcesUsed.Add(rd);
                     }
-                    functionsSB.AppendLine();
+                    functionsSB.AppendLine(processResult.FullText);
                 }
             }
 
@@ -311,7 +311,7 @@ namespace ShaderGen
 
             string functionDeclStr = $"{type} {returnType} {funcName}({fullParameterList})";
 
-            string containerArgs = string.Join(", ", setContext.Resources.Select(
+            string containerArgs = string.Join(", ", resourcesUsed.Select(
                 rd => rd.Name));
 
             string entryFuncArgs = string.Join(
