@@ -17,6 +17,7 @@ namespace ShaderGen.Tests
             using (TempFile tmpFile = new TempFile())
             {
                 File.WriteAllText(tmpFile, code, Encoding.UTF8);
+                Debug.WriteLine($"Wrote shader code to {tmpFile.FilePath}");
                 AssertCompilesFile(tmpFile);
             }
         }
