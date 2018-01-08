@@ -19,6 +19,10 @@ namespace ShaderGen.App
         private static string s_fxcPath;
         private static bool? s_fxcAvailable;
         private static bool? s_glslangValidatorAvailable;
+        private static bool? s_metalToolsAvailable;
+
+        const string metalPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metal";
+        const string metallibPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metallib";
 
         public static int Main(string[] args)
         {
@@ -266,6 +270,10 @@ namespace ShaderGen.App
             {
                 return CompileSpirv(shaderPath, entryPoint, type, out path);
             }
+            else if (langType == typeof(MetalBackend) && AreMetalToolsAvailable())
+            {
+                return CompileMetal(shaderPath, out path);
+            }
             else
             {
                 path = null;
@@ -347,6 +355,45 @@ namespace ShaderGen.App
             return false;
         }
 
+        private static bool CompileMetal(string shaderPath, out string path)
+        {
+            string outputPath = shaderPath + ".metallib";
+            string bitcodePath = Path.GetTempFileName();
+            string metalArgs = $"-x metal -o {bitcodePath} {shaderPath}";
+            try
+            {
+                ProcessStartInfo metalPSI = new ProcessStartInfo(metalPath, metalArgs);
+                metalPSI.RedirectStandardError = true;
+                metalPSI.RedirectStandardOutput = true;
+                Process metalProcess = Process.Start(metalPSI);
+                metalProcess.WaitForExit();
+
+                if (metalProcess.ExitCode != 0)
+                {
+                    throw new ShaderGenerationException(metalProcess.StandardOutput.ReadToEnd());
+                }
+
+                string metallibArgs = $"-o {outputPath} {bitcodePath}";
+                ProcessStartInfo metallibPSI = new ProcessStartInfo(metallibPath, metallibArgs);
+                metallibPSI.RedirectStandardError = true;
+                metallibPSI.RedirectStandardOutput = true;
+                Process metallibProcess = Process.Start(metallibPSI);
+                metallibProcess.WaitForExit();
+
+                if (metallibProcess.ExitCode != 0)
+                {
+                    throw new ShaderGenerationException(metallibProcess.StandardOutput.ReadToEnd());
+                }
+
+                path = outputPath;
+                return true;
+            }
+            finally
+            {
+                File.Delete(bitcodePath);
+            }
+        }
+
         public static bool IsFxcAvailable()
         {
             if (!s_fxcAvailable.HasValue)
@@ -374,6 +421,16 @@ namespace ShaderGen.App
             }
 
             return s_glslangValidatorAvailable.Value;
+        }
+
+        public static bool AreMetalToolsAvailable()
+        {
+            if (!s_metalToolsAvailable.HasValue)
+            {
+                s_metalToolsAvailable = File.Exists(metalPath) && File.Exists(metallibPath);
+            }
+
+            return s_metalToolsAvailable.Value;
         }
 
         private static string BackendExtension(LanguageBackend lang)
