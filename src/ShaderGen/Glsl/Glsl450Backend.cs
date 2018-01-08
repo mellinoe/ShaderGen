@@ -5,6 +5,8 @@ namespace ShaderGen.Glsl
 {
     public class Glsl450Backend : GlslBackendBase
     {
+        public override string GeneratedFileExtension => "450.glsl";
+        
         public Glsl450Backend(Compilation compilation) : base(compilation)
         {
         }

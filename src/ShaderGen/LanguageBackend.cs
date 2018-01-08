@@ -2,13 +2,14 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace ShaderGen
 {
     public abstract class LanguageBackend
     {
+        public abstract string GeneratedFileExtension { get; }
+        
         protected readonly Compilation Compilation;
 
         internal class BackendContext

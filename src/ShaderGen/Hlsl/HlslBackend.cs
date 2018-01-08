@@ -7,6 +7,8 @@ namespace ShaderGen.Hlsl
 {
     public class HlslBackend : LanguageBackend
     {
+        public override string GeneratedFileExtension => "hlsl";
+        
         public HlslBackend(Compilation compilation) : base(compilation)
         {
         }

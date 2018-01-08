@@ -176,7 +176,7 @@ namespace ShaderGen.App
             List<string> generatedFilePaths = new List<string>();
             foreach (LanguageBackend lang in languages)
             {
-                string extension = BackendExtension(lang);
+                string extension = lang.GeneratedFileExtension;
                 IReadOnlyList<GeneratedShaderSet> sets = shaderGenResult.GetOutput(lang);
                 foreach (GeneratedShaderSet set in sets)
                 {
