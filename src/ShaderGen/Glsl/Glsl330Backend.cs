@@ -85,7 +85,6 @@ namespace ShaderGen
             }
             else
             {
-                Debug.Assert(isVertexStage || isInVar);
                 identifier = $"fsin_{index}";
             }
 

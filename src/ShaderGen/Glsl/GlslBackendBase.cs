@@ -209,8 +209,6 @@ namespace ShaderGen
                     int colorTargetIndex = 0;
                     foreach (FieldDefinition field in outputType.Fields)
                     {
-                        Debug.Assert(field.SemanticType == SemanticType.ColorTarget);
-                        Debug.Assert(field.Type.Name == "System.Numerics.Vector4");
                         int index = colorTargetIndex++;
                         sb.AppendLine($"    layout(location = {index}) out vec4 _outputColor_{index};");
                     }
@@ -239,7 +237,6 @@ namespace ShaderGen
                     {
                         if (field.SemanticType == SemanticType.SystemPosition && !foundSystemPosition)
                         {
-                            Debug.Assert(field.Name == fragCoordName);
                             foundSystemPosition = true;
                             sb.AppendLine($"    {CorrectIdentifier("input")}.{CorrectIdentifier(field.Name)} = gl_FragCoord;");
                         }
@@ -302,7 +299,6 @@ namespace ShaderGen
                     int colorTargetIndex = 0;
                     foreach (FieldDefinition field in outputType.Fields)
                     {
-                        Debug.Assert(field.SemanticType == SemanticType.ColorTarget);
                         sb.AppendLine($"    _outputColor_{colorTargetIndex++} = {CorrectIdentifier("output")}.{CorrectIdentifier(field.Name)};");
                     }
                 }

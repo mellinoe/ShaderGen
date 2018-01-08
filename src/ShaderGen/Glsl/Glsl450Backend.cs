@@ -96,7 +96,6 @@ namespace ShaderGen
             }
             else
             {
-                Debug.Assert(isVertexStage || isInVar);
                 identifier = $"fsin_{index}";
             }
             sb.AppendLine($"layout(location = {index}) {qualifier} {normalizedType} {identifier};");

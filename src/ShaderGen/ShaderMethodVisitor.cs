@@ -180,7 +180,6 @@ namespace ShaderGen
                     {
                         string identifier = Visit(maes.Expression);
                         string identifierType = Utilities.GetFullTypeName(GetModel(maes.Expression), maes.Expression);
-                        Debug.Assert(identifier != null);
                         // Might need FullTypeName here too.
                         pis.Add(new InvocationParameterInfo()
                         {
@@ -201,7 +200,6 @@ namespace ShaderGen
                             identifier = Visit(identNameSyntax);
                         }
 
-                        Debug.Assert(identifier != null);
                         pis.Add(new InvocationParameterInfo
                         {
                             FullTypeName = containingType,

@@ -92,7 +92,7 @@ namespace ShaderGen
 
         private static bool IsRootNamespace(ISymbol symbol)
         {
-            INamespaceSymbol s = null;
+            INamespaceSymbol s;
             return ((s = symbol as INamespaceSymbol) != null) && s.IsGlobalNamespace;
         }
 
@@ -103,7 +103,6 @@ namespace ShaderGen
 
         public static string GetFullName(INamespaceSymbol ns)
         {
-            Debug.Assert(ns != null);
             string currentNamespace = ns.Name;
             if (ns.ContainingNamespace != null && !ns.ContainingNamespace.IsGlobalNamespace)
             {
@@ -117,7 +116,6 @@ namespace ShaderGen
 
         public static string GetFullName(INamedTypeSymbol symbol)
         {
-            Debug.Assert(symbol != null);
             string name = symbol.Name;
             if (symbol.ContainingNamespace != null && !symbol.ContainingNamespace.IsGlobalNamespace)
             {
@@ -171,7 +169,7 @@ namespace ShaderGen
             }
         }
 
-        private static readonly HashSet<string> s_basicNumericTypes = new HashSet<string>()
+        private static readonly HashSet<string> BasicNumericTypes = new HashSet<string>()
         {
             "System.Numerics.Vector2",
             "System.Numerics.Vector3",
@@ -181,7 +179,7 @@ namespace ShaderGen
 
         public static bool IsBasicNumericType(string fullName)
         {
-            return s_basicNumericTypes.Contains(fullName);
+            return BasicNumericTypes.Contains(fullName);
         }
 
         public static AttributeSyntax[] GetMemberAttributes(CSharpSyntaxNode vds, string name)
@@ -201,7 +199,6 @@ namespace ShaderGen
         /// </summary>
         public static string GetFullName(SymbolInfo symbolInfo)
         {
-            Debug.Assert(symbolInfo.Symbol != null);
             string fullName = symbolInfo.Symbol.Name;
             string ns = GetFullName(symbolInfo.Symbol.ContainingNamespace);
             if (!string.IsNullOrEmpty(ns))

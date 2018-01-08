@@ -137,8 +137,6 @@ namespace ShaderGen
 
         protected override MethodProcessResult GenerateFullTextCore(string setName, ShaderFunction function)
         {
-            Debug.Assert(function.IsEntryPoint);
-
             StringBuilder sb = new StringBuilder();
             HashSet<ResourceDefinition> resourcesUsed = new HashSet<ResourceDefinition>();
 
@@ -196,7 +194,6 @@ namespace ShaderGen
             int setIndex = 0;
             foreach (ResourceDefinition[] set in resourcesBySet)
             {
-                Debug.Assert(set[0].Set == setIndex);
                 setIndex += 1;
 
                 foreach (ResourceDefinition rd in set)

@@ -205,11 +205,6 @@ namespace ShaderGen
 
         internal string FormatInvocation(string setName, string type, string method, InvocationParameterInfo[] parameterInfos)
         {
-            Debug.Assert(setName != null);
-            Debug.Assert(type != null);
-            Debug.Assert(method != null);
-            Debug.Assert(parameterInfos != null);
-
             ShaderFunctionAndBlockSyntax function = GetContext(setName).Functions
                 .SingleOrDefault(sfabs => sfabs.Function.DeclaringType == type && sfabs.Function.Name == method);
             if (function != null)

@@ -19,7 +19,6 @@ namespace ShaderGen
             Compilation = compilation;
             _rootNode = new CallGraphNode() { Name = rootMethod };
             bool foundDecl = GetDeclaration(rootMethod, out _rootNode.Declaration);
-            Debug.Assert(foundDecl);
             _nodesByName.Add(rootMethod, _rootNode);
         }
 
@@ -55,7 +54,6 @@ namespace ShaderGen
 
         private void ExploreCallNode(CallGraphNode node)
         {
-            Debug.Assert(node.Declaration != null);
             MethodWalker walker = new MethodWalker(this);
             walker.Visit(node.Declaration);
             TypeAndMethodName[] childrenNames = walker.GetChildren();
