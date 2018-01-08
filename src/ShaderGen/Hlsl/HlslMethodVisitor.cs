@@ -1,8 +1,7 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
-using System.Collections.Generic;
 
-namespace ShaderGen
+namespace ShaderGen.Hlsl
 {
     internal class HlslMethodVisitor : ShaderMethodVisitor
     {

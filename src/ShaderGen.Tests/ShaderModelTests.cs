@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
+using ShaderGen.Hlsl;
 using System.Linq;
 using TestShaders;
 using Xunit;

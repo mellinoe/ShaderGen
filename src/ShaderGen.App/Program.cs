@@ -11,6 +11,8 @@ using System.Text;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Reflection;
+using ShaderGen.Glsl;
+using ShaderGen.Hlsl;
 
 namespace ShaderGen.App
 {

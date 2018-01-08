@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ShaderGen.Hlsl;
 using Xunit;
 
 namespace ShaderGen.Tests

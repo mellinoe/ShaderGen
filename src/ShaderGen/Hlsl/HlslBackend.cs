@@ -1,13 +1,9 @@
-﻿using Microsoft.CodeAnalysis;
-using System;
-using System.Text;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.IO;
-using System.Diagnostics;
+using System.Text;
+using Microsoft.CodeAnalysis;
 
-namespace ShaderGen
+namespace ShaderGen.Hlsl
 {
     public class HlslBackend : LanguageBackend
     {

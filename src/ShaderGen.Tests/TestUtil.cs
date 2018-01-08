@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
 using System.Runtime.InteropServices;
+using ShaderGen.Glsl;
+using ShaderGen.Hlsl;
 
 namespace ShaderGen.Tests
 {
