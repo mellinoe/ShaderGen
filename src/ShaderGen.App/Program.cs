@@ -357,7 +357,7 @@ namespace ShaderGen.App
 
         private static bool CompileMetal(string shaderPath, out string path)
         {
-            string shaderPathWithoutExtension = Path.GetFileNameWithoutExtension(shaderPath);
+            string shaderPathWithoutExtension = Path.ChangeExtension(shaderPath, null);
             string outputPath = shaderPathWithoutExtension + ".metallib";
             string bitcodePath = Path.GetTempFileName();
             string metalArgs = $"-x metal -o {bitcodePath} {shaderPath}";
