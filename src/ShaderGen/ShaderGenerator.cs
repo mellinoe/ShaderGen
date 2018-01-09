@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ShaderGen
 {
@@ -8,14 +9,14 @@ namespace ShaderGen
     {
         private readonly Compilation _compilation;
         private readonly List<ShaderSetInfo> _shaderSets = new List<ShaderSetInfo>();
-        private readonly List<LanguageBackend> _languages;
+        private readonly ILanguageBackend[] _languages;
         private readonly IShaderSetProcessor[] _processors;
 
         public ShaderGenerator(
             Compilation compilation,
             string vertexFunctionName,
             string fragmentFunctionName,
-            params LanguageBackend[] languages)
+            params ILanguageBackend[] languages)
             : this(
                 compilation,
                 vertexFunctionName,
@@ -28,7 +29,7 @@ namespace ShaderGen
             Compilation compilation,
             string vertexFunctionName,
             string fragmentFunctionName,
-            LanguageBackend[] languages,
+            ILanguageBackend[] languages,
             IShaderSetProcessor[] processors)
         {
             if (compilation == null)
@@ -54,7 +55,7 @@ namespace ShaderGen
             }
 
             _compilation = compilation;
-            _languages = new List<LanguageBackend>(languages);
+            _languages = languages.ToArray();
             TypeAndMethodName _vertexFunctionName = null;
             if (vertexFunctionName != null
                 && !TypeAndMethodName.Get(vertexFunctionName, out _vertexFunctionName))
@@ -99,13 +100,13 @@ namespace ShaderGen
 
         public ShaderGenerator(
             Compilation compilation,
-            LanguageBackend[] languages)
+            ILanguageBackend[] languages)
             : this(compilation, languages, Array.Empty<IShaderSetProcessor>())
         { }
 
         public ShaderGenerator(
             Compilation compilation,
-            LanguageBackend[] languages,
+            ILanguageBackend[] languages,
             IShaderSetProcessor[] processors)
         {
             if (compilation == null)
@@ -126,7 +127,7 @@ namespace ShaderGen
             }
 
             _compilation = compilation;
-            _languages = new List<LanguageBackend>(languages);
+            _languages = languages.ToArray();
 
             ShaderSetDiscoverer ssd = new ShaderSetDiscoverer();
             foreach (SyntaxTree tree in _compilation.SyntaxTrees)
@@ -184,12 +185,12 @@ namespace ShaderGen
                 GetTrees(treesToVisit, computeFunctionName.TypeName);
             }
 
-            foreach (LanguageBackend language in _languages)
+            foreach (var language in _languages)
             {
                 language.InitContext(ss.Name);
             }
 
-            ShaderSyntaxWalker walker = new ShaderSyntaxWalker(_compilation, _languages.ToArray(), ss);
+            ShaderSyntaxWalker walker = new ShaderSyntaxWalker(_compilation, _languages, ss);
             foreach (SyntaxTree tree in treesToVisit)
             {
                 walker.Visit(tree.GetRoot());

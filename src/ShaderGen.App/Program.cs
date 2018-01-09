@@ -126,7 +126,7 @@ namespace ShaderGen.App
             Glsl330Backend glsl330 = new Glsl330Backend(compilation);
             Glsl450Backend glsl450 = new Glsl450Backend(compilation);
             MetalBackend metal = new MetalBackend(compilation);
-            LanguageBackend[] languages = new LanguageBackend[]
+            var languages = new ILanguageBackend[]
             {
                 hlsl,
                 glsl330,

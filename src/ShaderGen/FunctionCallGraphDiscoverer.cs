@@ -4,7 +4,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using Microsoft.CodeAnalysis;
 using System.Linq;
-using System.Diagnostics;
 
 namespace ShaderGen
 {

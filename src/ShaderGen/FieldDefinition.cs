@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ShaderGen
+﻿namespace ShaderGen
 {
     public class FieldDefinition
     {

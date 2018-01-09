@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace ShaderGen
 {
-    public abstract class LanguageBackend
+    public abstract class LanguageBackend : ILanguageBackend
     {
         public abstract string GeneratedFileExtension { get; }
         
@@ -29,8 +29,7 @@ namespace ShaderGen
             Compilation = compilation;
         }
 
-        // Must be called before attempting to retrieve the context.
-        internal void InitContext(string setName)
+        public void InitContext(string setName)
         {
             if (Contexts.ContainsKey(setName))
             {
@@ -155,7 +154,7 @@ namespace ShaderGen
             return CSharpToShaderTypeCore(fullType);
         }
 
-        internal virtual void AddStructure(string setName, StructureDefinition sd)
+        public virtual void AddStructure(string setName, StructureDefinition sd)
         {
             if (sd == null)
             {
