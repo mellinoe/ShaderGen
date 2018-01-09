@@ -53,7 +53,7 @@ namespace ShaderGen
 
         public int GetTypeSize(TypeReference tr)
         {
-            if (s_knownTypeSizes.TryGetValue(tr.Name, out int ret))
+            if (KnownTypeSizes.TryGetValue(tr.Name, out int ret))
             {
                 return ret;
             }
@@ -76,8 +76,7 @@ namespace ShaderGen
             }
         }
 
-        private static readonly Dictionary<string, int> s_knownTypeSizes = new Dictionary<string, int>()
-        {
+        private static readonly Dictionary<string, int> KnownTypeSizes = new Dictionary<string, int> {
             { "System.Single", 4 },
             { "System.Int32", 4 },
             { "System.Numerics.Vector2", 8 },

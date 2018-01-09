@@ -4,7 +4,7 @@ namespace ShaderGen.Glsl
 {
     internal static class GlslKnownTypes
     {
-        private static readonly Dictionary<string, string> s_knownTypesShared = new Dictionary<string, string>()
+        private static readonly Dictionary<string, string> KnownTypesShared = new Dictionary<string, string>()
         {
             { "System.UInt32", "uint" },
             { "System.Int32", "int" },
@@ -24,14 +24,14 @@ namespace ShaderGen.Glsl
 
         };
 
-        private static readonly Dictionary<string, string> s_knownTypesGL = new Dictionary<string, string>()
+        private static readonly Dictionary<string, string> KnownTypesGl = new Dictionary<string, string>()
         {
             { "ShaderGen.Texture2DResource", "sampler2D" },
             { "ShaderGen.TextureCubeResource", "samplerCube" },
         };
 
 
-        private static readonly Dictionary<string, string> s_knownTypesVulkan = new Dictionary<string, string>()
+        private static readonly Dictionary<string, string> KnownTypesVulkan = new Dictionary<string, string>()
         {
             { "ShaderGen.Texture2DResource", "texture2D" },
             { "ShaderGen.TextureCubeResource", "textureCube" },
@@ -40,20 +40,20 @@ namespace ShaderGen.Glsl
 
         public static string GetMappedName(string name, bool vulkan)
         {
-            if (s_knownTypesShared.TryGetValue(name, out string mapped))
+            if (KnownTypesShared.TryGetValue(name, out string mapped))
             {
                 return mapped;
             }
             else if (vulkan)
             {
-                if (s_knownTypesVulkan.TryGetValue(name, out mapped))
+                if (KnownTypesVulkan.TryGetValue(name, out mapped))
                 {
                     return mapped;
                 }
             }
             else
             {
-                if (s_knownTypesGL.TryGetValue(name, out mapped))
+                if (KnownTypesGl.TryGetValue(name, out mapped))
                 {
                     return mapped;
                 }

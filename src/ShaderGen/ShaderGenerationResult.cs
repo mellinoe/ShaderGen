@@ -23,7 +23,7 @@ namespace ShaderGen
             return list;
         }
 
-        internal void AddShaderSet(LanguageBackend backend, GeneratedShaderSet gss)
+        internal void AddShaderSet(ILanguageBackend backend, GeneratedShaderSet gss)
         {
             if (!_generatedShaders.TryGetValue(backend, out var list))
             {

@@ -4,7 +4,7 @@ namespace ShaderGen.Hlsl
 {
     internal static class HlslKnownTypes
     {
-        private static readonly Dictionary<string, string> s_knownTypes = new Dictionary<string, string>()
+        private static readonly Dictionary<string, string> KnownTypes = new Dictionary<string, string>()
         {
             { "System.UInt32", "uint" },
             { "System.Int32", "int" },
@@ -27,7 +27,7 @@ namespace ShaderGen.Hlsl
 
         public static string GetMappedName(string name)
         {
-            if (s_knownTypes.TryGetValue(name, out string mapped))
+            if (KnownTypes.TryGetValue(name, out string mapped))
             {
                 return mapped;
             }

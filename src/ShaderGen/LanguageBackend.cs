@@ -49,7 +49,7 @@ namespace ShaderGen
         }
 
 
-        internal ShaderModel GetShaderModel(string setName)
+        public ShaderModel GetShaderModel(string setName)
         {
             BackendContext context = GetContext(setName);
 
@@ -175,7 +175,7 @@ namespace ShaderGen
                 && char.IsDigit(member.Symbol.Name[1]);
         }
 
-        internal virtual void AddResource(string setName, ResourceDefinition rd)
+        public virtual void AddResource(string setName, ResourceDefinition rd)
         {
             if (rd == null)
             {
@@ -185,7 +185,7 @@ namespace ShaderGen
             GetContext(setName).Resources.Add(rd);
         }
 
-        internal virtual void AddFunction(string setName, ShaderFunctionAndBlockSyntax sf)
+        public virtual void AddFunction(string setName, ShaderFunctionAndBlockSyntax sf)
         {
             if (sf == null)
             {

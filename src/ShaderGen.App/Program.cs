@@ -18,9 +18,9 @@ namespace ShaderGen.App
 {
     internal static class Program
     {
-        private static string s_fxcPath;
-        private static bool? s_fxcAvailable;
-        private static bool? s_glslangValidatorAvailable;
+        private static string _fxcPath;
+        private static bool? _fxcAvailable;
+        private static bool? _glslangValidatorAvailable;
         private static bool? s_metalToolsAvailable;
 
         const string metalPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metal";
@@ -36,7 +36,7 @@ namespace ShaderGen.App
             string processorPath = null;
             string processorArgs = null;
 
-            for (int i = 0; i < args.Length; i++)
+            for (var i = 0; i < args.Length; i++)
             {
                 args[i] = args[i].Replace("\\\\", "\\");
             }
@@ -399,18 +399,18 @@ namespace ShaderGen.App
 
         public static bool IsFxcAvailable()
         {
-            if (!s_fxcAvailable.HasValue)
+            if (!_fxcAvailable.HasValue)
             {
-                s_fxcPath = FindFxcExe();
-                s_fxcAvailable = s_fxcPath != null;
+                _fxcPath = FindFxcExe();
+                _fxcAvailable = _fxcPath != null;
             }
 
-            return s_fxcAvailable.Value;
+            return _fxcAvailable.Value;
         }
 
         public static bool IsGlslangValidatorAvailable()
         {
-            if (!s_glslangValidatorAvailable.HasValue)
+            if (!_glslangValidatorAvailable.HasValue)
             {
                 try
                 {
@@ -418,12 +418,12 @@ namespace ShaderGen.App
                     psi.RedirectStandardOutput = true;
                     psi.RedirectStandardError = true;
                     Process.Start(psi);
-                    s_glslangValidatorAvailable = true;
+                    _glslangValidatorAvailable = true;
                 }
-                catch { s_glslangValidatorAvailable = false; }
+                catch { _glslangValidatorAvailable = false; }
             }
 
-            return s_glslangValidatorAvailable.Value;
+            return _glslangValidatorAvailable.Value;
         }
 
         public static bool AreMetalToolsAvailable()

@@ -8,12 +8,12 @@ using System.Collections.Generic;
 
 namespace ShaderGen
 {
-    public partial class ShaderMethodVisitor : CSharpSyntaxVisitor<string>
+    public class ShaderMethodVisitor : CSharpSyntaxVisitor<string>
     {
-        protected readonly Compilation _compilation;
-        protected readonly string _setName;
-        protected readonly LanguageBackend _backend;
-        protected readonly ShaderFunction _shaderFunction;
+        protected readonly Compilation Compilation;
+        protected readonly string SetName;
+        protected readonly LanguageBackend Backend;
+        protected readonly ShaderFunction ShaderFunction;
         private string _containingTypeName;
         private HashSet<ResourceDefinition> _resourcesUsed = new HashSet<ResourceDefinition>();
 
@@ -23,13 +23,13 @@ namespace ShaderGen
             ShaderFunction shaderFunction,
             LanguageBackend backend)
         {
-            _compilation = compilation;
-            _setName = setName;
-            _shaderFunction = shaderFunction;
-            _backend = backend;
+            Compilation = compilation;
+            SetName = setName;
+            ShaderFunction = shaderFunction;
+            Backend = backend;
         }
 
-        private SemanticModel GetModel(SyntaxNode node) => _compilation.GetSemanticModel(node.SyntaxTree);
+        private SemanticModel GetModel(SyntaxNode node) => Compilation.GetSemanticModel(node.SyntaxTree);
 
         public MethodProcessResult VisitFunction(BlockSyntax node)
         {
@@ -38,9 +38,9 @@ namespace ShaderGen
             string blockResult = VisitBlock(node); // Visit block first in order to discover builtin variables.
             string functionDeclStr = GetFunctionDeclStr();
 
-            if (_shaderFunction.Type == ShaderFunctionType.ComputeEntryPoint)
+            if (ShaderFunction.Type == ShaderFunctionType.ComputeEntryPoint)
             {
-                sb.AppendLine(_backend.GetComputeGroupCountsDeclaration(_shaderFunction.ComputeGroupCounts));
+                sb.AppendLine(Backend.GetComputeGroupCountsDeclaration(ShaderFunction.ComputeGroupCounts));
             }
 
             sb.AppendLine(functionDeclStr);
@@ -72,11 +72,11 @@ namespace ShaderGen
 
         protected virtual string GetFunctionDeclStr()
         {
-            string returnType = _backend.CSharpToShaderType(_shaderFunction.ReturnType.Name);
-            string fullDeclType = _backend.CSharpToShaderType(_shaderFunction.DeclaringType);
-            string funcName = _shaderFunction.IsEntryPoint
-                ? _shaderFunction.Name
-                : fullDeclType + "_" + _shaderFunction.Name;
+            string returnType = Backend.CSharpToShaderType(ShaderFunction.ReturnType.Name);
+            string fullDeclType = Backend.CSharpToShaderType(ShaderFunction.DeclaringType);
+            string funcName = ShaderFunction.IsEntryPoint
+                ? ShaderFunction.Name
+                : fullDeclType + "_" + ShaderFunction.Name;
             return $"{returnType} {funcName}({GetParameterDeclList()})";
         }
 
@@ -100,10 +100,10 @@ namespace ShaderGen
 
             }
 
-            return base.Visit(node.Left)
+            return Visit(node.Left)
                 + " "
                 + token
-                + base.Visit(node.Right)
+                + Visit(node.Right)
                 + ";";
         }
 
@@ -122,12 +122,12 @@ namespace ShaderGen
 
                 string typeName = Utilities.GetFullMetadataName(exprSymbol.Symbol);
                 string targetName = Visit(node.Name);
-                return _backend.FormatInvocation(_setName, typeName, targetName, Array.Empty<InvocationParameterInfo>());
+                return Backend.FormatInvocation(SetName, typeName, targetName, Array.Empty<InvocationParameterInfo>());
             }
             else
             {
                 // Other accesses
-                bool isIndexerAccess = _backend.IsIndexerAccess(GetModel(node).GetSymbolInfo(node.Name));
+                bool isIndexerAccess = Backend.IsIndexerAccess(GetModel(node).GetSymbolInfo(node.Name));
                 string expr = Visit(node.Expression);
                 string name = Visit(node.Name);
 
@@ -165,7 +165,7 @@ namespace ShaderGen
                 SymbolInfo symbolInfo = GetModel(node).GetSymbolInfo(ins);
                 string type = symbolInfo.Symbol.ContainingType.ToDisplayString();
                 string method = symbolInfo.Symbol.Name;
-                return _backend.FormatInvocation(_setName, type, method, parameterInfos);
+                return Backend.FormatInvocation(SetName, type, method, parameterInfos);
             }
             else if (node.Expression is MemberAccessExpressionSyntax maes)
             {
@@ -207,7 +207,7 @@ namespace ShaderGen
                     }
 
                     pis.AddRange(GetParameterInfos(node.ArgumentList));
-                    return _backend.FormatInvocation(_setName, containingType, methodName, pis.ToArray());
+                    return Backend.FormatInvocation(SetName, containingType, methodName, pis.ToArray());
                 }
 
                 throw new NotImplementedException();
@@ -266,7 +266,7 @@ namespace ShaderGen
             string fullName = Utilities.GetFullName(symbolInfo);
 
             InvocationParameterInfo[] parameters = GetParameterInfos(node.ArgumentList);
-            return _backend.FormatInvocation(_setName, fullName, "ctor", parameters);
+            return Backend.FormatInvocation(SetName, fullName, "ctor", parameters);
         }
 
         public override string VisitIdentifierName(IdentifierNameSyntax node)
@@ -283,15 +283,15 @@ namespace ShaderGen
                 string symbolName = symbol.Name;
                 ResourceDefinition referencedResource = _backend.GetContext(_setName).Resources.Single(rd => rd.Name == symbolName);
                 _resourcesUsed.Add(referencedResource);
-                return _backend.CorrectFieldAccess(symbolInfo);
+                return Backend.CorrectFieldAccess(symbolInfo);
             }
             else if (symbol.Kind == SymbolKind.Property)
             {
-                return _backend.FormatInvocation(_setName, containingTypeName, symbol.Name, Array.Empty<InvocationParameterInfo>());
+                return Backend.FormatInvocation(SetName, containingTypeName, symbol.Name, Array.Empty<InvocationParameterInfo>());
             }
 
-            string mapped = _backend.CSharpToShaderIdentifierName(symbolInfo);
-            return _backend.CorrectIdentifier(mapped);
+            string mapped = Backend.CSharpToShaderIdentifierName(symbolInfo);
+            return Backend.CorrectIdentifier(mapped);
         }
 
         private void TryRecognizeBuiltInVariable(SymbolInfo symbolInfo)
@@ -299,46 +299,46 @@ namespace ShaderGen
             string name = symbolInfo.Symbol.Name;
             if (name == nameof(ShaderBuiltins.VertexID))
             {
-                if (_shaderFunction.Type != ShaderFunctionType.VertexEntryPoint)
+                if (ShaderFunction.Type != ShaderFunctionType.VertexEntryPoint)
                 {
                     throw new ShaderGenerationException("VertexID can only be used within Vertex shaders.");
                 }
-                _shaderFunction.UsesVertexID = true;
+                ShaderFunction.UsesVertexID = true;
             }
             else if (name == nameof(ShaderBuiltins.InstanceID))
             {
-                _shaderFunction.UsesInstanceID = true;
+                ShaderFunction.UsesInstanceID = true;
             }
             else if (name == nameof(ShaderBuiltins.DispatchThreadID))
             {
-                if (_shaderFunction.Type != ShaderFunctionType.ComputeEntryPoint)
+                if (ShaderFunction.Type != ShaderFunctionType.ComputeEntryPoint)
                 {
                     throw new ShaderGenerationException("DispatchThreadID can only be used within Vertex shaders.");
                 }
-                _shaderFunction.UsesDispatchThreadID = true;
+                ShaderFunction.UsesDispatchThreadID = true;
             }
             else if (name == nameof(ShaderBuiltins.GroupThreadID))
             {
-                if (_shaderFunction.Type != ShaderFunctionType.ComputeEntryPoint)
+                if (ShaderFunction.Type != ShaderFunctionType.ComputeEntryPoint)
                 {
                     throw new ShaderGenerationException("GroupThreadID can only be used within Vertex shaders.");
                 }
-                _shaderFunction.UsesGroupThreadID = true;
+                ShaderFunction.UsesGroupThreadID = true;
             }
             else if (name == nameof(ShaderBuiltins.IsFrontFace))
             {
-                if (_shaderFunction.Type != ShaderFunctionType.FragmentEntryPoint)
+                if (ShaderFunction.Type != ShaderFunctionType.FragmentEntryPoint)
                 {
                     throw new ShaderGenerationException("IsFrontFace can only be used within Fragment shaders.");
                 }
-                _shaderFunction.UsesFrontFace = true;
+                ShaderFunction.UsesFrontFace = true;
             }
         }
 
         public override string VisitLiteralExpression(LiteralExpressionSyntax node)
         {
             string literal = node.ToFullString().Trim();
-            return _backend.CorrectLiteral(literal);
+            return Backend.CorrectLiteral(literal);
         }
 
         public override string VisitIfStatement(IfStatementSyntax node)
@@ -386,11 +386,11 @@ namespace ShaderGen
                 throw new NotImplementedException();
             }
 
-            string csName = _compilation.GetSemanticModel(node.Type.SyntaxTree).GetFullTypeName(node.Type);
-            string mappedType = _backend.CSharpToShaderType(csName);
+            string csName = Compilation.GetSemanticModel(node.Type.SyntaxTree).GetFullTypeName(node.Type);
+            string mappedType = Backend.CSharpToShaderType(csName);
             string initializerStr = Visit(node.Variables[0].Initializer);
             string result = mappedType + " "
-                + _backend.CorrectIdentifier(node.Variables[0].Identifier.ToString());
+                + Backend.CorrectIdentifier(node.Variables[0].Identifier.ToString());
             if (!string.IsNullOrEmpty(initializerStr))
             {
                 result += " " + initializerStr;
@@ -413,12 +413,12 @@ namespace ShaderGen
 
         protected string GetParameterDeclList()
         {
-            return string.Join(", ", _shaderFunction.Parameters.Select(FormatParameter));
+            return string.Join(", ", ShaderFunction.Parameters.Select(FormatParameter));
         }
 
         protected virtual string FormatParameter(ParameterDefinition pd)
         {
-            return $"{_backend.CSharpToShaderType(pd.Type.Name)} {_backend.CorrectIdentifier(pd.Name)}";
+            return $"{Backend.CSharpToShaderType(pd.Type.Name)} {Backend.CorrectIdentifier(pd.Name)}";
         }
 
         private InvocationParameterInfo[] GetParameterInfos(ArgumentListSyntax argumentList)

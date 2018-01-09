@@ -4,7 +4,7 @@ namespace ShaderGen
 {
     internal static class ShaderPrimitiveTypes
     {
-        private static readonly HashSet<string> s_primitiveTypes = new HashSet<string>()
+        private static readonly HashSet<string> PrimitiveTypes = new HashSet<string>()
         {
             "float",
             "System.Single",
@@ -33,7 +33,7 @@ namespace ShaderGen
 
         public static bool IsPrimitiveType(string name)
         {
-            return s_primitiveTypes.Contains(name);
+            return PrimitiveTypes.Contains(name);
         }
     }
 }

@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace ShaderGen
 {
-    public partial class ShaderGenerator
+    public class ShaderGenerator
     {
         private readonly Compilation _compilation;
         private readonly List<ShaderSetInfo> _shaderSets = new List<ShaderSetInfo>();
@@ -196,7 +196,7 @@ namespace ShaderGen
                 walker.Visit(tree.GetRoot());
             }
 
-            foreach (LanguageBackend language in _languages)
+            foreach (var language in _languages)
             {
                 ShaderModel model = language.GetShaderModel(ss.Name);
                 ShaderFunction vsFunc = (ss.VertexShader != null)

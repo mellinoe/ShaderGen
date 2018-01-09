@@ -4,7 +4,7 @@ namespace ShaderGen
 {
     public static class BuiltinTypes
     {
-        private static readonly HashSet<string> s_builtins = new HashSet<string>()
+        private static readonly HashSet<string> Builtins = new HashSet<string>()
         {
             "System.Single",
             "System.Numerics.Vector2",
@@ -15,7 +15,7 @@ namespace ShaderGen
 
         public static bool IsBuiltinType(string fullTypeName)
         {
-            return s_builtins.Contains(fullTypeName);
+            return Builtins.Contains(fullTypeName);
         }
     }
 }

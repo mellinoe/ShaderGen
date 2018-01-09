@@ -189,11 +189,8 @@ namespace ShaderGen.Hlsl
 
             // Emit all of the resources now, because we've learned which ones are actually used by this function.
             int uniformBinding = 0, textureBinding = 0, samplerBinding = 0, uavBinding = function.ColorOutputCount;
-            int setIndex = 0;
             foreach (ResourceDefinition[] set in resourcesBySet)
             {
-                setIndex += 1;
-
                 foreach (ResourceDefinition rd in set)
                 {
                     switch (rd.ResourceKind)

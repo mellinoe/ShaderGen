@@ -8,8 +8,8 @@ namespace ShaderGen.Glsl
 {
     public abstract class GlslBackendBase : LanguageBackend
     {
-        protected readonly HashSet<string> _uniformNames = new HashSet<string>();
-        protected readonly HashSet<string> _ssboNames = new HashSet<string>();
+        protected readonly HashSet<string> UniformNames = new HashSet<string>();
+        protected readonly HashSet<string> SsboNames = new HashSet<string>();
 
         public GlslBackendBase(Compilation compilation) : base(compilation)
         {
@@ -140,13 +140,11 @@ namespace ShaderGen.Glsl
                     ? GetRequiredStructureType(setName, entryFunction.ReturnType)
                     : null;
 
-            string fragCoordName = null;
-
             if (inputType != null)
             {
                 // Declare "in" variables
                 int inVarIndex = 0;
-                fragCoordName = null;
+                string fragCoordName = null;
                 foreach (FieldDefinition field in inputType.Fields)
                 {
                     if (entryFunction.Type == ShaderFunctionType.FragmentEntryPoint
@@ -181,17 +179,15 @@ namespace ShaderGen.Glsl
                     {
                         continue;
                     }
-                    else
-                    {
-                        WriteInOutVariable(
-                            sb,
-                            false,
-                            true,
-                            CSharpToShaderType(field.Type.Name),
-                            "out_" + CorrectIdentifier(field.Name),
-                            outVarIndex);
-                        outVarIndex += 1;
-                    }
+
+                    WriteInOutVariable(
+                        sb,
+                        false,
+                        true,
+                        CSharpToShaderType(field.Type.Name),
+                        "out_" + CorrectIdentifier(field.Name),
+                        outVarIndex);
+                    outVarIndex += 1;
                 }
             }
             else
@@ -313,7 +309,7 @@ namespace ShaderGen.Glsl
 
         internal override string CorrectIdentifier(string identifier)
         {
-            if (s_glslKeywords.Contains(identifier))
+            if (GlslKeywords.Contains(identifier))
             {
                 return identifier + "_";
             }
@@ -321,16 +317,16 @@ namespace ShaderGen.Glsl
             return identifier;
         }
 
-        internal override void AddResource(string setName, ResourceDefinition rd)
+        public override void AddResource(string setName, ResourceDefinition rd)
         {
             if (rd.ResourceKind == ShaderResourceKind.Uniform)
             {
-                _uniformNames.Add(rd.Name);
+                UniformNames.Add(rd.Name);
             }
             if (rd.ResourceKind == ShaderResourceKind.StructuredBuffer
                 || rd.ResourceKind == ShaderResourceKind.RWStructuredBuffer)
             {
-                _ssboNames.Add(rd.Name);
+                SsboNames.Add(rd.Name);
             }
 
             base.AddResource(setName, rd);
@@ -341,7 +337,7 @@ namespace ShaderGen.Glsl
             string originalName = symbolInfo.Symbol.Name;
             string mapped = CSharpToShaderIdentifierName(symbolInfo);
             string identifier = CorrectIdentifier(mapped);
-            if (_uniformNames.Contains(originalName) || _ssboNames.Contains(originalName))
+            if (UniformNames.Contains(originalName) || SsboNames.Contains(originalName))
             {
                 return "field_" + identifier;
             }
@@ -356,7 +352,7 @@ namespace ShaderGen.Glsl
             return $"layout(local_size_x = {groupCounts.X}, local_size_y = {groupCounts.Y}, local_size_z = {groupCounts.Z}) in;";
         }
 
-        private static readonly HashSet<string> s_glslKeywords = new HashSet<string>()
+        private static readonly HashSet<string> GlslKeywords = new HashSet<string>()
         {
             "input", "output",
         };
