@@ -172,7 +172,7 @@ namespace ShaderGen
 
         private static string MatrixMul(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"{parameters[0].Identifier} * {parameters[1].Identifier}";
+            return $"{parameters[0].Identifier} * float4({parameters[1].Identifier})";
         }
 
         private static string LengthSquared(string typeName, string methodName, InvocationParameterInfo[] parameters)
@@ -248,7 +248,7 @@ namespace ShaderGen
         private static string ClipToTextureCoordinates(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
             string target = parameters[0].Identifier;
-            return $"float2(({target}.x / {target}.w) / 2 + 0.5, ({target}.y / {target}.w) / -2 + 0.5)";
+            return $"float2(({target}[0] / {target}[3]) / 2 + 0.5, ({target}[1] / {target}[3]) / -2 + 0.5)";
         }
 
         private static string VertexID(string typeName, string methodName, InvocationParameterInfo[] parameters)
@@ -377,7 +377,7 @@ namespace ShaderGen
             }
             else
             {
-                vecParam = parameters[0].Identifier;
+                vecParam = $"float4({parameters[0].Identifier})";
             }
 
             return $"{parameters[1].Identifier} * {vecParam}";

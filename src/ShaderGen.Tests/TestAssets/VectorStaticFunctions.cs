@@ -5,88 +5,91 @@ namespace TestShaders
 {
     public class VectorStaticFunctions
     {
+        public struct VectorHolder
+        {
+            public Vector2 V2;
+            public Vector3 V3;
+            public Vector4 V4;
+            public Matrix4x4 M4x4;
+        }
+
+        public VectorHolder VH;
+
         [VertexShader]
         SystemPosition4 VS(Position4 input)
         {
-            Matrix4x4 testMatrix = new Matrix4x4(
-                1, 0, 0, 0,
-                0, 1, 0, 0,
-                0, 0, 1, 0,
-                0, 0, 0, 1);
+            Vector2 r2 = Vector2.Abs(VH.V2);
+            r2 = Vector2.Add(VH.V2, VH.V2);
+            r2 = Vector2.Clamp(VH.V2, VH.V2, VH.V2);
+            float r = Vector2.Distance(VH.V2, VH.V2);
+            r = Vector2.DistanceSquared(VH.V2, VH.V2);
+            r2 = Vector2.Divide(VH.V2, VH.V2);
+            r2 = Vector2.Divide(VH.V2, r);
+            r = Vector2.Dot(VH.V2, VH.V2);
+            r2 = Vector2.Lerp(VH.V2, VH.V2, 0.75f);
+            r2 = Vector2.Max(VH.V2, VH.V2);
+            r2 = Vector2.Min(VH.V2, VH.V2);
+            r2 = Vector2.Multiply(VH.V2, VH.V2);
+            r2 = Vector2.Multiply(VH.V2, r);
+            r2 = Vector2.Multiply(r, VH.V2);
+            r2 = Vector2.Negate(VH.V2);
+            r2 = Vector2.Normalize(VH.V2);
+            r2 = Vector2.Reflect(VH.V2, VH.V2);
+            r2 = Vector2.SquareRoot(VH.V2);
+            r2 = Vector2.Subtract(VH.V2, VH.V2);
+            r = VH.V2.Length();
+            r = VH.V2.LengthSquared();
+            r2 = Vector2.Transform(VH.V2, VH.M4x4);
 
-            Vector2 v2 = new Vector2(1, 2);
-            Vector2 r2 = Vector2.Abs(v2);
-            r2 = Vector2.Add(v2, v2);
-            r2 = Vector2.Clamp(v2, v2, v2);
-            float r = Vector2.Distance(v2, v2);
-            r = Vector2.DistanceSquared(v2, v2);
-            r2 = Vector2.Divide(v2, v2);
-            r2 = Vector2.Divide(v2, r);
-            r = Vector2.Dot(v2, v2);
-            r2 = Vector2.Lerp(v2, v2, 0.75f);
-            r2 = Vector2.Max(v2, v2);
-            r2 = Vector2.Min(v2, v2);
-            r2 = Vector2.Multiply(v2, v2);
-            r2 = Vector2.Multiply(v2, r);
-            r2 = Vector2.Multiply(r, v2);
-            r2 = Vector2.Negate(v2);
-            r2 = Vector2.Normalize(v2);
-            r2 = Vector2.Reflect(v2, v2);
-            r2 = Vector2.SquareRoot(v2);
-            r2 = Vector2.Subtract(v2, v2);
-            r = v2.Length();
-            r = v2.LengthSquared();
-            r2 = Vector2.Transform(v2, testMatrix);
+            Vector3 V3 = new Vector3(1, 2, 3);
+            Vector3 r3 = Vector3.Abs(VH.V3);
+            r3 = Vector3.Add(VH.V3, VH.V3);
+            r3 = Vector3.Clamp(VH.V3, VH.V3, VH.V3);
+            r3 = Vector3.Cross(VH.V3, VH.V3);
+            r = Vector3.Distance(VH.V3, VH.V3);
+            r = Vector3.DistanceSquared(VH.V3, VH.V3);
+            r3 = Vector3.Divide(VH.V3, VH.V3);
+            r3 = Vector3.Divide(VH.V3, r);
+            r = Vector3.Dot(VH.V3, VH.V3);
+            r3 = Vector3.Lerp(VH.V3, VH.V3, 0.75f);
+            r3 = Vector3.Max(VH.V3, VH.V3);
+            r3 = Vector3.Min(VH.V3, VH.V3);
+            r3 = Vector3.Multiply(VH.V3, VH.V3);
+            r3 = Vector3.Multiply(VH.V3, r);
+            r3 = Vector3.Multiply(r, VH.V3);
+            r3 = Vector3.Negate(VH.V3);
+            r3 = Vector3.Normalize(VH.V3);
+            r3 = Vector3.Reflect(VH.V3, VH.V3);
+            r3 = Vector3.SquareRoot(VH.V3);
+            r3 = Vector3.Subtract(VH.V3, VH.V3);
+            r = VH.V3.Length();
+            r = VH.V3.LengthSquared();
+            r3 = Vector3.Transform(VH.V3, VH.M4x4);
 
-            Vector3 v3 = new Vector3(1, 2, 3);
-            Vector3 r3 = Vector3.Abs(v3);
-            r3 = Vector3.Add(v3, v3);
-            r3 = Vector3.Clamp(v3, v3, v3);
-            r3 = Vector3.Cross(v3, v3);
-            r = Vector3.Distance(v3, v3);
-            r = Vector3.DistanceSquared(v3, v3);
-            r3 = Vector3.Divide(v3, v3);
-            r3 = Vector3.Divide(v3, r);
-            r = Vector3.Dot(v3, v3);
-            r3 = Vector3.Lerp(v3, v3, 0.75f);
-            r3 = Vector3.Max(v3, v3);
-            r3 = Vector3.Min(v3, v3);
-            r3 = Vector3.Multiply(v3, v3);
-            r3 = Vector3.Multiply(v3, r);
-            r3 = Vector3.Multiply(r, v3);
-            r3 = Vector3.Negate(v3);
-            r3 = Vector3.Normalize(v3);
-            r3 = Vector3.Reflect(v3, v3);
-            r3 = Vector3.SquareRoot(v3);
-            r3 = Vector3.Subtract(v3, v3);
-            r = v3.Length();
-            r = v3.LengthSquared();
-            r3 = Vector3.Transform(v3, testMatrix);
-
-            Vector4 v4 = new Vector4(1, 2, 3, 4);
-            Vector4 r4 = Vector4.Abs(v4);
-            r4 = Vector4.Add(v4, v4);
-            r4 = Vector4.Clamp(v4, v4, v4);
-            r = Vector4.Distance(v4, v4);
-            r = Vector4.DistanceSquared(v4, v4);
-            r4 = Vector4.Divide(v4, v4);
-            r4 = Vector4.Divide(v4, r);
-            r = Vector4.Dot(v4, v4);
-            r4 = Vector4.Lerp(v4, v4, 0.75f);
-            r4 = Vector4.Max(v4, v4);
-            r4 = Vector4.Min(v4, v4);
-            r4 = Vector4.Multiply(v4, v4);
-            r4 = Vector4.Multiply(v4, r);
-            r4 = Vector4.Multiply(r, v4);
-            r4 = Vector4.Negate(v4);
-            r4 = Vector4.Normalize(v4);
-            r4 = Vector4.SquareRoot(v4);
-            r4 = Vector4.Subtract(v4, v4);
-            r = v4.Length();
-            r = v4.LengthSquared();
-            r4 = Vector4.Transform(v2, testMatrix);
-            r4 = Vector4.Transform(v3, testMatrix);
-            r4 = Vector4.Transform(v4, testMatrix);
+            Vector4 V4 = new Vector4(1, 2, 3, 4);
+            Vector4 r4 = Vector4.Abs(VH.V4);
+            r4 = Vector4.Add(VH.V4, VH.V4);
+            r4 = Vector4.Clamp(VH.V4, VH.V4, VH.V4);
+            r = Vector4.Distance(VH.V4, VH.V4);
+            r = Vector4.DistanceSquared(VH.V4, VH.V4);
+            r4 = Vector4.Divide(VH.V4, VH.V4);
+            r4 = Vector4.Divide(VH.V4, r);
+            r = Vector4.Dot(VH.V4, VH.V4);
+            r4 = Vector4.Lerp(VH.V4, VH.V4, 0.75f);
+            r4 = Vector4.Max(VH.V4, VH.V4);
+            r4 = Vector4.Min(VH.V4, VH.V4);
+            r4 = Vector4.Multiply(VH.V4, VH.V4);
+            r4 = Vector4.Multiply(VH.V4, r);
+            r4 = Vector4.Multiply(r, VH.V4);
+            r4 = Vector4.Negate(VH.V4);
+            r4 = Vector4.Normalize(VH.V4);
+            r4 = Vector4.SquareRoot(VH.V4);
+            r4 = Vector4.Subtract(VH.V4, VH.V4);
+            r = VH.V4.Length();
+            r = VH.V4.LengthSquared();
+            r4 = Vector4.Transform(VH.V2, VH.M4x4);
+            r4 = Vector4.Transform(VH.V3, VH.M4x4);
+            r4 = Vector4.Transform(VH.V4, VH.M4x4);
 
             SystemPosition4 output;
             output.Position = input.Position;

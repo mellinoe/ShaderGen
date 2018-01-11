@@ -6,13 +6,21 @@ namespace TestShaders
 {
     public class ShaderBuiltinsTestShader
     {
+        public struct VectorHolder
+        {
+            public Vector2 V2;
+            public Vector3 V3;
+            public Vector4 V4;
+            public Matrix4x4 M4x4;
+        }
+
+        public VectorHolder VH;
+
         [VertexShader]
         public SystemPosition4 VS(Position4 input)
         {
             float f = 0;
-            Vector2 v2 = new Vector2(0, 0);
-            Vector3 v3 = new Vector3(0, 0, 0);
-            Vector4 v4 = new Vector4(0, 0, 0, 0);
+
             float r = 0;
             Vector2 r2 = new Vector2(0, 0);
             Vector3 r3 = new Vector3(0, 0, 0);
@@ -20,47 +28,49 @@ namespace TestShaders
 
             // Abs
             r = Abs(f);
-            r2 = Abs(v2);
-            r3 = Abs(v3);
-            r4 = Abs(v4);
+            r2 = Abs(VH.V2);
+            r3 = Abs(VH.V3);
+            r4 = Abs(VH.V4);
 
             // Acos
             r = Acos(f);
-            r2 = Acos(v2);
-            r3 = Acos(v3);
-            r4 = Acos(v4);
+            r2 = Acos(VH.V2);
+            r3 = Acos(VH.V3);
+            r4 = Acos(VH.V4);
 
             // Clamp
             r = Clamp(f, 0, 10);
-            r2 = Clamp(v2, new Vector2(0, 0), new Vector2(10, 10));
-            r3 = Clamp(v3, new Vector3(0, 0, 0), new Vector3(10, 10, 10));
-            r4 = Clamp(v4, new Vector4(0, 0, 0, 0), new Vector4(10, 10, 10, 10));
+            r2 = Clamp(VH.V2, new Vector2(0, 0), new Vector2(10, 10));
+            r3 = Clamp(VH.V3, new Vector3(0, 0, 0), new Vector3(10, 10, 10));
+            r4 = Clamp(VH.V4, new Vector4(0, 0, 0, 0), new Vector4(10, 10, 10, 10));
 
             // Pow
             r = Pow(f, 10);
-            r2 = Pow(v2, new Vector2(10, 12));
-            r3 = Pow(v3, new Vector3(10, 12, 14));
-            r4 = Pow(v4, new Vector4(10, 12, 14, 16));
+            r2 = Pow(VH.V2, new Vector2(10, 12));
+            r3 = Pow(VH.V3, new Vector3(10, 12, 14));
+            r4 = Pow(VH.V4, new Vector4(10, 12, 14, 16));
 
             // Saturate
             r = Saturate(f);
-            r2 = Saturate(v2);
-            r3 = Saturate(v3);
-            r4 = Saturate(v4);
+            r2 = Saturate(VH.V2);
+            r3 = Saturate(VH.V3);
+            r4 = Saturate(VH.V4);
 
             // Tan
             r = Tan(f);
-            r2 = Tan(v2);
-            r3 = Tan(v3);
-            r4 = Tan(v4);
+            r2 = Tan(VH.V2);
+            r3 = Tan(VH.V3);
+            r4 = Tan(VH.V4);
 
             // Mod
             r = Mod(f, 2);
-            r2 = Mod(v2, new Vector2(2, 4));
-            r3 = Mod(v3, new Vector3(2, 4, 6));
-            r4 = Mod(v4, new Vector4(2, 4, 6, 8));
+            r2 = Mod(VH.V2, new Vector2(2, 4));
+            r3 = Mod(VH.V3, new Vector3(2, 4, 6));
+            r4 = Mod(VH.V4, new Vector4(2, 4, 6, 8));
 
             // ClipToTextureCoordinates
+            r2 = ClipToTextureCoordinates(VH.V4);
+            Vector4 v4 = VH.V4;
             r2 = ClipToTextureCoordinates(v4);
 
             SystemPosition4 output;

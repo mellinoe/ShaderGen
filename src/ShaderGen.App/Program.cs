@@ -371,7 +371,7 @@ namespace ShaderGen.App
 
                 if (metalProcess.ExitCode != 0)
                 {
-                    throw new ShaderGenerationException(metalProcess.StandardOutput.ReadToEnd());
+                    throw new ShaderGenerationException(metalProcess.StandardError.ReadToEnd());
                 }
 
                 string metallibArgs = $"-o {outputPath} {bitcodePath}";
@@ -383,7 +383,7 @@ namespace ShaderGen.App
 
                 if (metallibProcess.ExitCode != 0)
                 {
-                    throw new ShaderGenerationException(metallibProcess.StandardOutput.ReadToEnd());
+                    throw new ShaderGenerationException(metallibProcess.StandardError.ReadToEnd());
                 }
 
                 path = outputPath;
