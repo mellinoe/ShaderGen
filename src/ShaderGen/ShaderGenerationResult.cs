@@ -10,6 +10,11 @@ namespace ShaderGen
 
         public IReadOnlyList<GeneratedShaderSet> GetOutput(LanguageBackend backend)
         {
+            if (_generatedShaders.Count == 0)
+            {
+                return Array.Empty<GeneratedShaderSet>();
+            }
+
             if (!_generatedShaders.TryGetValue(backend, out List<GeneratedShaderSet> list))
             {
                 throw new InvalidOperationException($"The backend {backend} was not used to generate shaders for this object.");
