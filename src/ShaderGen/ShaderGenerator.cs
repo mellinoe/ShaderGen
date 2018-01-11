@@ -140,11 +140,6 @@ namespace ShaderGen
 
         public ShaderGenerationResult GenerateShaders()
         {
-            if (_shaderSets.Count == 0)
-            {
-                throw new ShaderGenerationException("No shader sets were discovered.");
-            }
-
             ShaderGenerationResult result = new ShaderGenerationResult();
             foreach (ShaderSetInfo ss in _shaderSets)
             {
