@@ -55,6 +55,13 @@ namespace ShaderGen
             };
             ret.Add("System.Numerics.Matrix4x4", m4x4Mappings);
 
+            Dictionary<string, string> uint2Mappings = new Dictionary<string, string>()
+            {
+                { "X", "x" },
+                { "Y", "y" },
+            };
+            ret.Add("ShaderGen.UInt2", uint2Mappings);
+
             Dictionary<string, string> uint3Mappings = new Dictionary<string, string>()
             {
                 { "X", "x" },
@@ -62,6 +69,15 @@ namespace ShaderGen
                 { "Z", "z" },
             };
             ret.Add("ShaderGen.UInt3", uint3Mappings);
+
+            Dictionary<string, string> uint4Mappings = new Dictionary<string, string>()
+            {
+                { "X", "x" },
+                { "Y", "y" },
+                { "Z", "z" },
+                { "W", "w" },
+            };
+            ret.Add("ShaderGen.UInt4", uint4Mappings);
 
             return ret;
         }

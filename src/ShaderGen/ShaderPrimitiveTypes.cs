@@ -15,6 +15,9 @@ namespace ShaderGen
             "System.Numerics.Vector3",
             "System.Numerics.Vector4",
             "System.Numerics.Matrix4x4",
+            "ShaderGen.UInt2",
+            "ShaderGen.UInt3",
+            "ShaderGen.UInt4",
         };
 
         public static bool IsPrimitiveType(string name)

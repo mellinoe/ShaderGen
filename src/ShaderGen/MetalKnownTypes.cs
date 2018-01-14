@@ -18,7 +18,9 @@ namespace ShaderGen
             { "ShaderGen.Texture2DResource", "texture2d<float>" },
             { "ShaderGen.TextureCubeResource", "texturecube<float>" },
             { "System.Boolean", "bool" },
+            { "ShaderGen.UInt2", "uint2" },
             { "ShaderGen.UInt3", "uint3" },
+            { "ShaderGen.UInt4", "uint4" },
         };
 
         private static readonly Dictionary<string, string> s_mappedToPackedTypes = new Dictionary<string, string>()

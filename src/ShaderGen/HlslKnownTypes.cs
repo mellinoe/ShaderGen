@@ -17,7 +17,9 @@ namespace ShaderGen
             { "ShaderGen.Texture2DResource", "Texture2D" },
             { "ShaderGen.TextureCubeResource", "TextureCube" },
             { "System.Boolean", "bool" },
+            { "ShaderGen.UInt2", "uint2" },
             { "ShaderGen.UInt3", "uint3" },
+            { "ShaderGen.UInt4", "uint4" },
         };
 
         public static string GetMappedName(string name)
