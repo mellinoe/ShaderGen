@@ -37,6 +37,7 @@ namespace ShaderGen.Tests
             yield return new object[] { "TestShaders.CustomMethodUsingUniform.VS", null };
             yield return new object[] { "TestShaders.PointLightTestShaders.VS", null };
             yield return new object[] { "TestShaders.UIntVectors.VS", null };
+            yield return new object[] { "TestShaders.VeldridShaders.UIntVertexAttribs.VS", null };
         }
 
         public static IEnumerable<object[]> ComputeShaders()

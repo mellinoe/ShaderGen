@@ -277,7 +277,7 @@ namespace ShaderGen
         protected bool TryDiscoverStructure(string setName, string name, out StructureDefinition sd)
         {
             INamedTypeSymbol type = Compilation.GetTypeByMetadataName(name);
-            if (type == null)
+            if (type == null || type.OriginalDefinition.DeclaringSyntaxReferences.Length == 0)
             {
                 throw new ShaderGenerationException("Unable to obtain compilation type metadata for " + name);
             }
