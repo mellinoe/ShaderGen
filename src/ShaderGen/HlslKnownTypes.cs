@@ -20,6 +20,9 @@ namespace ShaderGen
             { "ShaderGen.UInt2", "uint2" },
             { "ShaderGen.UInt3", "uint3" },
             { "ShaderGen.UInt4", "uint4" },
+            { "ShaderGen.Int2", "int2" },
+            { "ShaderGen.Int3", "int3" },
+            { "ShaderGen.Int4", "int4" },
         };
 
         public static string GetMappedName(string name)

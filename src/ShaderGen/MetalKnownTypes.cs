@@ -21,6 +21,9 @@ namespace ShaderGen
             { "ShaderGen.UInt2", "uint2" },
             { "ShaderGen.UInt3", "uint3" },
             { "ShaderGen.UInt4", "uint4" },
+            { "ShaderGen.Int2", "int2" },
+            { "ShaderGen.Int3", "int3" },
+            { "ShaderGen.Int4", "int4" },
         };
 
         private static readonly Dictionary<string, string> s_mappedToPackedTypes = new Dictionary<string, string>()
@@ -28,7 +31,12 @@ namespace ShaderGen
             { "float2", "packed_float2" },
             { "float3", "packed_float3" },
             { "float4", "packed_float4" },
+            { "uint2", "packed_uint2" },
             { "uint3", "packed_uint3" },
+            { "uint4", "packed_uint4" },
+            { "int2", "packed_int2" },
+            { "int3", "packed_int3" },
+            { "int4", "packed_int4" },
         };
 
         private static readonly Dictionary<string, string> s_csharpToUnpackedTypes = new Dictionary<string, string>()
@@ -36,7 +44,12 @@ namespace ShaderGen
             { "System.Numerics.Vector2", "float2" },
             { "System.Numerics.Vector3", "float3" },
             { "System.Numerics.Vector4", "float4" },
+            { "ShaderGen.UInt2", "uint2" },
             { "ShaderGen.UInt3", "uint3" },
+            { "ShaderGen.UInt4", "uint4" },
+            { "ShaderGen.Int2", "int2" },
+            { "ShaderGen.Int3", "int3" },
+            { "ShaderGen.Int4", "int4" },
         };
 
         public static string GetMappedName(string name)

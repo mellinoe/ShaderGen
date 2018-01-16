@@ -18,6 +18,17 @@ namespace ShaderGen
             "ShaderGen.UInt2",
             "ShaderGen.UInt3",
             "ShaderGen.UInt4",
+            "ShaderGen.Int2",
+            "ShaderGen.Int3",
+            "ShaderGen.Int4",
+            "ShaderGen.Byte2",
+            "ShaderGen.Byte4",
+            "ShaderGen.SByte2",
+            "ShaderGen.SByte4",
+            "ShaderGen.UShort2",
+            "ShaderGen.UShort4",
+            "ShaderGen.Short2",
+            "ShaderGen.Short4",
         };
 
         public static bool IsPrimitiveType(string name)

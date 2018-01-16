@@ -7,11 +7,18 @@ namespace TestShaders
         public struct VertexInput
         {
             [PositionSemantic]
-            public UInt2 U2;
+            public UInt2 U32x2;
             [TextureCoordinateSemantic]
-            public UInt3 U3;
+            public UInt3 U32x3;
             [ColorSemantic]
-            public UInt4 U4;
+            public UInt4 U32x4;
+
+            [PositionSemantic]
+            public Int2 I32x2;
+            [PositionSemantic]
+            public Int3 I32x3;
+            [PositionSemantic]
+            public Int4 I32x4;
         }
 
         [VertexShader]
@@ -19,10 +26,17 @@ namespace TestShaders
         {
             SystemPosition4 output;
             output.Position = new System.Numerics.Vector4(
-                input.U2.X + input.U3.X + input.U4.X,
-                input.U2.Y + input.U3.Y + input.U4.Y,
-                input.U3.Z + input.U4.Z,
-                input.U4.Z);
+                input.U32x2.X + input.U32x3.X + input.U32x4.X,
+                input.U32x2.Y + input.U32x3.Y + input.U32x4.Y,
+                input.U32x3.Z + input.U32x4.Z,
+                input.U32x4.Z);
+
+            output.Position += new System.Numerics.Vector4(
+                input.I32x2.X + input.I32x3.X + input.I32x4.X,
+                input.I32x2.Y + input.I32x3.Y + input.I32x4.Y,
+                input.I32x3.Z + input.I32x4.Z,
+                input.I32x4.W);
+
             return output;
         }
     }

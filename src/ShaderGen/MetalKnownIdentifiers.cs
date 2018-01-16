@@ -79,6 +79,30 @@ namespace ShaderGen
             };
             ret.Add("ShaderGen.UInt4", uint4Mappings);
 
+            Dictionary<string, string> int2Mappings = new Dictionary<string, string>()
+            {
+                { "X", "[0]" },
+                { "Y", "[1]" },
+            };
+            ret.Add("ShaderGen.Int2", int2Mappings);
+
+            Dictionary<string, string> int3Mappings = new Dictionary<string, string>()
+            {
+                { "X", "[0]" },
+                { "Y", "[1]" },
+                { "Z", "[2]" },
+            };
+            ret.Add("ShaderGen.Int3", int3Mappings);
+
+            Dictionary<string, string> int4Mappings = new Dictionary<string, string>()
+            {
+                { "X", "[0]" },
+                { "Y", "[1]" },
+                { "Z", "[2]" },
+                { "W", "[3]" },
+            };
+            ret.Add("ShaderGen.Int4", int4Mappings);
+
             return ret;
         }
 

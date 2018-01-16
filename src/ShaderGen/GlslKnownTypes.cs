@@ -18,6 +18,10 @@ namespace ShaderGen
             { "ShaderGen.UInt2", "uvec2" },
             { "ShaderGen.UInt3", "uvec3" },
             { "ShaderGen.UInt4", "uvec4" },
+            { "ShaderGen.Int2", "ivec2" },
+            { "ShaderGen.Int3", "ivec3" },
+            { "ShaderGen.Int4", "ivec4" },
+
         };
 
         private static readonly Dictionary<string, string> s_knownTypesGL = new Dictionary<string, string>()
