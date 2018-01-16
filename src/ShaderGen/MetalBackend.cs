@@ -436,7 +436,8 @@ namespace ShaderGen
                     && char.IsDigit(member.Symbol.Name[1]))
                     ||
                 ((containingType.StartsWith("System.Numerics.Vector")
-                    || containingType.StartsWith("ShaderGen.UInt"))
+                    || containingType.StartsWith("ShaderGen.UInt")
+                    || containingType.StartsWith("ShaderGen.Int"))
                     && (memberNameFirstChar == 'X'
                         || memberNameFirstChar == 'Y'
                         || memberNameFirstChar == 'Z'

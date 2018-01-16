@@ -1,9 +1,11 @@
-﻿using ShaderGen;
+﻿using System.Runtime.InteropServices;
+using ShaderGen;
 
 namespace TestShaders
 {
     internal class UIntVectors
     {
+        [StructLayout(LayoutKind.Sequential)]
         public struct VertexInput
         {
             [PositionSemantic]
