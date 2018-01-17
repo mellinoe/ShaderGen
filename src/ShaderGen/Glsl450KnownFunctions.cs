@@ -356,12 +356,12 @@ namespace ShaderGen
 
         private static string Vector2Transform(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"(vec4({parameters[0].Identifier}, 0, 1) * {parameters[1].Identifier}).xy";
+            return $"({parameters[1].Identifier} * vec4({parameters[0].Identifier}, 0, 1)).xy";
         }
 
         private static string Vector3Transform(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"(vec4({parameters[0].Identifier}, 1) * {parameters[1].Identifier}).xyz";
+            return $"({parameters[1].Identifier} * vec4({parameters[0].Identifier}, 1)).xyz";
         }
 
         private static string Vector4Transform(string typeName, string methodName, InvocationParameterInfo[] parameters)
@@ -380,7 +380,7 @@ namespace ShaderGen
                 vecParam = parameters[0].Identifier;
             }
 
-            return $"{vecParam} * {parameters[1].Identifier}";
+            return $"{parameters[1].Identifier} * {vecParam}";
         }
 
         private static void GetVectorTypeInfo(string name, out string shaderType, out int elementCount)
