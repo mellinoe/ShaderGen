@@ -37,7 +37,7 @@ namespace ShaderGen.Metal
             bool result = MetalKnownTypes.GetUnpackedType(parameters[0].FullTypeName, out string unpackedType);
             Debug.Assert(result);
 
-            return $"{unpackedType}({target}).{swizzle.ToString()}";
+            return $"{unpackedType}({target}).{swizzle}";
         }
     }
 }

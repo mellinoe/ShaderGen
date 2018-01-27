@@ -93,7 +93,7 @@ namespace ShaderGen.Tests
         private static string[] GetReferenceItems()
         {
             string[] lines = File.ReadAllLines(Path.Combine(ProjectBasePath, "References.txt"));
-            return lines.Select(l => l.Trim()).ToArray();;
+            return lines.Select(l => l.Trim()).ToArray();
         }
 
         public static string[] GetPackageDirs()

@@ -1,5 +1,4 @@
 ﻿using Microsoft.CodeAnalysis;
-using ShaderGen;
 using Xunit;
 
 namespace ShaderGen.Tests

@@ -31,7 +31,7 @@ namespace ShaderGen
                     return true;
                 }
 
-                return TryGetParentSyntax<T>(syntaxNode, out result);
+                return TryGetParentSyntax(syntaxNode, out result);
             }
             catch
             {

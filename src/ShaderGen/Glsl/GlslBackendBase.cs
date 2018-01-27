@@ -11,7 +11,7 @@ namespace ShaderGen.Glsl
         protected readonly HashSet<string> UniformNames = new HashSet<string>();
         protected readonly HashSet<string> SsboNames = new HashSet<string>();
 
-        public GlslBackendBase(Compilation compilation) : base(compilation)
+        protected GlslBackendBase(Compilation compilation) : base(compilation)
         {
         }
 

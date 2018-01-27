@@ -59,15 +59,14 @@ namespace ShaderGen.Hlsl
         
         private static string FindFxcExe()
         {
-            const string WindowsKitsFolder = @"C:\Program Files (x86)\Windows Kits";
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Directory.Exists(WindowsKitsFolder))
+            const string windowsKitsFolder = @"C:\Program Files (x86)\Windows Kits";
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Directory.Exists(windowsKitsFolder))
             {
-                IEnumerable<string> paths = Directory.EnumerateFiles(
-                    WindowsKitsFolder,
+                var paths = Directory.EnumerateFiles(
+                    windowsKitsFolder,
                     "fxc.exe",
                     SearchOption.AllDirectories);
-                string path = paths.FirstOrDefault(s => !s.Contains("arm"));
-                return path;
+                return paths.FirstOrDefault(s => !s.Contains("arm"));
             }
 
             return null;

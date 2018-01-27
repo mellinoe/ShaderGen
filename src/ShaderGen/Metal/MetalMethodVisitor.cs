@@ -23,7 +23,7 @@ namespace ShaderGen.Metal
                 MetalBackend.GetBuiltinParameterList(ShaderFunction).Select(b => $"{b.Type} {b.Name}"));
             string fullParameterList = string.Join(
                 ", ",
-                new string[]
+                new[]
                 {
                     baseParameterList, builtinParameterList
                 }.Where(s => !string.IsNullOrEmpty(s)));

@@ -33,7 +33,7 @@ namespace ShaderGen
                 swizzle.Append(char.ToLowerInvariant(c));
             }
 
-            return $"{target}.{swizzle.ToString()}";
+            return $"{target}.{swizzle}";
         }
     }
 }
