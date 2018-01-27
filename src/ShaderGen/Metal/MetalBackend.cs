@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -14,6 +15,60 @@ namespace ShaderGen.Metal
         }
 
         public override string GeneratedFileExtension => "metal";
+        
+        
+        const string metalPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metal";
+        const string metallibPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metallib";
+
+        private static bool? s_metalToolsAvailable;
+
+        public override bool CompilationToolsAreAvailable() {
+            if (!s_metalToolsAvailable.HasValue)
+            {
+                s_metalToolsAvailable = File.Exists(metalPath) && File.Exists(metallibPath);
+            }
+
+            return s_metalToolsAvailable.Value;
+        }
+
+        public override bool CompileCode(string shaderPath, string entryPoint, ShaderFunctionType type, out string path) {
+            string shaderPathWithoutExtension = Path.ChangeExtension(shaderPath, null);
+            string outputPath = shaderPathWithoutExtension + ".metallib";
+            string bitcodePath = Path.GetTempFileName();
+            string metalArgs = $"-x metal -o {bitcodePath} {shaderPath}";
+            try
+            {
+                ProcessStartInfo metalPSI = new ProcessStartInfo(metalPath, metalArgs);
+                metalPSI.RedirectStandardError = true;
+                metalPSI.RedirectStandardOutput = true;
+                Process metalProcess = Process.Start(metalPSI);
+                metalProcess.WaitForExit();
+
+                if (metalProcess.ExitCode != 0)
+                {
+                    throw new ShaderGenerationException(metalProcess.StandardError.ReadToEnd());
+                }
+
+                string metallibArgs = $"-o {outputPath} {bitcodePath}";
+                ProcessStartInfo metallibPSI = new ProcessStartInfo(metallibPath, metallibArgs);
+                metallibPSI.RedirectStandardError = true;
+                metallibPSI.RedirectStandardOutput = true;
+                Process metallibProcess = Process.Start(metallibPSI);
+                metallibProcess.WaitForExit();
+
+                if (metallibProcess.ExitCode != 0)
+                {
+                    throw new ShaderGenerationException(metallibProcess.StandardError.ReadToEnd());
+                }
+
+                path = outputPath;
+                return true;
+            }
+            finally
+            {
+                File.Delete(bitcodePath);
+            }
+        }
 
         private string CSharpToShaderTypeCore(string fullType, bool packed)
         {

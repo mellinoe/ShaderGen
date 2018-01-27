@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Text;
 using Microsoft.CodeAnalysis;
 
 namespace ShaderGen.Glsl
@@ -7,6 +10,60 @@ namespace ShaderGen.Glsl
     {
         public override string GeneratedFileExtension => "450.glsl";
         
+        private static bool? _glslangValidatorAvailable;
+
+        public override bool CompilationToolsAreAvailable()
+        {
+            if (!_glslangValidatorAvailable.HasValue)
+            {
+                try
+                {
+                    ProcessStartInfo psi = new ProcessStartInfo("glslangValidator");
+                    psi.RedirectStandardOutput = true;
+                    psi.RedirectStandardError = true;
+                    Process.Start(psi);
+                    _glslangValidatorAvailable = true;
+                }
+                catch { _glslangValidatorAvailable = false; }
+            }
+
+            return _glslangValidatorAvailable.Value;
+        }
+
+        public override bool CompileCode(string shaderPath, string entryPoint, ShaderFunctionType type, out string path) {
+            string stage = type == ShaderFunctionType.VertexEntryPoint ? "vert"
+                : type == ShaderFunctionType.FragmentEntryPoint ? "frag"
+                : "comp";
+            string outputPath = shaderPath + ".spv";
+            string args = $"-V -S {stage} {shaderPath} -o {outputPath}";
+            try
+            {
+
+                ProcessStartInfo psi = new ProcessStartInfo("glslangValidator", args);
+                psi.RedirectStandardError = true;
+                psi.RedirectStandardOutput = true;
+                Process p = Process.Start(psi);
+                p.WaitForExit();
+
+                if (p.ExitCode == 0)
+                {
+                    path = outputPath;
+                    return true;
+                }
+                else
+                {
+                    throw new ShaderGenerationException(p.StandardOutput.ReadToEnd());
+                }
+            }
+            catch (Win32Exception)
+            {
+                Console.WriteLine("Unable to launch glslangValidator tool.");
+            }
+
+            path = null;
+            return false;
+        }
+
         public Glsl450Backend(Compilation compilation) : base(compilation)
         {
         }

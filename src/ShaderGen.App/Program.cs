@@ -7,8 +7,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.ComponentModel;
-using System.Runtime.InteropServices;
 using System.Reflection;
 using ShaderGen.Glsl;
 using ShaderGen.Hlsl;
@@ -18,14 +16,6 @@ namespace ShaderGen.App
 {
     internal static class Program
     {
-        private static string _fxcPath;
-        private static bool? _fxcAvailable;
-        private static bool? _glslangValidatorAvailable;
-        private static bool? s_metalToolsAvailable;
-
-        const string metalPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metal";
-        const string metallibPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metallib";
-
         public static int Main(string[] args) {
             try {
                 var arguments = new CommandLineArguments(args);
@@ -217,193 +207,11 @@ namespace ShaderGen.App
 
         private static bool CompileCode(ILanguageBackend lang, string shaderPath, string entryPoint, ShaderFunctionType type, out string path)
         {
-            var langType = lang.GetType();
-            if (langType == typeof(HlslBackend) && IsFxcAvailable())
-            {
-                return CompileHlsl(shaderPath, entryPoint, type, out path);
+            if (lang.CompilationToolsAreAvailable()) {
+                return lang.CompileCode(shaderPath, entryPoint, type, out path);
             }
-            else if (langType == typeof(Glsl450Backend) && IsGlslangValidatorAvailable())
-            {
-                return CompileSpirv(shaderPath, entryPoint, type, out path);
-            }
-            else if (langType == typeof(MetalBackend) && AreMetalToolsAvailable())
-            {
-                return CompileMetal(shaderPath, out path);
-            }
-            else
-            {
-                path = null;
-                return false;
-            }
-        }
-
-        private static bool CompileHlsl(string shaderPath, string entryPoint, ShaderFunctionType type, out string path)
-        {
-            try
-            {
-                string profile = type == ShaderFunctionType.VertexEntryPoint ? "vs_5_0"
-                    : type == ShaderFunctionType.FragmentEntryPoint ? "ps_5_0"
-                    : "cs_5_0";
-                string outputPath = shaderPath + ".bytes";
-                string args = $"/T {profile} /E {entryPoint} {shaderPath} /Fo {outputPath}";
-                string fxcPath = FindFxcExe();
-                ProcessStartInfo psi = new ProcessStartInfo(fxcPath, args);
-                psi.RedirectStandardOutput = true;
-                psi.RedirectStandardError = true;
-                Process p = new Process() { StartInfo = psi };
-                p.Start();
-                var stdOut = p.StandardOutput.ReadToEndAsync();
-                var stdErr = p.StandardError.ReadToEndAsync();
-                bool exited = p.WaitForExit(2000);
-
-                if (exited && p.ExitCode == 0)
-                {
-                    path = outputPath;
-                    return true;
-                }
-                else
-                {
-                    string message = $"StdOut: {stdOut.Result}, StdErr: {stdErr.Result}";
-                    Console.WriteLine($"Failed to compile HLSL: {message}.");
-                }
-            }
-            catch (Win32Exception)
-            {
-                Console.WriteLine("Unable to launch fxc tool.");
-            }
-
             path = null;
             return false;
-        }
-
-        private static bool CompileSpirv(string shaderPath, string entryPoint, ShaderFunctionType type, out string path)
-        {
-            string stage = type == ShaderFunctionType.VertexEntryPoint ? "vert"
-                : type == ShaderFunctionType.FragmentEntryPoint ? "frag"
-                : "comp";
-            string outputPath = shaderPath + ".spv";
-            string args = $"-V -S {stage} {shaderPath} -o {outputPath}";
-            try
-            {
-
-                ProcessStartInfo psi = new ProcessStartInfo("glslangValidator", args);
-                psi.RedirectStandardError = true;
-                psi.RedirectStandardOutput = true;
-                Process p = Process.Start(psi);
-                p.WaitForExit();
-
-                if (p.ExitCode == 0)
-                {
-                    path = outputPath;
-                    return true;
-                }
-                else
-                {
-                    throw new ShaderGenerationException(p.StandardOutput.ReadToEnd());
-                }
-            }
-            catch (Win32Exception)
-            {
-                Console.WriteLine("Unable to launch glslangValidator tool.");
-            }
-
-            path = null;
-            return false;
-        }
-
-        private static bool CompileMetal(string shaderPath, out string path)
-        {
-            string shaderPathWithoutExtension = Path.ChangeExtension(shaderPath, null);
-            string outputPath = shaderPathWithoutExtension + ".metallib";
-            string bitcodePath = Path.GetTempFileName();
-            string metalArgs = $"-x metal -o {bitcodePath} {shaderPath}";
-            try
-            {
-                ProcessStartInfo metalPSI = new ProcessStartInfo(metalPath, metalArgs);
-                metalPSI.RedirectStandardError = true;
-                metalPSI.RedirectStandardOutput = true;
-                Process metalProcess = Process.Start(metalPSI);
-                metalProcess.WaitForExit();
-
-                if (metalProcess.ExitCode != 0)
-                {
-                    throw new ShaderGenerationException(metalProcess.StandardError.ReadToEnd());
-                }
-
-                string metallibArgs = $"-o {outputPath} {bitcodePath}";
-                ProcessStartInfo metallibPSI = new ProcessStartInfo(metallibPath, metallibArgs);
-                metallibPSI.RedirectStandardError = true;
-                metallibPSI.RedirectStandardOutput = true;
-                Process metallibProcess = Process.Start(metallibPSI);
-                metallibProcess.WaitForExit();
-
-                if (metallibProcess.ExitCode != 0)
-                {
-                    throw new ShaderGenerationException(metallibProcess.StandardError.ReadToEnd());
-                }
-
-                path = outputPath;
-                return true;
-            }
-            finally
-            {
-                File.Delete(bitcodePath);
-            }
-        }
-
-        public static bool IsFxcAvailable()
-        {
-            if (!_fxcAvailable.HasValue)
-            {
-                _fxcPath = FindFxcExe();
-                _fxcAvailable = _fxcPath != null;
-            }
-
-            return _fxcAvailable.Value;
-        }
-
-        public static bool IsGlslangValidatorAvailable()
-        {
-            if (!_glslangValidatorAvailable.HasValue)
-            {
-                try
-                {
-                    ProcessStartInfo psi = new ProcessStartInfo("glslangValidator");
-                    psi.RedirectStandardOutput = true;
-                    psi.RedirectStandardError = true;
-                    Process.Start(psi);
-                    _glslangValidatorAvailable = true;
-                }
-                catch { _glslangValidatorAvailable = false; }
-            }
-
-            return _glslangValidatorAvailable.Value;
-        }
-
-        public static bool AreMetalToolsAvailable()
-        {
-            if (!s_metalToolsAvailable.HasValue)
-            {
-                s_metalToolsAvailable = File.Exists(metalPath) && File.Exists(metallibPath);
-            }
-
-            return s_metalToolsAvailable.Value;
-        }
-
-        private static string FindFxcExe()
-        {
-            const string WindowsKitsFolder = @"C:\Program Files (x86)\Windows Kits";
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Directory.Exists(WindowsKitsFolder))
-            {
-                IEnumerable<string> paths = Directory.EnumerateFiles(
-                    WindowsKitsFolder,
-                    "fxc.exe",
-                    SearchOption.AllDirectories);
-                string path = paths.FirstOrDefault(s => !s.Contains("arm"));
-                return path;
-            }
-
-            return null;
         }
     }
 }

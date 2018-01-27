@@ -1,5 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.CodeAnalysis;
 
@@ -11,6 +16,73 @@ namespace ShaderGen.Hlsl
         
         public HlslBackend(Compilation compilation) : base(compilation)
         {
+        }
+        
+        public override bool CompileCode(string shaderPath, string entryPoint, ShaderFunctionType type, out string path)
+        {
+            try
+            {
+                string profile = type == ShaderFunctionType.VertexEntryPoint ? "vs_5_0"
+                    : type == ShaderFunctionType.FragmentEntryPoint ? "ps_5_0"
+                    : "cs_5_0";
+                string outputPath = shaderPath + ".bytes";
+                string args = $"/T {profile} /E {entryPoint} {shaderPath} /Fo {outputPath}";
+                string fxcPath = FindFxcExe();
+                ProcessStartInfo psi = new ProcessStartInfo(fxcPath, args);
+                psi.RedirectStandardOutput = true;
+                psi.RedirectStandardError = true;
+                Process p = new Process() { StartInfo = psi };
+                p.Start();
+                var stdOut = p.StandardOutput.ReadToEndAsync();
+                var stdErr = p.StandardError.ReadToEndAsync();
+                bool exited = p.WaitForExit(2000);
+
+                if (exited && p.ExitCode == 0)
+                {
+                    path = outputPath;
+                    return true;
+                }
+                else
+                {
+                    string message = $"StdOut: {stdOut.Result}, StdErr: {stdErr.Result}";
+                    Console.WriteLine($"Failed to compile HLSL: {message}.");
+                }
+            }
+            catch (Win32Exception)
+            {
+                Console.WriteLine("Unable to launch fxc tool.");
+            }
+
+            path = null;
+            return false;
+        }
+        
+        private static string FindFxcExe()
+        {
+            const string WindowsKitsFolder = @"C:\Program Files (x86)\Windows Kits";
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Directory.Exists(WindowsKitsFolder))
+            {
+                IEnumerable<string> paths = Directory.EnumerateFiles(
+                    WindowsKitsFolder,
+                    "fxc.exe",
+                    SearchOption.AllDirectories);
+                string path = paths.FirstOrDefault(s => !s.Contains("arm"));
+                return path;
+            }
+
+            return null;
+        }
+        
+        private static bool? _fxcAvailable;
+        private static string _fxcPath;
+
+        public override bool CompilationToolsAreAvailable()
+        {
+            if (_fxcAvailable.HasValue) return _fxcAvailable.Value;
+            
+            _fxcPath = FindFxcExe();
+            _fxcAvailable = _fxcPath != null;
+            return _fxcAvailable.Value;
         }
 
         protected override string CSharpToShaderTypeCore(string fullType)
