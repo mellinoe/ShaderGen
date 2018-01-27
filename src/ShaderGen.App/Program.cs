@@ -437,28 +437,6 @@ namespace ShaderGen.App
             return s_metalToolsAvailable.Value;
         }
 
-        private static string BackendExtension(LanguageBackend lang)
-        {
-            if (lang.GetType() == typeof(HlslBackend))
-            {
-                return "hlsl";
-            }
-            else if (lang.GetType() == typeof(Glsl330Backend))
-            {
-                return "330.glsl";
-            }
-            else if (lang.GetType() == typeof(Glsl450Backend))
-            {
-                return "450.glsl";
-            }
-            else if (lang.GetType() == typeof(MetalBackend))
-            {
-                return "metal";
-            }
-
-            throw new InvalidOperationException("Invalid backend type: " + lang.GetType().Name);
-        }
-
         private static string FindFxcExe()
         {
             const string WindowsKitsFolder = @"C:\Program Files (x86)\Windows Kits";
