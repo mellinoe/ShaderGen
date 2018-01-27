@@ -140,11 +140,13 @@ namespace ShaderGen.Glsl
                     ? GetRequiredStructureType(setName, entryFunction.ReturnType)
                     : null;
 
+            string fragCoordName = null;
+            
             if (inputType != null)
             {
                 // Declare "in" variables
                 int inVarIndex = 0;
-                string fragCoordName = null;
+                fragCoordName = null;
                 foreach (FieldDefinition field in inputType.Fields)
                 {
                     if (entryFunction.Type == ShaderFunctionType.FragmentEntryPoint
@@ -205,6 +207,8 @@ namespace ShaderGen.Glsl
                     int colorTargetIndex = 0;
                     foreach (FieldDefinition field in outputType.Fields)
                     {
+                        Debug.Assert(field.SemanticType == SemanticType.ColorTarget);
+                        Debug.Assert(field.Type.Name == "System.Numerics.Vector4");
                         int index = colorTargetIndex++;
                         sb.AppendLine($"    layout(location = {index}) out vec4 _outputColor_{index};");
                     }
@@ -233,6 +237,7 @@ namespace ShaderGen.Glsl
                     {
                         if (field.SemanticType == SemanticType.SystemPosition && !foundSystemPosition)
                         {
+                            Debug.Assert(field.Name == fragCoordName);
                             foundSystemPosition = true;
                             sb.AppendLine($"    {CorrectIdentifier("input")}.{CorrectIdentifier(field.Name)} = gl_FragCoord;");
                         }
@@ -295,6 +300,7 @@ namespace ShaderGen.Glsl
                     int colorTargetIndex = 0;
                     foreach (FieldDefinition field in outputType.Fields)
                     {
+                        Debug.Assert(field.SemanticType == SemanticType.ColorTarget);
                         sb.AppendLine($"    _outputColor_{colorTargetIndex++} = {CorrectIdentifier("output")}.{CorrectIdentifier(field.Name)};");
                     }
                 }

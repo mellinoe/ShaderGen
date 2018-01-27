@@ -206,6 +206,7 @@ namespace ShaderGen.Hlsl
 
         protected override MethodProcessResult GenerateFullTextCore(string setName, ShaderFunction function)
         {
+            Debug.Assert(function.IsEntryPoint);
             StringBuilder sb = new StringBuilder();
             HashSet<ResourceDefinition> resourcesUsed = new HashSet<ResourceDefinition>();
 

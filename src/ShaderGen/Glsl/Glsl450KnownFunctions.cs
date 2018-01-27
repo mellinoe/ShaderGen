@@ -310,6 +310,7 @@ namespace ShaderGen.Glsl
 
         private static string VectorStaticAccessor(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
+            Debug.Assert(parameters.Length == 0);
             GetVectorTypeInfo(typeName, out string shaderType, out int elementCount);
             if (methodName == "Zero")
             {

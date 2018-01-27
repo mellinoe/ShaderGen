@@ -81,7 +81,6 @@ namespace ShaderGen
                 }
 
                 sb.Insert(0, s.OriginalDefinition.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat));
-                //sb.Insert(0, s.MetadataName);
                 s = s.ContainingSymbol;
             }
 

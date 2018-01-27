@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace ShaderGen
 {
@@ -178,10 +179,11 @@ namespace ShaderGen
                     if (ims.IsExtensionMethod)
                     {
                         string identifier = Visit(maes.Expression);
+                        Debug.Assert(identifier != null);
+                        
                         string identifierType = Utilities.GetFullTypeName(GetModel(maes.Expression), maes.Expression);
                         // Might need FullTypeName here too.
-                        pis.Add(new InvocationParameterInfo()
-                        {
+                        pis.Add(new InvocationParameterInfo {
                             Identifier = identifier,
                             FullTypeName = identifierType,
                         });
@@ -198,6 +200,7 @@ namespace ShaderGen
                         {
                             identifier = Visit(identNameSyntax);
                         }
+                        Debug.Assert(identifier != null);
 
                         pis.Add(new InvocationParameterInfo
                         {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
+using System.Diagnostics;
 using Microsoft.CodeAnalysis;
 using System.Linq;
 
@@ -18,6 +19,7 @@ namespace ShaderGen
             Compilation = compilation;
             _rootNode = new CallGraphNode() { Name = rootMethod };
             bool foundDecl = GetDeclaration(rootMethod, out _rootNode.Declaration);
+            Debug.Assert(foundDecl);
             _nodesByName.Add(rootMethod, _rootNode);
         }
 
