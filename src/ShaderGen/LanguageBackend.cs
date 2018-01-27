@@ -91,7 +91,6 @@ namespace ShaderGen
                     }
                     else
                     {
-                        Debug.Assert(sf.Function.Type == ShaderFunctionType.ComputeEntryPoint);
                         computeResources = processedFunction.ResourcesUsed.ToArray();
                     }
                 }

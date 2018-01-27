@@ -281,7 +281,7 @@ namespace ShaderGen
             if (symbol.Kind == SymbolKind.Field && containingTypeName == _containingTypeName)
             {
                 string symbolName = symbol.Name;
-                ResourceDefinition referencedResource = _backend.GetContext(_setName).Resources.Single(rd => rd.Name == symbolName);
+                ResourceDefinition referencedResource = Backend.GetContext(SetName).Resources.Single(rd => rd.Name == symbolName);
                 _resourcesUsed.Add(referencedResource);
                 return Backend.CorrectFieldAccess(symbolInfo);
             }

@@ -15,6 +15,8 @@ namespace ShaderGen
         {
         }
 
+        public override string GeneratedFileExtension => "metal";
+
         private string CSharpToShaderTypeCore(string fullType, bool packed)
         {
             string mapped = packed
