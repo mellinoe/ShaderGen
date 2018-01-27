@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace ShaderGen
+namespace ShaderGen.Metal
 {
     public static class MetalKnownIdentifiers
     {

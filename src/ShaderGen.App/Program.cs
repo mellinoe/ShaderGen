@@ -13,6 +13,7 @@ using System.Runtime.InteropServices;
 using System.Reflection;
 using ShaderGen.Glsl;
 using ShaderGen.Hlsl;
+using ShaderGen.Metal;
 
 namespace ShaderGen.App
 {
