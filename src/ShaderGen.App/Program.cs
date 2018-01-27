@@ -3,7 +3,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -27,92 +26,51 @@ namespace ShaderGen.App
         const string metalPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metal";
         const string metallibPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metallib";
 
-        public static int Main(string[] args)
+        public static int Main(string[] args) {
+            try {
+                var arguments = new CommandLineArguments(args);
+                CompileFiles(arguments);
+            }
+            catch (Exception ex) {
+                Console.Error.WriteLine(ex.Message);
+                return -1;
+            }
+            return 0;
+        }
+        
+        public static void CompileFiles(CommandLineArguments arguments)
         {
-            string referenceItemsResponsePath = null;
-            string compileItemsResponsePath = null;
-            string outputPath = null;
-            string genListFilePath = null;
-            bool listAllFiles = false;
-            string processorPath = null;
-            string processorArgs = null;
+            AssertThatArgumentsAreValid(arguments);
 
-            for (var i = 0; i < args.Length; i++)
-            {
-                args[i] = args[i].Replace("\\\\", "\\");
-            }
+            var referenceItems = File.ReadAllLines(arguments.ReferenceItemsResponsePath);
+            var compileItems = File.ReadAllLines(arguments.CompileItemsResponsePath);
 
-            ArgumentSyntax.Parse(args, syntax =>
-            {
-                syntax.DefineOption("ref", ref referenceItemsResponsePath, true, "The semicolon-separated list of references to compile against.");
-                syntax.DefineOption("src", ref compileItemsResponsePath, true, "The semicolon-separated list of source files to compile.");
-                syntax.DefineOption("out", ref outputPath, true, "The output path for the generated shaders.");
-                syntax.DefineOption("genlist", ref genListFilePath, true, "The output file to store the list of generated files.");
-                syntax.DefineOption("listall", ref listAllFiles, false, "Forces all generated files to be listed in the list file. By default, only bytecode files will be listed and not the original shader code.");
-                syntax.DefineOption("processor", ref processorPath, false, "The path of an assembly containing IShaderSetProcessor types to be used to post-process GeneratedShaderSet objects.");
-                syntax.DefineOption("processorargs", ref processorArgs, false, "Custom information passed to IShaderSetProcessor.");
-            });
-
-            referenceItemsResponsePath = NormalizePath(referenceItemsResponsePath);
-            compileItemsResponsePath = NormalizePath(compileItemsResponsePath);
-            outputPath = NormalizePath(outputPath);
-            genListFilePath = NormalizePath(genListFilePath);
-            processorPath = NormalizePath(processorPath);
-
-            if (!File.Exists(referenceItemsResponsePath))
-            {
-                Console.Error.WriteLine("Reference items response file does not exist: " + referenceItemsResponsePath);
-                return -1;
-            }
-            if (!File.Exists(compileItemsResponsePath))
-            {
-                Console.Error.WriteLine("Compile items response file does not exist: " + compileItemsResponsePath);
-                return -1;
-            }
-            if (!Directory.Exists(outputPath))
-            {
-                try
-                {
-                    Directory.CreateDirectory(outputPath);
-                }
-                catch
-                {
-                    Console.Error.WriteLine($"Unable to create the output directory \"{outputPath}\".");
-                    return -1;
-                }
-            }
-
-            string[] referenceItems = File.ReadAllLines(referenceItemsResponsePath);
-            string[] compileItems = File.ReadAllLines(compileItemsResponsePath);
-
-            List<MetadataReference> references = new List<MetadataReference>();
-            foreach (string referencePath in referenceItems)
+            var references = new List<MetadataReference>();
+            foreach (var referencePath in referenceItems)
             {
                 if (!File.Exists(referencePath))
                 {
-                    Console.Error.WriteLine("Error: reference does not exist: " + referencePath);
-                    return 1;
+                    throw new FileNotFoundException("Error: reference does not exist: " + referencePath);
                 }
 
-                using (FileStream fs = File.OpenRead(referencePath))
+                using (var fs = File.OpenRead(referencePath))
                 {
                     references.Add(MetadataReference.CreateFromStream(fs, filePath: referencePath));
                 }
             }
 
-            List<SyntaxTree> syntaxTrees = new List<SyntaxTree>();
-            foreach (string sourcePath in compileItems)
+            var syntaxTrees = new List<SyntaxTree>();
+            foreach (var sourcePath in compileItems)
             {
-                string fullSourcePath = Path.Combine(Environment.CurrentDirectory, sourcePath);
+                var fullSourcePath = Path.Combine(Environment.CurrentDirectory, sourcePath);
                 if (!File.Exists(fullSourcePath))
                 {
-                    Console.Error.WriteLine("Error: source file does not exist: " + fullSourcePath);
-                    return 1;
+                    throw new FileNotFoundException("Error: source file does not exist: " + fullSourcePath);
                 }
 
-                using (FileStream fs = File.OpenRead(fullSourcePath))
+                using (var fs = File.OpenRead(fullSourcePath))
                 {
-                    SourceText text = SourceText.From(fs);
+                    var text = SourceText.From(fs);
                     syntaxTrees.Add(CSharpSyntaxTree.ParseText(text, path: fullSourcePath));
                 }
             }
@@ -123,121 +81,111 @@ namespace ShaderGen.App
                 references,
                 options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
-            HlslBackend hlsl = new HlslBackend(compilation);
-            Glsl330Backend glsl330 = new Glsl330Backend(compilation);
-            Glsl450Backend glsl450 = new Glsl450Backend(compilation);
-            MetalBackend metal = new MetalBackend(compilation);
             var languages = new ILanguageBackend[]
             {
-                hlsl,
-                glsl330,
-                glsl450,
-                metal,
+                new HlslBackend(compilation),
+                new Glsl330Backend(compilation),
+                new Glsl450Backend(compilation),
+                new MetalBackend(compilation),
             };
 
-            List<IShaderSetProcessor> processors = new List<IShaderSetProcessor>();
-            if (processorPath != null)
+            var processors = new List<IShaderSetProcessor>();
+            if (arguments.ProcessorPath != null)
             {
                 try
                 {
-                    Assembly assm = Assembly.LoadFrom(processorPath);
-                    IEnumerable<Type> processorTypes = assm.GetTypes().Where(
-                        t => t.GetInterface(nameof(ShaderGen) + "." + nameof(IShaderSetProcessor)) != null);
-                    foreach (Type type in processorTypes)
+                    var assm = Assembly.LoadFrom(arguments.ProcessorPath);
+                    var processorTypes = assm.GetTypes().Where(t => t.GetInterface(nameof(ShaderGen) + "." + nameof(IShaderSetProcessor)) != null);
+                    foreach (var type in processorTypes)
                     {
-                        IShaderSetProcessor processor = (IShaderSetProcessor)Activator.CreateInstance(type);
-                        processor.UserArgs = processorArgs;
+                        var processor = (IShaderSetProcessor)Activator.CreateInstance(type);
+                        processor.UserArgs = arguments.ProcessorArgs;
                         processors.Add(processor);
                     }
                 }
                 catch (ReflectionTypeLoadException rtle)
                 {
-                    string msg = string.Join(Environment.NewLine, rtle.LoaderExceptions.Select(e => e.ToString()));
-                    Console.WriteLine("FAIL: " + msg);
+                    var msg = string.Join(Environment.NewLine, rtle.LoaderExceptions.Select(e => e.ToString()));
                     throw new Exception(msg);
                 }
             }
 
-            ShaderGenerator sg = new ShaderGenerator(compilation, languages, processors.ToArray());
+            var sg = new ShaderGenerator(compilation, languages, processors.ToArray());
             ShaderGenerationResult shaderGenResult;
             try
             {
                 shaderGenResult = sg.GenerateShaders();
             }
-            catch (Exception e) when (!Debugger.IsAttached)
+            catch (Exception ex) when (!Debugger.IsAttached)
             {
-                StringBuilder sb = new StringBuilder();
-                sb.AppendLine("An error was encountered while generating shader code:");
-                sb.AppendLine(e.ToString());
-                Console.Error.WriteLine(sb.ToString());
-                return -1;
+                throw new Exception("An error was encountered while generating shader code:" + ex, ex);
             }
 
             Encoding outputEncoding = new UTF8Encoding(false);
-            List<string> generatedFilePaths = new List<string>();
-            foreach (LanguageBackend lang in languages)
+            var generatedFilePaths = new List<string>();
+            foreach (var lang in languages)
             {
-                string extension = lang.GeneratedFileExtension;
-                IReadOnlyList<GeneratedShaderSet> sets = shaderGenResult.GetOutput(lang);
-                foreach (GeneratedShaderSet set in sets)
+                var extension = lang.GeneratedFileExtension;
+                var sets = shaderGenResult.GetOutput(lang);
+                foreach (var set in sets)
                 {
-                    string name = set.Name;
+                    var name = set.Name;
                     if (set.VertexShaderCode != null)
                     {
-                        string vsOutName = name + "-vertex." + extension;
-                        string vsOutPath = Path.Combine(outputPath, vsOutName);
+                        var vsOutName = name + "-vertex." + extension;
+                        var vsOutPath = Path.Combine(arguments.OutputPath, vsOutName);
                         File.WriteAllText(vsOutPath, set.VertexShaderCode, outputEncoding);
-                        bool succeeded = CompileCode(
+                        var succeeded = CompileCode(
                             lang,
                             vsOutPath,
                             set.VertexFunction.Name,
                             ShaderFunctionType.VertexEntryPoint,
-                            out string genPath);
+                            out var genPath);
                         if (succeeded)
                         {
                             generatedFilePaths.Add(genPath);
                         }
-                        if (!succeeded || listAllFiles)
+                        if (!succeeded || arguments.ListAllFiles)
                         {
                             generatedFilePaths.Add(vsOutPath);
                         }
                     }
                     if (set.FragmentShaderCode != null)
                     {
-                        string fsOutName = name + "-fragment." + extension;
-                        string fsOutPath = Path.Combine(outputPath, fsOutName);
+                        var fsOutName = name + "-fragment." + extension;
+                        var fsOutPath = Path.Combine(arguments.OutputPath, fsOutName);
                         File.WriteAllText(fsOutPath, set.FragmentShaderCode, outputEncoding);
-                        bool succeeded = CompileCode(
+                        var succeeded = CompileCode(
                             lang,
                             fsOutPath,
                             set.FragmentFunction.Name,
                             ShaderFunctionType.FragmentEntryPoint,
-                            out string genPath);
+                            out var genPath);
                         if (succeeded)
                         {
                             generatedFilePaths.Add(genPath);
                         }
-                        if (!succeeded || listAllFiles)
+                        if (!succeeded || arguments.ListAllFiles)
                         {
                             generatedFilePaths.Add(fsOutPath);
                         }
                     }
                     if (set.ComputeShaderCode != null)
                     {
-                        string csOutName = name + "-compute." + extension;
-                        string csOutPath = Path.Combine(outputPath, csOutName);
+                        var csOutName = name + "-compute." + extension;
+                        var csOutPath = Path.Combine(arguments.OutputPath, csOutName);
                         File.WriteAllText(csOutPath, set.ComputeShaderCode, outputEncoding);
-                        bool succeeded = CompileCode(
+                        var succeeded = CompileCode(
                             lang,
                             csOutPath,
                             set.ComputeFunction.Name,
                             ShaderFunctionType.ComputeEntryPoint,
-                            out string genPath);
+                            out var genPath);
                         if (succeeded)
                         {
                             generatedFilePaths.Add(genPath);
                         }
-                        if (!succeeded || listAllFiles)
+                        if (!succeeded || arguments.ListAllFiles)
                         {
                             generatedFilePaths.Add(csOutPath);
                         }
@@ -245,26 +193,31 @@ namespace ShaderGen.App
                 }
             }
 
-            File.WriteAllLines(genListFilePath, generatedFilePaths);
-
-            return 0;
+            File.WriteAllLines(arguments.GenListFilePath, generatedFilePaths);
         }
 
-        private static string NormalizePath(string path)
-        {
-            if (path == null)
-            {
-                return null;
+        private static void AssertThatArgumentsAreValid(CommandLineArguments arguments) {
+            if (!File.Exists(arguments.ReferenceItemsResponsePath)) {
+                throw new InvalidArgumentException("Reference items response file does not exist: " + arguments.ReferenceItemsResponsePath);
             }
-            else
-            {
-                return path.Trim();
+
+            if (!File.Exists(arguments.CompileItemsResponsePath)) {
+                throw new InvalidArgumentException("Compile items response file does not exist: " + arguments.CompileItemsResponsePath);
+            }
+
+            if (!Directory.Exists(arguments.OutputPath)) {
+                try {
+                    Directory.CreateDirectory(arguments.OutputPath);
+                }
+                catch {
+                    throw new InvalidArgumentException($"Unable to create the output directory \"{arguments.OutputPath}\".");
+                }
             }
         }
 
-        private static bool CompileCode(LanguageBackend lang, string shaderPath, string entryPoint, ShaderFunctionType type, out string path)
+        private static bool CompileCode(ILanguageBackend lang, string shaderPath, string entryPoint, ShaderFunctionType type, out string path)
         {
-            Type langType = lang.GetType();
+            var langType = lang.GetType();
             if (langType == typeof(HlslBackend) && IsFxcAvailable())
             {
                 return CompileHlsl(shaderPath, entryPoint, type, out path);

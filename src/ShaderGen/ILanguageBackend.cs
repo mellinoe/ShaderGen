@@ -1,5 +1,7 @@
 ﻿namespace ShaderGen {
     public interface ILanguageBackend {
+        string GeneratedFileExtension { get; }
+        
         void InitContext(string setName);
         void AddStructure(string setName, StructureDefinition sd);
         ShaderModel GetShaderModel(string setName);
