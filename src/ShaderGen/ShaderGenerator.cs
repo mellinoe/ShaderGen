@@ -9,14 +9,14 @@ namespace ShaderGen
     {
         private readonly Compilation _compilation;
         private readonly List<ShaderSetInfo> _shaderSets = new List<ShaderSetInfo>();
-        private readonly ILanguageBackend[] _languages;
+        private readonly LanguageBackend[] _languages;
         private readonly IShaderSetProcessor[] _processors;
 
         public ShaderGenerator(
             Compilation compilation,
             string vertexFunctionName,
             string fragmentFunctionName,
-            params ILanguageBackend[] languages)
+            params LanguageBackend[] languages)
             : this(
                 compilation,
                 vertexFunctionName,
@@ -29,7 +29,7 @@ namespace ShaderGen
             Compilation compilation,
             string vertexFunctionName,
             string fragmentFunctionName,
-            ILanguageBackend[] languages,
+            LanguageBackend[] languages,
             IShaderSetProcessor[] processors)
         {
             if (compilation == null)
@@ -100,13 +100,13 @@ namespace ShaderGen
 
         public ShaderGenerator(
             Compilation compilation,
-            ILanguageBackend[] languages)
+            LanguageBackend[] languages)
             : this(compilation, languages, Array.Empty<IShaderSetProcessor>())
         { }
 
         public ShaderGenerator(
             Compilation compilation,
-            ILanguageBackend[] languages,
+            LanguageBackend[] languages,
             IShaderSetProcessor[] processors)
         {
             if (compilation == null)

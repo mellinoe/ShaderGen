@@ -217,7 +217,7 @@ namespace ShaderGen.Glsl
 
             sb.AppendLine();
 
-            sb.AppendLine($"void main()");
+            sb.AppendLine("void main()");
             sb.AppendLine("{");
             if (inputType != null)
             {

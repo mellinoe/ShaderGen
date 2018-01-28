@@ -5,10 +5,10 @@ namespace ShaderGen
 {
     public class ShaderGenerationResult
     {
-        private readonly Dictionary<ILanguageBackend, List<GeneratedShaderSet>> _generatedShaders
-            = new Dictionary<ILanguageBackend, List<GeneratedShaderSet>>();
+        private readonly Dictionary<LanguageBackend, List<GeneratedShaderSet>> _generatedShaders
+            = new Dictionary<LanguageBackend, List<GeneratedShaderSet>>();
 
-        public IReadOnlyList<GeneratedShaderSet> GetOutput(ILanguageBackend backend)
+        public IReadOnlyList<GeneratedShaderSet> GetOutput(LanguageBackend backend)
         {
             if (_generatedShaders.Count == 0)
             {
@@ -23,7 +23,7 @@ namespace ShaderGen
             return list;
         }
 
-        internal void AddShaderSet(ILanguageBackend backend, GeneratedShaderSet gss)
+        internal void AddShaderSet(LanguageBackend backend, GeneratedShaderSet gss)
         {
             if (!_generatedShaders.TryGetValue(backend, out var list))
             {

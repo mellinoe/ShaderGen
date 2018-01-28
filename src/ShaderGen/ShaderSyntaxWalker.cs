@@ -10,12 +10,12 @@ namespace ShaderGen
     internal class ShaderSyntaxWalker : CSharpSyntaxWalker
     {
         private readonly Compilation _compilation;
-        private readonly ILanguageBackend[] _backends;
+        private readonly LanguageBackend[] _backends;
         private readonly ShaderSetInfo _shaderSet;
 
         private Dictionary<int, int> _setCounts = new Dictionary<int, int>();
 
-        public ShaderSyntaxWalker(Compilation compilation, ILanguageBackend[] backends, ShaderSetInfo ss)
+        public ShaderSyntaxWalker(Compilation compilation, LanguageBackend[] backends, ShaderSetInfo ss)
             : base(SyntaxWalkerDepth.Token)
         {
             _compilation = compilation;

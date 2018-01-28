@@ -6,12 +6,8 @@ using System.Linq;
 
 namespace ShaderGen
 {
-    public abstract class LanguageBackend : ILanguageBackend
+    public abstract class LanguageBackend
     {
-        public abstract string GeneratedFileExtension { get; }
-        public abstract bool CompilationToolsAreAvailable();
-        public abstract bool CompileCode(string shaderPath, string entryPoint, ShaderFunctionType type, out string path);
-
         protected readonly Compilation Compilation;
 
         internal class BackendContext

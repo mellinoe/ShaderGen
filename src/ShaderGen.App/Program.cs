@@ -14,12 +14,13 @@ using ShaderGen.Metal;
 
 namespace ShaderGen.App
 {
-    internal static class Program
+    internal class Program
     {
         public static int Main(string[] args) {
             try {
                 var arguments = new CommandLineArguments(args);
-                CompileFiles(arguments);
+                var program = new Program(arguments);
+                program.CompileFiles();
             }
             catch (Exception ex) {
                 Console.Error.WriteLine(ex.Message);
@@ -27,13 +28,21 @@ namespace ShaderGen.App
             }
             return 0;
         }
-        
-        public static void CompileFiles(CommandLineArguments arguments)
-        {
-            AssertThatArgumentsAreValid(arguments);
 
-            var referenceItems = File.ReadAllLines(arguments.ReferenceItemsResponsePath);
-            var compileItems = File.ReadAllLines(arguments.CompileItemsResponsePath);
+        private readonly CommandLineArguments _arguments;
+        private readonly Encoding _outputEncoding = new UTF8Encoding(false);
+        private List<string> _generatedFilePaths;
+
+        public Program(CommandLineArguments arguments) {
+            _arguments = arguments;
+        }
+
+        public void CompileFiles()
+        {
+            AssertThatArgumentsAreValid();
+
+            var referenceItems = File.ReadAllLines(_arguments.ReferenceItemsResponsePath);
+            var compileItems = File.ReadAllLines(_arguments.CompileItemsResponsePath);
 
             var references = new List<MetadataReference>();
             foreach (var referencePath in referenceItems)
@@ -71,25 +80,29 @@ namespace ShaderGen.App
                 references,
                 options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
-            var languages = new ILanguageBackend[]
+            var hlsl = new HlslBackend(compilation);
+            var glsl450 = new Glsl450Backend(compilation);
+            var metal = new MetalBackend(compilation);
+            
+            var languages = new LanguageBackend[]
             {
-                new HlslBackend(compilation),
+                hlsl,
                 new Glsl330Backend(compilation),
-                new Glsl450Backend(compilation),
-                new MetalBackend(compilation),
+                glsl450,
+                metal,
             };
 
             var processors = new List<IShaderSetProcessor>();
-            if (arguments.ProcessorPath != null)
+            if (_arguments.ProcessorPath != null)
             {
                 try
                 {
-                    var assm = Assembly.LoadFrom(arguments.ProcessorPath);
+                    var assm = Assembly.LoadFrom(_arguments.ProcessorPath);
                     var processorTypes = assm.GetTypes().Where(t => t.GetInterface(nameof(ShaderGen) + "." + nameof(IShaderSetProcessor)) != null);
                     foreach (var type in processorTypes)
                     {
                         var processor = (IShaderSetProcessor)Activator.CreateInstance(type);
-                        processor.UserArgs = arguments.ProcessorArgs;
+                        processor.UserArgs = _arguments.ProcessorArgs;
                         processors.Add(processor);
                     }
                 }
@@ -111,107 +124,74 @@ namespace ShaderGen.App
                 throw new Exception("An error was encountered while generating shader code:" + ex, ex);
             }
 
-            Encoding outputEncoding = new UTF8Encoding(false);
-            var generatedFilePaths = new List<string>();
-            foreach (var lang in languages)
-            {
-                var extension = lang.GeneratedFileExtension;
-                var sets = shaderGenResult.GetOutput(lang);
+            _generatedFilePaths = new List<string>();
+            var binaryCompilers = new IBinaryCompiler[] {
+                new Glsl450ToSpirVCompiler(glsl450), 
+                new HlslBinaryCompiler(hlsl), 
+                new MetalBinaryCompiler(metal)
+            };
+            foreach (var compiler in binaryCompilers) {
+                var sets = shaderGenResult.GetOutput(compiler.Language);
                 foreach (var set in sets)
                 {
-                    var name = set.Name;
-                    if (set.VertexShaderCode != null)
-                    {
-                        var vsOutName = name + "-vertex." + extension;
-                        var vsOutPath = Path.Combine(arguments.OutputPath, vsOutName);
-                        File.WriteAllText(vsOutPath, set.VertexShaderCode, outputEncoding);
-                        var succeeded = CompileCode(
-                            lang,
-                            vsOutPath,
-                            set.VertexFunction.Name,
-                            ShaderFunctionType.VertexEntryPoint,
-                            out var genPath);
-                        if (succeeded)
-                        {
-                            generatedFilePaths.Add(genPath);
-                        }
-                        if (!succeeded || arguments.ListAllFiles)
-                        {
-                            generatedFilePaths.Add(vsOutPath);
-                        }
-                    }
-                    if (set.FragmentShaderCode != null)
-                    {
-                        var fsOutName = name + "-fragment." + extension;
-                        var fsOutPath = Path.Combine(arguments.OutputPath, fsOutName);
-                        File.WriteAllText(fsOutPath, set.FragmentShaderCode, outputEncoding);
-                        var succeeded = CompileCode(
-                            lang,
-                            fsOutPath,
-                            set.FragmentFunction.Name,
-                            ShaderFunctionType.FragmentEntryPoint,
-                            out var genPath);
-                        if (succeeded)
-                        {
-                            generatedFilePaths.Add(genPath);
-                        }
-                        if (!succeeded || arguments.ListAllFiles)
-                        {
-                            generatedFilePaths.Add(fsOutPath);
-                        }
-                    }
-                    if (set.ComputeShaderCode != null)
-                    {
-                        var csOutName = name + "-compute." + extension;
-                        var csOutPath = Path.Combine(arguments.OutputPath, csOutName);
-                        File.WriteAllText(csOutPath, set.ComputeShaderCode, outputEncoding);
-                        var succeeded = CompileCode(
-                            lang,
-                            csOutPath,
-                            set.ComputeFunction.Name,
-                            ShaderFunctionType.ComputeEntryPoint,
-                            out var genPath);
-                        if (succeeded)
-                        {
-                            generatedFilePaths.Add(genPath);
-                        }
-                        if (!succeeded || arguments.ListAllFiles)
-                        {
-                            generatedFilePaths.Add(csOutPath);
-                        }
-                    }
+                    CompileCodeIntoBinaries(set.Name, set.VertexShaderCode, "vertex", compiler, set.VertexFunction.Name, ShaderFunctionType.VertexEntryPoint);
+                    CompileCodeIntoBinaries(set.Name, set.FragmentShaderCode, "fragment", compiler, set.FragmentFunction.Name, ShaderFunctionType.FragmentEntryPoint);
+                    CompileCodeIntoBinaries(set.Name, set.ComputeShaderCode, "compute", compiler, set.ComputeFunction.Name, ShaderFunctionType.ComputeEntryPoint);
                 }
             }
-
-            File.WriteAllLines(arguments.GenListFilePath, generatedFilePaths);
+            File.WriteAllLines(_arguments.GenListFilePath, _generatedFilePaths);
         }
 
-        private static void AssertThatArgumentsAreValid(CommandLineArguments arguments) {
-            if (!File.Exists(arguments.ReferenceItemsResponsePath)) {
-                throw new InvalidArgumentException("Reference items response file does not exist: " + arguments.ReferenceItemsResponsePath);
-            }
+        private void CompileCodeIntoBinaries(string name, 
+                                             string code, 
+                                             string type, 
+                                             IBinaryCompiler lang, 
+                                             string functionName,
+                                             ShaderFunctionType functionType) {
+            if (code == null) return;
 
-            if (!File.Exists(arguments.CompileItemsResponsePath)) {
-                throw new InvalidArgumentException("Compile items response file does not exist: " + arguments.CompileItemsResponsePath);
-            }
-
-            if (!Directory.Exists(arguments.OutputPath)) {
-                try {
-                    Directory.CreateDirectory(arguments.OutputPath);
-                }
-                catch {
-                    throw new InvalidArgumentException($"Unable to create the output directory \"{arguments.OutputPath}\".");
-                }
+            var extension = lang.GeneratedFileExtension;
+            var outName = $"{name}-{type}.{extension}";
+            var outPath = Path.Combine(_arguments.OutputPath, outName);
+            File.WriteAllText(outPath, code, _outputEncoding);
+            var succeeded = CompileBinaries(
+                lang,
+                outPath,
+                functionName,
+                functionType,
+                out var genPath);
+            
+            if (succeeded || _arguments.ListAllFiles) {
+                _generatedFilePaths.Add(genPath);
             }
         }
 
-        private static bool CompileCode(ILanguageBackend lang, string shaderPath, string entryPoint, ShaderFunctionType type, out string path)
+        private static bool CompileBinaries(IBinaryCompiler lang, string shaderPath, string entryPoint, ShaderFunctionType type, out string path)
         {
             if (lang.CompilationToolsAreAvailable()) {
                 return lang.CompileCode(shaderPath, entryPoint, type, out path);
             }
             path = null;
             return false;
+        }
+
+        private void AssertThatArgumentsAreValid() {
+            if (!File.Exists(_arguments.ReferenceItemsResponsePath)) {
+                throw new InvalidArgumentException("Reference items response file does not exist: " + _arguments.ReferenceItemsResponsePath);
+            }
+
+            if (!File.Exists(_arguments.CompileItemsResponsePath)) {
+                throw new InvalidArgumentException("Compile items response file does not exist: " + _arguments.CompileItemsResponsePath);
+            }
+
+            if (!Directory.Exists(_arguments.OutputPath)) {
+                try {
+                    Directory.CreateDirectory(_arguments.OutputPath);
+                }
+                catch {
+                    throw new InvalidArgumentException($"Unable to create the output directory \"{_arguments.OutputPath}\".");
+                }
+            }
         }
     }
 }

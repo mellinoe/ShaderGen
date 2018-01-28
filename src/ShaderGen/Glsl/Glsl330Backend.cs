@@ -5,15 +5,6 @@ namespace ShaderGen.Glsl
 {
     public class Glsl330Backend : GlslBackendBase
     {
-        public override string GeneratedFileExtension => "330.glsl";
-        public override bool CompilationToolsAreAvailable() {
-            return false;
-        }
-
-        public override bool CompileCode(string shaderPath, string entryPoint, ShaderFunctionType type, out string path) {
-            throw new System.NotImplementedException();
-        }
-
         public Glsl330Backend(Compilation compilation) : base(compilation)
         {
         }
@@ -101,7 +92,7 @@ namespace ShaderGen.Glsl
 
         protected override void EmitGlPositionCorrection(StringBuilder sb)
         {
-            sb.AppendLine($"        gl_Position.z = gl_Position.z * 2.0 - gl_Position.w;");
+            sb.AppendLine("        gl_Position.z = gl_Position.z * 2.0 - gl_Position.w;");
         }
     }
 }
