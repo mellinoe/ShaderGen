@@ -45,7 +45,7 @@ namespace ShaderGen
 
             if (name.Contains("."))
             {
-                name = name.Split(new[] { '.' }).Last();
+                name = name.Split('.').Last();
             }
 
             return Functions.FirstOrDefault(sf => sf.Name == name);
@@ -53,30 +53,28 @@ namespace ShaderGen
 
         public int GetTypeSize(TypeReference tr)
         {
-            if (KnownTypeSizes.TryGetValue(tr.Name, out int ret))
+            if (s_knownTypeSizes.TryGetValue(tr.Name, out int ret))
             {
                 return ret;
             }
-            else
+
+            StructureDefinition sd = GetStructureDefinition(tr);
+            int totalSize = 0;
+            foreach (FieldDefinition fd in sd.Fields)
             {
-                StructureDefinition sd = GetStructureDefinition(tr);
-                int totalSize = 0;
-                foreach (FieldDefinition fd in sd.Fields)
-                {
-                    int fieldTypeSize = GetTypeSize(fd.Type);
-                    totalSize += fieldTypeSize * (Math.Max(1, fd.ArrayElementCount));
-                }
-
-                if (totalSize == 0)
-                {
-                    throw new InvalidOperationException("Unable to determine the size fo type: " + tr.Name);
-                }
-
-                return totalSize;
+                int fieldTypeSize = GetTypeSize(fd.Type);
+                totalSize += fieldTypeSize * (Math.Max(1, fd.ArrayElementCount));
             }
+
+            if (totalSize == 0)
+            {
+                throw new InvalidOperationException("Unable to determine the size fo type: " + tr.Name);
+            }
+
+            return totalSize;
         }
 
-        private static readonly Dictionary<string, int> KnownTypeSizes = new Dictionary<string, int> {
+        private static readonly Dictionary<string, int> s_knownTypeSizes = new Dictionary<string, int> {
             { "System.Single", 4 },
             { "System.Int32", 4 },
             { "System.Numerics.Vector2", 8 },

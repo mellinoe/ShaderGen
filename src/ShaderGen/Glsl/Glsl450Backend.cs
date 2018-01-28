@@ -10,7 +10,7 @@ namespace ShaderGen.Glsl
     {
         public override string GeneratedFileExtension => "450.glsl";
         
-        private static bool? _glslangValidatorAvailable;
+        private bool? _glslangValidatorAvailable;
 
         public override bool CompilationToolsAreAvailable()
         {

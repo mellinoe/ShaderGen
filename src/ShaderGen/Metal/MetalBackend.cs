@@ -17,18 +17,18 @@ namespace ShaderGen.Metal
         public override string GeneratedFileExtension => "metal";
         
         
-        const string metalPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metal";
-        const string metallibPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metallib";
+        private const string MetalPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metal";
+        private const string MetalLibPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metallib";
 
-        private static bool? s_metalToolsAvailable;
+        private bool? _metalToolsAvailable;
 
         public override bool CompilationToolsAreAvailable() {
-            if (!s_metalToolsAvailable.HasValue)
+            if (!_metalToolsAvailable.HasValue)
             {
-                s_metalToolsAvailable = File.Exists(metalPath) && File.Exists(metallibPath);
+                _metalToolsAvailable = File.Exists(MetalPath) && File.Exists(MetalLibPath);
             }
 
-            return s_metalToolsAvailable.Value;
+            return _metalToolsAvailable.Value;
         }
 
         public override bool CompileCode(string shaderPath, string entryPoint, ShaderFunctionType type, out string path) {
@@ -38,7 +38,7 @@ namespace ShaderGen.Metal
             string metalArgs = $"-x metal -o {bitcodePath} {shaderPath}";
             try
             {
-                ProcessStartInfo metalPSI = new ProcessStartInfo(metalPath, metalArgs);
+                ProcessStartInfo metalPSI = new ProcessStartInfo(MetalPath, metalArgs);
                 metalPSI.RedirectStandardError = true;
                 metalPSI.RedirectStandardOutput = true;
                 Process metalProcess = Process.Start(metalPSI);
@@ -50,7 +50,7 @@ namespace ShaderGen.Metal
                 }
 
                 string metallibArgs = $"-o {outputPath} {bitcodePath}";
-                ProcessStartInfo metallibPSI = new ProcessStartInfo(metallibPath, metallibArgs);
+                ProcessStartInfo metallibPSI = new ProcessStartInfo(MetalLibPath, metallibArgs);
                 metallibPSI.RedirectStandardError = true;
                 metallibPSI.RedirectStandardOutput = true;
                 Process metallibProcess = Process.Start(metallibPSI);
@@ -371,14 +371,14 @@ namespace ShaderGen.Metal
 
             string entryFuncArgs = string.Join(
                 ", ",
-                MetalBackend.GetBuiltinParameterList(entryFunction).Select(b => $"{b.Name}"));
+                GetBuiltinParameterList(entryFunction).Select(b => $"{b.Name}"));
 
             if (entryFunction.Parameters.Length > 0)
             {
                 Debug.Assert(entryFunction.Parameters.Length == 1);
                 entryFuncArgs = Utilities.JoinIgnoreNull(
                     ", ",
-                    new string[] { $"{entryFunction.Parameters[0].Name}", entryFuncArgs });
+                    new[] { $"{entryFunction.Parameters[0].Name}", entryFuncArgs });
             }
 
             sb.AppendLine(functionDeclStr);

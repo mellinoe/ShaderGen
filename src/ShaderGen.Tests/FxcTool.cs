@@ -10,7 +10,7 @@ namespace ShaderGen.Tests
 {
     public static class FxcTool
     {
-        private static readonly string SFxcLocation = FindFxcExe();
+        private static readonly string s_fxcLocation = FindFxcExe();
 
         public static void AssertCompilesCode(string code, string profile, string entryPoint)
         {
@@ -23,7 +23,7 @@ namespace ShaderGen.Tests
 
         public static void AssertCompilesFile(string file, string profile, string entryPoint, string output = null)
         {
-            if (SFxcLocation == null)
+            if (s_fxcLocation == null)
             {
                 return;
             }
@@ -39,7 +39,7 @@ namespace ShaderGen.Tests
         public static ToolResult Compile(string file, string profile, string entryPoint, string output = null)
         {
             var psi = new ProcessStartInfo {
-                FileName = SFxcLocation,
+                FileName = s_fxcLocation,
                 Arguments = FormatArgs(file, profile, entryPoint, output),
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,

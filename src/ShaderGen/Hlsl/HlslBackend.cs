@@ -57,7 +57,7 @@ namespace ShaderGen.Hlsl
             return false;
         }
         
-        private static string FindFxcExe()
+        protected virtual string FindFxcExe()
         {
             const string windowsKitsFolder = @"C:\Program Files (x86)\Windows Kits";
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Directory.Exists(windowsKitsFolder))
@@ -72,8 +72,8 @@ namespace ShaderGen.Hlsl
             return null;
         }
         
-        private static bool? _fxcAvailable;
-        private static string _fxcPath;
+        private bool? _fxcAvailable;
+        private string _fxcPath;
 
         public override bool CompilationToolsAreAvailable()
         {

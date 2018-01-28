@@ -12,7 +12,7 @@ namespace ShaderGen
     {
         public static string GetFullTypeName(this SemanticModel model, ExpressionSyntax type)
         {
-            bool _; return GetFullTypeName(model, type, out _);
+            return GetFullTypeName(model, type, out bool _);
         }
 
         public static string GetFullTypeName(this SemanticModel model, ExpressionSyntax type, out bool isArray)
@@ -89,8 +89,7 @@ namespace ShaderGen
 
         private static bool IsRootNamespace(ISymbol symbol)
         {
-            INamespaceSymbol s;
-            return ((s = symbol as INamespaceSymbol) != null) && s.IsGlobalNamespace;
+            return symbol is INamespaceSymbol ns && ns.IsGlobalNamespace;
         }
 
         private static SemanticModel GetSemanticModel(Compilation compilation, SyntaxTree syntaxTree)
@@ -105,10 +104,7 @@ namespace ShaderGen
             {
                 return GetFullName(ns.ContainingNamespace) + "." + currentNamespace;
             }
-            else
-            {
-                return currentNamespace;
-            }
+            return currentNamespace;
         }
 
         public static string GetFullName(INamedTypeSymbol symbol)
@@ -118,10 +114,7 @@ namespace ShaderGen
             {
                 return GetFullName(symbol.ContainingNamespace) + "." + name;
             }
-            else
-            {
-                return name;
-            }
+            return name;
         }
 
         public static string GetFullNamespace(SyntaxNode node)
@@ -130,9 +123,7 @@ namespace ShaderGen
             {
                 return string.Empty; // or whatever you want to do in this scenario
             }
-
-            string namespaceName = namespaceDeclarationSyntax.Name.ToString();
-            return namespaceName;
+            return namespaceDeclarationSyntax.Name.ToString();
         }
 
         public static string GetFullNestedTypePrefix(SyntaxNode node, out bool nested)
@@ -164,19 +155,6 @@ namespace ShaderGen
                     return ns + "." + nestedTypeStr;
                 }
             }
-        }
-
-        private static readonly HashSet<string> BasicNumericTypes = new HashSet<string>()
-        {
-            "System.Numerics.Vector2",
-            "System.Numerics.Vector3",
-            "System.Numerics.Vector4",
-            "System.Numerics.Matrix4x4",
-        };
-
-        public static bool IsBasicNumericType(string fullName)
-        {
-            return BasicNumericTypes.Contains(fullName);
         }
 
         public static AttributeSyntax[] GetMemberAttributes(CSharpSyntaxNode vds, string name)

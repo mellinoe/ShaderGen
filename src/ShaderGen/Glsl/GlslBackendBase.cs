@@ -315,7 +315,7 @@ namespace ShaderGen.Glsl
 
         internal override string CorrectIdentifier(string identifier)
         {
-            if (GlslKeywords.Contains(identifier))
+            if (_glslKeywords.Contains(identifier))
             {
                 return identifier + "_";
             }
@@ -358,7 +358,7 @@ namespace ShaderGen.Glsl
             return $"layout(local_size_x = {groupCounts.X}, local_size_y = {groupCounts.Y}, local_size_z = {groupCounts.Z}) in;";
         }
 
-        private static readonly HashSet<string> GlslKeywords = new HashSet<string>()
+        private readonly HashSet<string> _glslKeywords = new HashSet<string>()
         {
             "input", "output",
         };
