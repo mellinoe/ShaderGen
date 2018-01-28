@@ -1,8 +1,7 @@
 ﻿using System.Text;
 using Microsoft.CodeAnalysis;
-using System.Diagnostics;
 
-namespace ShaderGen
+namespace ShaderGen.Glsl
 {
     public class Glsl330Backend : GlslBackendBase
     {
@@ -85,7 +84,6 @@ namespace ShaderGen
             }
             else
             {
-                Debug.Assert(isVertexStage || isInVar);
                 identifier = $"fsin_{index}";
             }
 
@@ -94,7 +92,7 @@ namespace ShaderGen
 
         protected override void EmitGlPositionCorrection(StringBuilder sb)
         {
-            sb.AppendLine($"        gl_Position.z = gl_Position.z * 2.0 - gl_Position.w;");
+            sb.AppendLine("        gl_Position.z = gl_Position.z * 2.0 - gl_Position.w;");
         }
     }
 }

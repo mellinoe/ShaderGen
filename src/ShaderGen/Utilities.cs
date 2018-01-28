@@ -3,8 +3,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -14,7 +12,7 @@ namespace ShaderGen
     {
         public static string GetFullTypeName(this SemanticModel model, ExpressionSyntax type)
         {
-            bool _; return GetFullTypeName(model, type, out _);
+            return GetFullTypeName(model, type, out bool _);
         }
 
         public static string GetFullTypeName(this SemanticModel model, ExpressionSyntax type, out bool isArray)
@@ -83,7 +81,6 @@ namespace ShaderGen
                 }
 
                 sb.Insert(0, s.OriginalDefinition.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat));
-                //sb.Insert(0, s.MetadataName);
                 s = s.ContainingSymbol;
             }
 
@@ -92,8 +89,7 @@ namespace ShaderGen
 
         private static bool IsRootNamespace(ISymbol symbol)
         {
-            INamespaceSymbol s = null;
-            return ((s = symbol as INamespaceSymbol) != null) && s.IsGlobalNamespace;
+            return symbol is INamespaceSymbol ns && ns.IsGlobalNamespace;
         }
 
         private static SemanticModel GetSemanticModel(Compilation compilation, SyntaxTree syntaxTree)
@@ -103,30 +99,22 @@ namespace ShaderGen
 
         public static string GetFullName(INamespaceSymbol ns)
         {
-            Debug.Assert(ns != null);
             string currentNamespace = ns.Name;
             if (ns.ContainingNamespace != null && !ns.ContainingNamespace.IsGlobalNamespace)
             {
                 return GetFullName(ns.ContainingNamespace) + "." + currentNamespace;
             }
-            else
-            {
-                return currentNamespace;
-            }
+            return currentNamespace;
         }
 
         public static string GetFullName(INamedTypeSymbol symbol)
         {
-            Debug.Assert(symbol != null);
             string name = symbol.Name;
             if (symbol.ContainingNamespace != null && !symbol.ContainingNamespace.IsGlobalNamespace)
             {
                 return GetFullName(symbol.ContainingNamespace) + "." + name;
             }
-            else
-            {
-                return name;
-            }
+            return name;
         }
 
         public static string GetFullNamespace(SyntaxNode node)
@@ -135,9 +123,7 @@ namespace ShaderGen
             {
                 return string.Empty; // or whatever you want to do in this scenario
             }
-
-            string namespaceName = namespaceDeclarationSyntax.Name.ToString();
-            return namespaceName;
+            return namespaceDeclarationSyntax.Name.ToString();
         }
 
         public static string GetFullNestedTypePrefix(SyntaxNode node, out bool nested)
@@ -171,19 +157,6 @@ namespace ShaderGen
             }
         }
 
-        private static readonly HashSet<string> s_basicNumericTypes = new HashSet<string>()
-        {
-            "System.Numerics.Vector2",
-            "System.Numerics.Vector3",
-            "System.Numerics.Vector4",
-            "System.Numerics.Matrix4x4",
-        };
-
-        public static bool IsBasicNumericType(string fullName)
-        {
-            return s_basicNumericTypes.Contains(fullName);
-        }
-
         public static AttributeSyntax[] GetMemberAttributes(CSharpSyntaxNode vds, string name)
         {
             return vds.Parent.Parent.DescendantNodes().OfType<AttributeSyntax>()
@@ -201,7 +174,6 @@ namespace ShaderGen
         /// </summary>
         public static string GetFullName(SymbolInfo symbolInfo)
         {
-            Debug.Assert(symbolInfo.Symbol != null);
             string fullName = symbolInfo.Symbol.Name;
             string ns = GetFullName(symbolInfo.Symbol.ContainingNamespace);
             if (!string.IsNullOrEmpty(ns))

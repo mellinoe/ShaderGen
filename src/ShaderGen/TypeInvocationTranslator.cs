@@ -1,3 +1,5 @@
+using ShaderGen.Hlsl;
+
 namespace ShaderGen
 {
     internal abstract class TypeInvocationTranslator

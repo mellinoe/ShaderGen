@@ -1,8 +1,9 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using ShaderGen.Hlsl;
 
-namespace ShaderGen
+namespace ShaderGen.Metal
 {
     internal class MetalSwizzleTranslator : TypeInvocationTranslator
     {
@@ -36,7 +37,7 @@ namespace ShaderGen
             bool result = MetalKnownTypes.GetUnpackedType(parameters[0].FullTypeName, out string unpackedType);
             Debug.Assert(result);
 
-            return $"{unpackedType}({target}).{swizzle.ToString()}";
+            return $"{unpackedType}({target}).{swizzle}";
         }
     }
 }

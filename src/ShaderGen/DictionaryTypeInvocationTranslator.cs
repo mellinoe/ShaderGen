@@ -1,11 +1,11 @@
 using System.Collections.Generic;
+using ShaderGen.Hlsl;
 
 namespace ShaderGen
 {
     internal class DictionaryTypeInvocationTranslator : TypeInvocationTranslator
     {
-        private readonly Dictionary<string, InvocationTranslator> _translators
-            = new Dictionary<string, InvocationTranslator>();
+        private readonly Dictionary<string, InvocationTranslator> _translators;
 
         public DictionaryTypeInvocationTranslator(Dictionary<string, InvocationTranslator> translators)
         {

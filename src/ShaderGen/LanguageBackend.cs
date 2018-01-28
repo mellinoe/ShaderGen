@@ -2,7 +2,6 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace ShaderGen
@@ -28,8 +27,7 @@ namespace ShaderGen
             Compilation = compilation;
         }
 
-        // Must be called before attempting to retrieve the context.
-        internal void InitContext(string setName)
+        public void InitContext(string setName)
         {
             if (Contexts.ContainsKey(setName))
             {
@@ -49,7 +47,7 @@ namespace ShaderGen
         }
 
 
-        internal ShaderModel GetShaderModel(string setName)
+        public ShaderModel GetShaderModel(string setName)
         {
             BackendContext context = GetContext(setName);
 
@@ -91,7 +89,6 @@ namespace ShaderGen
                     }
                     else
                     {
-                        Debug.Assert(sf.Function.Type == ShaderFunctionType.ComputeEntryPoint);
                         computeResources = processedFunction.ResourcesUsed.ToArray();
                     }
                 }
@@ -154,7 +151,7 @@ namespace ShaderGen
             return CSharpToShaderTypeCore(fullType);
         }
 
-        internal virtual void AddStructure(string setName, StructureDefinition sd)
+        public virtual void AddStructure(string setName, StructureDefinition sd)
         {
             if (sd == null)
             {
@@ -175,7 +172,7 @@ namespace ShaderGen
                 && char.IsDigit(member.Symbol.Name[1]);
         }
 
-        internal virtual void AddResource(string setName, ResourceDefinition rd)
+        public virtual void AddResource(string setName, ResourceDefinition rd)
         {
             if (rd == null)
             {
@@ -185,7 +182,7 @@ namespace ShaderGen
             GetContext(setName).Resources.Add(rd);
         }
 
-        internal virtual void AddFunction(string setName, ShaderFunctionAndBlockSyntax sf)
+        public virtual void AddFunction(string setName, ShaderFunctionAndBlockSyntax sf)
         {
             if (sf == null)
             {
@@ -205,11 +202,6 @@ namespace ShaderGen
 
         internal string FormatInvocation(string setName, string type, string method, InvocationParameterInfo[] parameterInfos)
         {
-            Debug.Assert(setName != null);
-            Debug.Assert(type != null);
-            Debug.Assert(method != null);
-            Debug.Assert(parameterInfos != null);
-
             ShaderFunctionAndBlockSyntax function = GetContext(setName).Functions
                 .SingleOrDefault(sfabs => sfabs.Function.DeclaringType == type && sfabs.Function.Name == method);
             if (function != null)

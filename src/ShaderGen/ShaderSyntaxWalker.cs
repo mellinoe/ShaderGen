@@ -1,6 +1,5 @@
 ﻿using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Text;
 using System.Linq;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,6 @@ namespace ShaderGen
 {
     internal class ShaderSyntaxWalker : CSharpSyntaxWalker
     {
-        private readonly StringBuilder _sb = new StringBuilder();
         private readonly Compilation _compilation;
         private readonly LanguageBackend[] _backends;
         private readonly ShaderSetInfo _shaderSet;
@@ -74,7 +72,7 @@ namespace ShaderGen
                 type,
                 computeGroupCounts);
             ShaderFunctionAndBlockSyntax sfab = new ShaderFunctionAndBlockSyntax(sf, node.Body);
-            foreach (LanguageBackend b in _backends) { b.AddFunction(_shaderSet.Name, sfab); }
+            foreach (var b in _backends) { b.AddFunction(_shaderSet.Name, sfab); }
         }
 
         public override void VisitStructDeclaration(StructDeclarationSyntax node)
@@ -266,7 +264,7 @@ namespace ShaderGen
                 ValidateResourceType(typeInfo);
             }
 
-            foreach (LanguageBackend b in _backends) { b.AddResource(_shaderSet.Name, rd); }
+            foreach (var b in _backends) { b.AddResource(_shaderSet.Name, rd); }
         }
 
         private TypeReference ParseStructuredBufferElementType(VariableDeclaratorSyntax vds)

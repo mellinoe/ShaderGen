@@ -1,5 +1,4 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ShaderGen
 {
@@ -32,7 +31,7 @@ namespace ShaderGen
                     return true;
                 }
 
-                return TryGetParentSyntax<T>(syntaxNode, out result);
+                return TryGetParentSyntax(syntaxNode, out result);
             }
             catch
             {

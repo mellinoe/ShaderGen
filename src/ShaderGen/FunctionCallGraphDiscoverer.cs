@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
+using System.Diagnostics;
 using Microsoft.CodeAnalysis;
 using System.Linq;
-using System.Diagnostics;
 
 namespace ShaderGen
 {
@@ -55,7 +55,6 @@ namespace ShaderGen
 
         private void ExploreCallNode(CallGraphNode node)
         {
-            Debug.Assert(node.Declaration != null);
             MethodWalker walker = new MethodWalker(this);
             walker.Visit(node.Declaration);
             TypeAndMethodName[] childrenNames = walker.GetChildren();

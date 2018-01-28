@@ -38,15 +38,15 @@ namespace ShaderGen.Tests
 
         public static ToolResult Compile(string file, string profile, string entryPoint, string output = null)
         {
-            ProcessStartInfo psi = new ProcessStartInfo()
-            {
+            var psi = new ProcessStartInfo {
                 FileName = s_fxcLocation,
                 Arguments = FormatArgs(file, profile, entryPoint, output),
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
             };
 
-            Process p = Process.Start(psi);
+            var p = Process.Start(psi);
+            Assert.NotNull(p);
             p.WaitForExit(4000);
 
             string stdOut = p.StandardOutput.ReadToEnd();
@@ -69,12 +69,12 @@ namespace ShaderGen.Tests
 
         private static string FindFxcExe()
         {
-            const string WindowsKitsFolder = @"C:\Program Files (x86)\Windows Kits";
+            const string windowsKitsFolder = @"C:\Program Files (x86)\Windows Kits";
             string path = null;
-            if (Directory.Exists(WindowsKitsFolder))
+            if (Directory.Exists(windowsKitsFolder))
             {
                 IEnumerable<string> paths = Directory.EnumerateFiles(
-                    WindowsKitsFolder,
+                    windowsKitsFolder,
                     "fxc.exe",
                     SearchOption.AllDirectories);
                 path = paths.FirstOrDefault(s => !s.Contains("arm"));

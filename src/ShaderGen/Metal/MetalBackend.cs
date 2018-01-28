@@ -1,13 +1,11 @@
-﻿using Microsoft.CodeAnalysis;
-using System;
-using System.Text;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.IO;
 using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using Microsoft.CodeAnalysis;
 
-namespace ShaderGen
+namespace ShaderGen.Metal
 {
     public class MetalBackend : LanguageBackend
     {
@@ -316,14 +314,14 @@ namespace ShaderGen
 
             string entryFuncArgs = string.Join(
                 ", ",
-                MetalBackend.GetBuiltinParameterList(entryFunction).Select(b => $"{b.Name}"));
+                GetBuiltinParameterList(entryFunction).Select(b => $"{b.Name}"));
 
             if (entryFunction.Parameters.Length > 0)
             {
                 Debug.Assert(entryFunction.Parameters.Length == 1);
                 entryFuncArgs = Utilities.JoinIgnoreNull(
                     ", ",
-                    new string[] { $"{entryFunction.Parameters[0].Name}", entryFuncArgs });
+                    new[] { $"{entryFunction.Parameters[0].Name}", entryFuncArgs });
             }
 
             sb.AppendLine(functionDeclStr);

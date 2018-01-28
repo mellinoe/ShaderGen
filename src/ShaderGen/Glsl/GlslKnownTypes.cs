@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace ShaderGen
+namespace ShaderGen.Glsl
 {
     internal static class GlslKnownTypes
     {
@@ -24,7 +24,7 @@ namespace ShaderGen
 
         };
 
-        private static readonly Dictionary<string, string> s_knownTypesGL = new Dictionary<string, string>()
+        private static readonly Dictionary<string, string> s_knownTypesGl = new Dictionary<string, string>()
         {
             { "ShaderGen.Texture2DResource", "sampler2D" },
             { "ShaderGen.TextureCubeResource", "samplerCube" },
@@ -53,7 +53,7 @@ namespace ShaderGen
             }
             else
             {
-                if (s_knownTypesGL.TryGetValue(name, out mapped))
+                if (s_knownTypesGl.TryGetValue(name, out mapped))
                 {
                     return mapped;
                 }

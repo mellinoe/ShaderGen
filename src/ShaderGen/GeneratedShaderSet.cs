@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ShaderGen
+﻿namespace ShaderGen
 {
     /// <summary>
     /// Represents the concrete output of a shader generation for a specific shader set,

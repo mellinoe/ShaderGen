@@ -1,17 +1,17 @@
-﻿using Microsoft.CodeAnalysis;
-using System.Text;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using Microsoft.CodeAnalysis;
 
-namespace ShaderGen
+namespace ShaderGen.Glsl
 {
     public abstract class GlslBackendBase : LanguageBackend
     {
-        protected readonly HashSet<string> _uniformNames = new HashSet<string>();
-        protected readonly HashSet<string> _ssboNames = new HashSet<string>();
+        protected readonly HashSet<string> UniformNames = new HashSet<string>();
+        protected readonly HashSet<string> SsboNames = new HashSet<string>();
 
-        public GlslBackendBase(Compilation compilation) : base(compilation)
+        protected GlslBackendBase(Compilation compilation) : base(compilation)
         {
         }
 
@@ -141,7 +141,7 @@ namespace ShaderGen
                     : null;
 
             string fragCoordName = null;
-
+            
             if (inputType != null)
             {
                 // Declare "in" variables
@@ -181,17 +181,15 @@ namespace ShaderGen
                     {
                         continue;
                     }
-                    else
-                    {
-                        WriteInOutVariable(
-                            sb,
-                            false,
-                            true,
-                            CSharpToShaderType(field.Type.Name),
-                            "out_" + CorrectIdentifier(field.Name),
-                            outVarIndex);
-                        outVarIndex += 1;
-                    }
+
+                    WriteInOutVariable(
+                        sb,
+                        false,
+                        true,
+                        CSharpToShaderType(field.Type.Name),
+                        "out_" + CorrectIdentifier(field.Name),
+                        outVarIndex);
+                    outVarIndex += 1;
                 }
             }
             else
@@ -219,7 +217,7 @@ namespace ShaderGen
 
             sb.AppendLine();
 
-            sb.AppendLine($"void main()");
+            sb.AppendLine("void main()");
             sb.AppendLine("{");
             if (inputType != null)
             {
@@ -317,7 +315,7 @@ namespace ShaderGen
 
         internal override string CorrectIdentifier(string identifier)
         {
-            if (s_glslKeywords.Contains(identifier))
+            if (_glslKeywords.Contains(identifier))
             {
                 return identifier + "_";
             }
@@ -325,16 +323,16 @@ namespace ShaderGen
             return identifier;
         }
 
-        internal override void AddResource(string setName, ResourceDefinition rd)
+        public override void AddResource(string setName, ResourceDefinition rd)
         {
             if (rd.ResourceKind == ShaderResourceKind.Uniform)
             {
-                _uniformNames.Add(rd.Name);
+                UniformNames.Add(rd.Name);
             }
             if (rd.ResourceKind == ShaderResourceKind.StructuredBuffer
                 || rd.ResourceKind == ShaderResourceKind.RWStructuredBuffer)
             {
-                _ssboNames.Add(rd.Name);
+                SsboNames.Add(rd.Name);
             }
 
             base.AddResource(setName, rd);
@@ -345,7 +343,7 @@ namespace ShaderGen
             string originalName = symbolInfo.Symbol.Name;
             string mapped = CSharpToShaderIdentifierName(symbolInfo);
             string identifier = CorrectIdentifier(mapped);
-            if (_uniformNames.Contains(originalName) || _ssboNames.Contains(originalName))
+            if (UniformNames.Contains(originalName) || SsboNames.Contains(originalName))
             {
                 return "field_" + identifier;
             }
@@ -360,7 +358,7 @@ namespace ShaderGen
             return $"layout(local_size_x = {groupCounts.X}, local_size_y = {groupCounts.Y}, local_size_z = {groupCounts.Z}) in;";
         }
 
-        private static readonly HashSet<string> s_glslKeywords = new HashSet<string>()
+        private readonly HashSet<string> _glslKeywords = new HashSet<string>()
         {
             "input", "output",
         };

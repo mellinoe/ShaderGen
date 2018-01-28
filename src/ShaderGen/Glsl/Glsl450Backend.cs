@@ -1,11 +1,10 @@
 ﻿using System.Text;
 using Microsoft.CodeAnalysis;
-using System.Diagnostics;
 
-namespace ShaderGen
+namespace ShaderGen.Glsl
 {
     public class Glsl450Backend : GlslBackendBase
-    {
+    {        
         public Glsl450Backend(Compilation compilation) : base(compilation)
         {
         }
@@ -96,7 +95,6 @@ namespace ShaderGen
             }
             else
             {
-                Debug.Assert(isVertexStage || isInVar);
                 identifier = $"fsin_{index}";
             }
             sb.AppendLine($"layout(location = {index}) {qualifier} {normalizedType} {identifier};");
@@ -108,7 +106,7 @@ namespace ShaderGen
             return Glsl450KnownFunctions.TranslateInvocation(type, method, parameterInfos);
         }
 
-        private string FormatLayoutStr(ResourceDefinition rd, string storageSpec = null)
+        protected virtual string FormatLayoutStr(ResourceDefinition rd, string storageSpec = null)
         {
             string storageSpecPart = storageSpec != null ? $"{storageSpec}, " : string.Empty;
             return $"layout({storageSpecPart}set = {rd.Set}, binding = {rd.Binding})";

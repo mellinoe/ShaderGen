@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Text;
+using ShaderGen.Hlsl;
 
 namespace ShaderGen
 {
@@ -32,7 +33,7 @@ namespace ShaderGen
                 swizzle.Append(char.ToLowerInvariant(c));
             }
 
-            return $"{target}.{swizzle.ToString()}";
+            return $"{target}.{swizzle}";
         }
     }
 }

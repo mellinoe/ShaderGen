@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
 using System.Runtime.InteropServices;
+using ShaderGen.Glsl;
+using ShaderGen.Hlsl;
 
 namespace ShaderGen.Tests
 {
@@ -91,7 +93,7 @@ namespace ShaderGen.Tests
         private static string[] GetReferenceItems()
         {
             string[] lines = File.ReadAllLines(Path.Combine(ProjectBasePath, "References.txt"));
-            return lines.Select(l => l.Trim()).ToArray();;
+            return lines.Select(l => l.Trim()).ToArray();
         }
 
         public static string[] GetPackageDirs()

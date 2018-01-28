@@ -1,10 +1,4 @@
-﻿using System;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace ShaderGen
+﻿namespace ShaderGen
 {
     public class ShaderFunction
     {

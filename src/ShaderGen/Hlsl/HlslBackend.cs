@@ -1,16 +1,13 @@
-﻿using Microsoft.CodeAnalysis;
-using System;
-using System.Text;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using Microsoft.CodeAnalysis;
 
-namespace ShaderGen
+namespace ShaderGen.Hlsl
 {
     public class HlslBackend : LanguageBackend
-    {
+    {  
         public HlslBackend(Compilation compilation) : base(compilation)
         {
         }
@@ -138,7 +135,6 @@ namespace ShaderGen
         protected override MethodProcessResult GenerateFullTextCore(string setName, ShaderFunction function)
         {
             Debug.Assert(function.IsEntryPoint);
-
             StringBuilder sb = new StringBuilder();
             HashSet<ResourceDefinition> resourcesUsed = new HashSet<ResourceDefinition>();
 
@@ -193,12 +189,8 @@ namespace ShaderGen
 
             // Emit all of the resources now, because we've learned which ones are actually used by this function.
             int uniformBinding = 0, textureBinding = 0, samplerBinding = 0, uavBinding = function.ColorOutputCount;
-            int setIndex = 0;
             foreach (ResourceDefinition[] set in resourcesBySet)
             {
-                Debug.Assert(set[0].Set == setIndex);
-                setIndex += 1;
-
                 foreach (ResourceDefinition rd in set)
                 {
                     switch (rd.ResourceKind)
@@ -259,7 +251,7 @@ namespace ShaderGen
             }
 
             // Resources need to be defined before the function that uses them -- so append this after the resources.
-            sb.Append(functionsSB.ToString());
+            sb.Append(functionsSB);
             sb.AppendLine(result.FullText);
 
             return new MethodProcessResult(sb.ToString(), resourcesUsed);

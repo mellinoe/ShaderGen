@@ -1,9 +1,7 @@
-﻿using System;
+﻿using System.Linq;
 using Microsoft.CodeAnalysis;
-using System.Collections.Generic;
-using System.Linq;
 
-namespace ShaderGen
+namespace ShaderGen.Metal
 {
     internal class MetalMethodVisitor : ShaderMethodVisitor
     {
@@ -14,18 +12,18 @@ namespace ShaderGen
 
         protected override string GetFunctionDeclStr()
         {
-            string returnType = _backend.CSharpToShaderType(_shaderFunction.ReturnType.Name);
-            string fullDeclType = _backend.CSharpToShaderType(_shaderFunction.DeclaringType);
-            string funcName = _shaderFunction.IsEntryPoint
-                ? _shaderFunction.Name
-                : fullDeclType + "_" + _shaderFunction.Name;
+            string returnType = Backend.CSharpToShaderType(ShaderFunction.ReturnType.Name);
+            string fullDeclType = Backend.CSharpToShaderType(ShaderFunction.DeclaringType);
+            string funcName = ShaderFunction.IsEntryPoint
+                ? ShaderFunction.Name
+                : fullDeclType + "_" + ShaderFunction.Name;
             string baseParameterList = GetParameterDeclList();
             string builtinParameterList = string.Join(
                 ", ",
-                MetalBackend.GetBuiltinParameterList(_shaderFunction).Select(b => $"{b.Type} {b.Name}"));
+                MetalBackend.GetBuiltinParameterList(ShaderFunction).Select(b => $"{b.Type} {b.Name}"));
             string fullParameterList = string.Join(
                 ", ",
-                new string[]
+                new[]
                 {
                     baseParameterList, builtinParameterList
                 }.Where(s => !string.IsNullOrEmpty(s)));
@@ -36,7 +34,7 @@ namespace ShaderGen
 
         protected override string FormatParameter(ParameterDefinition pd)
         {
-            return $"{_backend.CSharpToShaderType(pd.Type.Name)} {_backend.CorrectIdentifier(pd.Name)}";
+            return $"{Backend.CSharpToShaderType(pd.Type.Name)} {Backend.CorrectIdentifier(pd.Name)}";
         }
     }
 }

@@ -15,7 +15,7 @@ namespace ShaderGen
                 return Array.Empty<GeneratedShaderSet>();
             }
 
-            if (!_generatedShaders.TryGetValue(backend, out List<GeneratedShaderSet> list))
+            if (!_generatedShaders.TryGetValue(backend, out var list))
             {
                 throw new InvalidOperationException($"The backend {backend} was not used to generate shaders for this object.");
             }
@@ -25,7 +25,7 @@ namespace ShaderGen
 
         internal void AddShaderSet(LanguageBackend backend, GeneratedShaderSet gss)
         {
-            if (!_generatedShaders.TryGetValue(backend, out List<GeneratedShaderSet> list))
+            if (!_generatedShaders.TryGetValue(backend, out var list))
             {
                 list = new List<GeneratedShaderSet>();
                 _generatedShaders.Add(backend, list);

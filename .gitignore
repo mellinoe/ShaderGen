@@ -161,6 +161,7 @@ ClientBin/
 node_modules/
 *.metaproj
 *.metaproj.tmp
+.idea/
 
 # RIA/Silverlight projects
 Generated_Code/
