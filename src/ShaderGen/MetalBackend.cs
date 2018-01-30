@@ -3,8 +3,6 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.IO;
 using System.Diagnostics;
 
 namespace ShaderGen

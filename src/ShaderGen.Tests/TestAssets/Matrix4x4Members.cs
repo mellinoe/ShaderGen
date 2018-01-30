@@ -1,6 +1,5 @@
 ﻿using ShaderGen;
 using System.Numerics;
-using static ShaderGen.ShaderBuiltins;
 
 namespace TestShaders
 {

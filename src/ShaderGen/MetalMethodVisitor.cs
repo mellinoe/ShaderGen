@@ -1,6 +1,4 @@
-﻿using System;
-using Microsoft.CodeAnalysis;
-using System.Collections.Generic;
+﻿using Microsoft.CodeAnalysis;
 using System.Linq;
 
 namespace ShaderGen
