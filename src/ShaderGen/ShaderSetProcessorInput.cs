@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ShaderGen
+﻿namespace ShaderGen
 {
     public class ShaderSetProcessorInput
     {
