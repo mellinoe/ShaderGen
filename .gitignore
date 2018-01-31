@@ -26,6 +26,9 @@ msbuild.log
 # Visual Studio 2015
 .vs/
 
+# JetBrains Rider
+.idea/
+
 # Visual Studio 2015 Pre-CTP6
 *.sln.ide
 *.ide/
