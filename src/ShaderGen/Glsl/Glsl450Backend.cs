@@ -1,8 +1,8 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 using Microsoft.CodeAnalysis;
-using System.Diagnostics;
 
-namespace ShaderGen
+namespace ShaderGen.Glsl
 {
     public class Glsl450Backend : GlslBackendBase
     {

@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
-namespace ShaderGen
+namespace ShaderGen.Hlsl
 {
     public static class HlslKnownFunctions
     {

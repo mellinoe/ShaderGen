@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace ShaderGen
+namespace ShaderGen.Glsl
 {
     public static class GlslKnownIdentifiers
     {

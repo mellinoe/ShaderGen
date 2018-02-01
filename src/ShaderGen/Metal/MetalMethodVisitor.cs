@@ -1,7 +1,7 @@
-﻿using Microsoft.CodeAnalysis;
-using System.Linq;
+﻿using System.Linq;
+using Microsoft.CodeAnalysis;
 
-namespace ShaderGen
+namespace ShaderGen.Metal
 {
     internal class MetalMethodVisitor : ShaderMethodVisitor
     {
