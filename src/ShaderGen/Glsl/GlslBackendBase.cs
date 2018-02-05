@@ -1,10 +1,10 @@
-﻿using Microsoft.CodeAnalysis;
-using System.Text;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using Microsoft.CodeAnalysis;
 
-namespace ShaderGen
+namespace ShaderGen.Glsl
 {
     public abstract class GlslBackendBase : LanguageBackend
     {

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ShaderGen.Hlsl;
 
 namespace ShaderGen
 {

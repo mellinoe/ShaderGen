@@ -1,6 +1,9 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.IO;
+using ShaderGen.Glsl;
+using ShaderGen.Hlsl;
+using ShaderGen.Metal;
 using Xunit;
 
 namespace ShaderGen.Tests
