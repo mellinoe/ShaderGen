@@ -18,8 +18,10 @@ namespace ShaderGen.Hlsl
                 { "Mul", SimpleNameTranslator("mul") },
                 { "Saturate", SimpleNameTranslator("saturate") },
                 { "Abs", SimpleNameTranslator("abs") },
+                { "Cos", SimpleNameTranslator("cos") },
                 { "Pow", SimpleNameTranslator("pow") },
                 { "Acos", SimpleNameTranslator("acos") },
+                { "Sin", SimpleNameTranslator("sin") },
                 { "Tan", SimpleNameTranslator("tan") },
                 { "Clamp", SimpleNameTranslator("clamp") },
                 { "Mod", SimpleNameTranslator("fmod") },
@@ -40,6 +42,7 @@ namespace ShaderGen.Hlsl
                 { "Abs", SimpleNameTranslator("abs") },
                 { "Add", BinaryOpTranslator("+") },
                 { "Clamp", SimpleNameTranslator("clamp") },
+                { "Cos", SimpleNameTranslator("cos") },
                 { "Distance", SimpleNameTranslator("distance") },
                 { "DistanceSquared", DistanceSquared },
                 { "Divide", BinaryOpTranslator("/") },
@@ -51,6 +54,7 @@ namespace ShaderGen.Hlsl
                 { "Negate", Negate },
                 { "Normalize", SimpleNameTranslator("normalize") },
                 { "Reflect", SimpleNameTranslator("reflect") },
+                { "Sin", SimpleNameTranslator("sin") },
                 { "SquareRoot", SimpleNameTranslator("sqrt") },
                 { "Subtract", BinaryOpTranslator("-") },
                 { "Length", SimpleNameTranslator("length") },
@@ -69,6 +73,7 @@ namespace ShaderGen.Hlsl
                 { "Abs", SimpleNameTranslator("abs") },
                 { "Add", BinaryOpTranslator("+") },
                 { "Clamp", SimpleNameTranslator("clamp") },
+                { "Cos", SimpleNameTranslator("cos") },
                 { "Cross", SimpleNameTranslator("cross") },
                 { "Distance", SimpleNameTranslator("distance") },
                 { "DistanceSquared", DistanceSquared },
@@ -81,6 +86,7 @@ namespace ShaderGen.Hlsl
                 { "Negate", Negate },
                 { "Normalize", SimpleNameTranslator("normalize") },
                 { "Reflect", SimpleNameTranslator("reflect") },
+                { "Sin", SimpleNameTranslator("sin") },
                 { "SquareRoot", SimpleNameTranslator("sqrt") },
                 { "Subtract", BinaryOpTranslator("-") },
                 { "Length", SimpleNameTranslator("length") },
@@ -100,6 +106,7 @@ namespace ShaderGen.Hlsl
                 { "Abs", SimpleNameTranslator("abs") },
                 { "Add", BinaryOpTranslator("+") },
                 { "Clamp", SimpleNameTranslator("clamp") },
+                { "Cos", SimpleNameTranslator("cos") },
                 { "Distance", SimpleNameTranslator("distance") },
                 { "DistanceSquared", DistanceSquared },
                 { "Divide", BinaryOpTranslator("/") },
@@ -111,6 +118,7 @@ namespace ShaderGen.Hlsl
                 { "Negate", Negate },
                 { "Normalize", SimpleNameTranslator("normalize") },
                 { "Reflect", SimpleNameTranslator("reflect") },
+                { "Sin", SimpleNameTranslator("sin") },
                 { "SquareRoot", SimpleNameTranslator("sqrt") },
                 { "Subtract", BinaryOpTranslator("-") },
                 { "Length", SimpleNameTranslator("length") },
@@ -134,9 +142,11 @@ namespace ShaderGen.Hlsl
 
             Dictionary<string, InvocationTranslator> mathfMappings = new Dictionary<string, InvocationTranslator>()
             {
+                { "Cos", SimpleNameTranslator("cos") },
                 { "Max", SimpleNameTranslator("max") },
                 { "Min", SimpleNameTranslator("min") },
                 { "Pow", SimpleNameTranslator("pow") },
+                { "Sin", SimpleNameTranslator("sin") },
             };
             ret.Add("System.MathF", new DictionaryTypeInvocationTranslator(mathfMappings));
 

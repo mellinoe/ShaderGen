@@ -31,12 +31,17 @@ namespace ShaderGen
         public static Vector3 Acos(Vector3 value) => throw new ShaderBuiltinException();
         public static Vector4 Acos(Vector4 value) => throw new ShaderBuiltinException();
 
-
         // Clamp
         public static float Clamp(float value, float min, float max) => throw new ShaderBuiltinException();
         public static Vector2 Clamp(Vector2 value, Vector2 min, Vector2 max) => throw new ShaderBuiltinException();
         public static Vector3 Clamp(Vector3 value, Vector3 min, Vector3 max) => throw new ShaderBuiltinException();
         public static Vector4 Clamp(Vector4 value, Vector4 min, Vector4 max) => throw new ShaderBuiltinException();
+
+        // Cos
+        public static float Cos(float value) => throw new ShaderBuiltinException();
+        public static Vector2 Cos(Vector2 value) => throw new ShaderBuiltinException();
+        public static Vector3 Cos(Vector3 value) => throw new ShaderBuiltinException();
+        public static Vector4 Cos(Vector4 value) => throw new ShaderBuiltinException();
 
         // Mod
         public static float Mod(float a, float b) => throw new ShaderBuiltinException();
@@ -55,6 +60,12 @@ namespace ShaderGen
         public static Vector2 Saturate(Vector2 value) => throw new ShaderBuiltinException();
         public static Vector3 Saturate(Vector3 value) => throw new ShaderBuiltinException();
         public static Vector4 Saturate(Vector4 value) => throw new ShaderBuiltinException();
+
+        // Sin
+        public static float Sin(float value) => throw new ShaderBuiltinException();
+        public static Vector2 Sin(Vector2 value) => throw new ShaderBuiltinException();
+        public static Vector3 Sin(Vector3 value) => throw new ShaderBuiltinException();
+        public static Vector4 Sin(Vector4 value) => throw new ShaderBuiltinException();
 
         // Tan
         public static float Tan(float value) => throw new ShaderBuiltinException();

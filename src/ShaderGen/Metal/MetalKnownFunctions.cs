@@ -21,6 +21,8 @@ namespace ShaderGen.Metal
                 { "Abs", SimpleNameTranslator("abs") },
                 { "Pow", Pow },
                 { "Acos", SimpleNameTranslator("acos") },
+                { "Cos", SimpleNameTranslator("cos") },
+                { "Sin", SimpleNameTranslator("sin") },
                 { "Tan", SimpleNameTranslator("tan") },
                 { "Clamp", Clamp },
                 { "Mod", SimpleNameTranslator("fmod") },
@@ -41,6 +43,7 @@ namespace ShaderGen.Metal
                 { "Abs", SimpleNameTranslator("abs") },
                 { "Add", BinaryOpTranslator("+") },
                 { "Clamp", SimpleNameTranslator("clamp") },
+                { "Cos", SimpleNameTranslator("cos") },
                 { "Distance", SimpleNameTranslator("distance") },
                 { "DistanceSquared", DistanceSquared },
                 { "Divide", BinaryOpTranslator("/") },
@@ -52,6 +55,7 @@ namespace ShaderGen.Metal
                 { "Negate", Negate },
                 { "Normalize", SimpleNameTranslator("normalize") },
                 { "Reflect", SimpleNameTranslator("reflect") },
+                { "Sin", SimpleNameTranslator("sin") },
                 { "SquareRoot", SimpleNameTranslator("sqrt") },
                 { "Subtract", BinaryOpTranslator("-") },
                 { "Length", SimpleNameTranslator("length") },
@@ -70,6 +74,7 @@ namespace ShaderGen.Metal
                 { "Abs", SimpleNameTranslator("abs") },
                 { "Add", BinaryOpTranslator("+") },
                 { "Clamp", SimpleNameTranslator("clamp") },
+                { "Cos", SimpleNameTranslator("cos") },
                 { "Cross", SimpleNameTranslator("cross") },
                 { "Distance", SimpleNameTranslator("distance") },
                 { "DistanceSquared", DistanceSquared },
@@ -82,6 +87,7 @@ namespace ShaderGen.Metal
                 { "Negate", Negate },
                 { "Normalize", SimpleNameTranslator("normalize") },
                 { "Reflect", SimpleNameTranslator("reflect") },
+                { "Sin", SimpleNameTranslator("sin") },
                 { "SquareRoot", SimpleNameTranslator("sqrt") },
                 { "Subtract", BinaryOpTranslator("-") },
                 { "Length", SimpleNameTranslator("length") },
@@ -101,6 +107,7 @@ namespace ShaderGen.Metal
                 { "Abs", SimpleNameTranslator("abs") },
                 { "Add", BinaryOpTranslator("+") },
                 { "Clamp", SimpleNameTranslator("clamp") },
+                { "Cos", SimpleNameTranslator("cos") },
                 { "Distance", SimpleNameTranslator("distance") },
                 { "DistanceSquared", DistanceSquared },
                 { "Divide", BinaryOpTranslator("/") },
@@ -112,6 +119,7 @@ namespace ShaderGen.Metal
                 { "Negate", Negate },
                 { "Normalize", SimpleNameTranslator("normalize") },
                 { "Reflect", SimpleNameTranslator("reflect") },
+                { "Sin", SimpleNameTranslator("sin") },
                 { "SquareRoot", SimpleNameTranslator("sqrt") },
                 { "Subtract", BinaryOpTranslator("-") },
                 { "Length", SimpleNameTranslator("length") },
@@ -135,9 +143,11 @@ namespace ShaderGen.Metal
 
             Dictionary<string, InvocationTranslator> mathfMappings = new Dictionary<string, InvocationTranslator>()
             {
+                { "Cos", SimpleNameTranslator("cos") },
                 { "Max", SimpleNameTranslator("max") },
                 { "Min", SimpleNameTranslator("min") },
                 { "Pow", Pow },
+                { "Sin", SimpleNameTranslator("sin") },
             };
             ret.Add("System.MathF", new DictionaryTypeInvocationTranslator(mathfMappings));
 
