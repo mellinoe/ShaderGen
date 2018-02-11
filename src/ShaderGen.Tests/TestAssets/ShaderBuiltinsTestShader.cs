@@ -44,6 +44,12 @@ namespace TestShaders
             r3 = Clamp(VH.V3, new Vector3(0, 0, 0), new Vector3(10, 10, 10));
             r4 = Clamp(VH.V4, new Vector4(0, 0, 0, 0), new Vector4(10, 10, 10, 10));
 
+            // Cos
+            r = Cos(f);
+            r2 = Cos(VH.V2);
+            r3 = Cos(VH.V3);
+            r4 = Cos(VH.V4);
+
             // Pow
             r = Pow(f, 10);
             r2 = Pow(VH.V2, new Vector2(10, 12));
@@ -55,6 +61,12 @@ namespace TestShaders
             r2 = Saturate(VH.V2);
             r3 = Saturate(VH.V3);
             r4 = Saturate(VH.V4);
+
+            // Sin
+            r = Sin(f);
+            r2 = Sin(VH.V2);
+            r3 = Sin(VH.V3);
+            r4 = Sin(VH.V4);
 
             // Tan
             r = Tan(f);
