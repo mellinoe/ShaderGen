@@ -372,6 +372,42 @@ namespace ShaderGen
             return sb.ToString();
         }
 
+        public override string VisitSwitchStatement(SwitchStatementSyntax node)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("switch (" + Visit(node.Expression) + ")");
+            sb.AppendLine("{");
+            foreach (SwitchSectionSyntax section in node.Sections)
+            {
+                foreach (SwitchLabelSyntax label in section.Labels)
+                {
+                    sb.AppendLine(Visit(label));
+                }
+
+                foreach (StatementSyntax statement in section.Statements)
+                {
+                    sb.AppendLine(Visit(statement));
+                }
+                sb.AppendLine("break;");
+            }
+            sb.AppendLine("}");
+            return sb.ToString();
+        }
+
+        public override string VisitCaseSwitchLabel(CaseSwitchLabelSyntax node)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("case " + Visit(node.Value) + ":");
+            return sb.ToString();
+        }
+
+        public override string VisitDefaultSwitchLabel(DefaultSwitchLabelSyntax node)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("default:");
+            return sb.ToString();
+        }
+
         public override string VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node)
         {
             return node.OperatorToken.ToFullString() + Visit(node.Operand);
