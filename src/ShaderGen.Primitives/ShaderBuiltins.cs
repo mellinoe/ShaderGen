@@ -43,6 +43,18 @@ namespace ShaderGen
         public static Vector3 Cos(Vector3 value) => throw new ShaderBuiltinException();
         public static Vector4 Cos(Vector4 value) => throw new ShaderBuiltinException();
 
+        // Cos
+        public static float Frac(float value) => throw new ShaderBuiltinException();
+        public static Vector2 Frac(Vector2 value) => throw new ShaderBuiltinException();
+        public static Vector3 Frac(Vector3 value) => throw new ShaderBuiltinException();
+        public static Vector4 Frac(Vector4 value) => throw new ShaderBuiltinException();
+
+        // Clamp
+        public static float Lerp(float x, float y, float s) => throw new ShaderBuiltinException();
+        public static Vector2 Lerp(Vector2 x, Vector2 y, float s) => throw new ShaderBuiltinException();
+        public static Vector3 Lerp(Vector3 x, Vector3 y, float s) => throw new ShaderBuiltinException();
+        public static Vector4 Lerp(Vector4 x, Vector4 y, float s) => throw new ShaderBuiltinException();
+
         // Mod
         public static float Mod(float a, float b) => throw new ShaderBuiltinException();
         public static Vector2 Mod(Vector2 a, Vector2 b) => throw new ShaderBuiltinException();
