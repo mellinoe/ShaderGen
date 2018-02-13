@@ -21,6 +21,8 @@ namespace ShaderGen.Glsl
                 { "Pow", SimpleNameTranslator("pow") },
                 { "Acos", SimpleNameTranslator("acos") },
                 { "Cos", SimpleNameTranslator("cos") },
+                { "Frac", SimpleNameTranslator("fract") },
+                { "Lerp", SimpleNameTranslator("mix") },
                 { "Sin", SimpleNameTranslator("sin") },
                 { "Tan", SimpleNameTranslator("tan") },
                 { "Clamp", SimpleNameTranslator("clamp") },

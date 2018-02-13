@@ -50,6 +50,18 @@ namespace TestShaders
             r3 = Cos(VH.V3);
             r4 = Cos(VH.V4);
 
+            // Frac
+            r = Frac(f);
+            r2 = Frac(VH.V2);
+            r3 = Frac(VH.V3);
+            r4 = Frac(VH.V4);
+
+            // Lerp
+            r = Lerp(f, f, f);
+            r2 = Lerp(VH.V2, VH.V2, f);
+            r3 = Lerp(VH.V3, VH.V3, f);
+            r4 = Lerp(VH.V4, VH.V4, f);
+
             // Pow
             r = Pow(f, 10);
             r2 = Pow(VH.V2, new Vector2(10, 12));
