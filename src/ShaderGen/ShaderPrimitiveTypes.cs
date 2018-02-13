@@ -9,6 +9,7 @@ namespace ShaderGen
             "float",
             "System.Single",
             "int",
+            "System.Boolean",
             "System.UInt32",
             "System.Int32",
             "System.Numerics.Vector2",
