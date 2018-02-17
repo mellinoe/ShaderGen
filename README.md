@@ -1,6 +1,6 @@
 # ShaderGen
 
-A proof-of-concept library which generates shader code from C#. Currently, the project can generate HLSL (D3D11), GLSL-330 (core-GL-compatible) and GLSL-450 (Vulkan-compatible) shader code from a single shader source specified in C#.
+A proof-of-concept library which generates shader code from C#. Currently, the project can generate HLSL (D3D11), GLSL-330 (core-GL-compatible), GLSL-450 (Vulkan-compatible), and Metal shader code from a single shader source specified in C#.
 
 ## Shaders in C#
 
@@ -17,6 +17,8 @@ Writing shader code in C# could have quite a few benefits:
 * C# niceties like inheritance, composition, partial declarations, etc. can be leveraged for easier shader writing (speculative).
 
 ## Example Shader
+
+**NOTE: The examples below are a bit out of date with regards to the current output of the library. This is still a decent approximation of what the output looks like, though.**
 
 Here is an example vertex and fragment shader, written in C# with ShaderGen:
 
