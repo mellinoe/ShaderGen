@@ -272,10 +272,11 @@ namespace ShaderGen.Tests
             Assert.Throws<ShaderGenerationException>(() => sg.GenerateShaders());
         }
 
+        [Fact]
         public void DummyTest()
         {
-            string vsName = "TestShaders.VeldridShaders.VertexAndFragment.VS";
-            string fsName = "TestShaders.VeldridShaders.VertexAndFragment.FS";
+            string vsName = "TestShaders.VertexAndFragment.VS";
+            string fsName = "TestShaders.VertexAndFragment.FS";
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             using (TempFile fp = new TempFile())
             {
