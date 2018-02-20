@@ -271,46 +271,5 @@ namespace ShaderGen.Tests
 
             Assert.Throws<ShaderGenerationException>(() => sg.GenerateShaders());
         }
-
-        [Fact]
-        public void DummyTest()
-        {
-            string vsName = "TestShaders.VertexAndFragment.VS";
-            string fsName = "TestShaders.VertexAndFragment.FS";
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
-            using (TempFile fp = new TempFile())
-            {
-                Microsoft.CodeAnalysis.Emit.EmitResult emitResult = compilation.Emit(fp);
-                Assert.True(emitResult.Success);
-            }
-
-            LanguageBackend backend = new Glsl450Backend(compilation);
-            ShaderGenerator sg = new ShaderGenerator(
-                compilation,
-                vsName,
-                fsName,
-                backend);
-
-            ShaderGenerationResult result = sg.GenerateShaders();
-            IReadOnlyList<GeneratedShaderSet> sets = result.GetOutput(backend);
-            Assert.Equal(1, sets.Count);
-            GeneratedShaderSet set = sets[0];
-            ShaderModel shaderModel = set.Model;
-
-            if (vsName != null)
-            {
-                ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
-                string vsCode = set.VertexShaderCode;
-                File.WriteAllText(@"C:\Users\raver\Documents\forward-vertex.glsl", vsCode);
-                GlsLangValidatorTool.AssertCompilesCode(vsCode, "vert", true);
-            }
-            if (fsName != null)
-            {
-                ShaderFunction fsFunction = shaderModel.GetFunction(fsName);
-                string fsCode = set.FragmentShaderCode;
-                File.WriteAllText(@"C:\Users\raver\Documents\forward-frag.glsl", fsCode);
-                GlsLangValidatorTool.AssertCompilesCode(fsCode, "frag", true);
-            }
-        }
     }
 }
