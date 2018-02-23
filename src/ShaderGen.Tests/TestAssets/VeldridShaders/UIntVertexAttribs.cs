@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace TestShaders.VeldridShaders
 {
-    internal class UIntVertexAttribs
+    public class UIntVertexAttribs
     {
         public struct Vertex
         {

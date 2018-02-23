@@ -28,7 +28,7 @@ namespace ShaderGen.Tests
             Assert.Equal(3, shaderModel.AllResources.Length);
             ShaderFunction vsEntry = shaderModel.GetFunction(functionName);
             Assert.Equal("VS", vsEntry.Name);
-            Assert.Equal(1, vsEntry.Parameters.Length);
+            Assert.Single(vsEntry.Parameters);
             Assert.True(vsEntry.IsEntryPoint);
             Assert.Equal(ShaderFunctionType.VertexEntryPoint, vsEntry.Type);
         }
@@ -96,7 +96,7 @@ namespace ShaderGen.Tests
             GeneratedShaderSet set = sets[0];
             ShaderModel shaderModel = set.Model;
 
-            Assert.Equal(1, shaderModel.AllResources.Length);
+            Assert.Single(shaderModel.AllResources);
             Assert.Equal(144, shaderModel.GetTypeSize(shaderModel.AllResources[0].ValueType));
         }
 

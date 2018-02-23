@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace TestShaders
 {
-    internal class Matrix4x4Members
+    public class Matrix4x4Members
     {
         public Matrix4x4 InputMatrix;
 
