@@ -221,6 +221,13 @@ namespace ShaderGen.Metal
             fcgd.GenerateFullGraph();
             // TODO: Necessary for Metal?
             ShaderFunctionAndBlockSyntax[] orderedFunctionList = fcgd.GetOrderedCallList();
+            foreach (ShaderFunctionAndBlockSyntax sfabs in orderedFunctionList)
+            {
+                if (!setContext.Functions.Contains(sfabs))
+                {
+                    AddFunction(setName, sfabs);
+                }
+            }
 
             StringBuilder functionsSB = new StringBuilder();
             foreach (ShaderFunctionAndBlockSyntax name in orderedFunctionList)
