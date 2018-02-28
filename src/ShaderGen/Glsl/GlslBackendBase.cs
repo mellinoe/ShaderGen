@@ -96,12 +96,11 @@ namespace ShaderGen.Glsl
                 Compilation,
                 new TypeAndMethodName { TypeName = function.DeclaringType, MethodName = function.Name });
             fcgd.GenerateFullGraph();
-            TypeAndMethodName[] orderedFunctionList = fcgd.GetOrderedCallList();
+            ShaderFunctionAndBlockSyntax[] orderedFunctionList = fcgd.GetOrderedCallList();
 
-            foreach (TypeAndMethodName name in orderedFunctionList)
+            foreach (ShaderFunctionAndBlockSyntax name in orderedFunctionList)
             {
-                ShaderFunctionAndBlockSyntax f = context.Functions.Single(
-                    sfabs => sfabs.Function.DeclaringType == name.TypeName && sfabs.Function.Name == name.MethodName);
+                ShaderFunctionAndBlockSyntax f = name;
                 if (!f.Function.IsEntryPoint)
                 {
                     MethodProcessResult processResult = new ShaderMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block);

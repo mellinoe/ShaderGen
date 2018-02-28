@@ -160,24 +160,27 @@ namespace ShaderGen.Hlsl
                 Compilation,
                 new TypeAndMethodName { TypeName = function.DeclaringType, MethodName = function.Name });
             fcgd.GenerateFullGraph();
-            TypeAndMethodName[] orderedFunctionList = fcgd.GetOrderedCallList();
+            ShaderFunctionAndBlockSyntax[] orderedFunctionList = fcgd.GetOrderedCallList();
 
             List<ResourceDefinition[]> resourcesBySet = setContext.Resources.GroupBy(rd => rd.Set)
                 .Select(g => g.ToArray()).ToList();
 
             StringBuilder functionsSB = new StringBuilder();
-            foreach (TypeAndMethodName name in orderedFunctionList)
+            foreach (ShaderFunctionAndBlockSyntax syntax in orderedFunctionList)
             {
-                ShaderFunctionAndBlockSyntax f = setContext.Functions.Single(
-                    sfabs => sfabs.Function.DeclaringType == name.TypeName && sfabs.Function.Name == name.MethodName);
-                if (!f.Function.IsEntryPoint)
+                if (!syntax.Function.IsEntryPoint)
                 {
-                    MethodProcessResult processResult = new HlslMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block);
+                    MethodProcessResult processResult = new HlslMethodVisitor(Compilation, setName, syntax.Function, this).VisitFunction(syntax.Block);
                     foreach (ResourceDefinition rd in processResult.ResourcesUsed)
                     {
                         resourcesUsed.Add(rd);
                     }
                     functionsSB.AppendLine(processResult.FullText);
+
+                    if (!GetContext(setName).Functions.Any(x => x.Block == syntax.Block))
+                    {
+                        GetContext(setName).Functions.Add(syntax);
+                    }
                 }
             }
 

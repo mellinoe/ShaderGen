@@ -23,16 +23,18 @@ namespace ShaderGen
             _nodesByName.Add(rootMethod, _rootNode);
         }
 
-        public TypeAndMethodName[] GetOrderedCallList()
+        public ShaderFunctionAndBlockSyntax[] GetOrderedCallList()
         {
-            HashSet<TypeAndMethodName> result = new HashSet<TypeAndMethodName>();
+            HashSet<ShaderFunctionAndBlockSyntax> result = new HashSet<ShaderFunctionAndBlockSyntax>();
             TraverseNode(result, _rootNode);
             return result.ToArray();
         }
 
-        private void TraverseNode(HashSet<TypeAndMethodName> result, CallGraphNode node)
+        private SemanticModel GetModel(SyntaxNode node) => Compilation.GetSemanticModel(node.SyntaxTree);
+
+        private void TraverseNode(HashSet<ShaderFunctionAndBlockSyntax> result, CallGraphNode node)
         {
-            foreach (TypeAndMethodName existing in result)
+            foreach (ShaderFunctionAndBlockSyntax existing in result)
             {
                 if (node.Parents.Any(cgn => cgn.Name.Equals(existing)))
                 {
@@ -45,7 +47,69 @@ namespace ShaderGen
                 TraverseNode(result, child);
             }
 
-            result.Add(node.Name);
+            List<ParameterDefinition> parameters = new List<ParameterDefinition>();
+            foreach (ParameterSyntax ps in node.Declaration.ParameterList.Parameters)
+            {
+                parameters.Add(ParameterDefinition.GetParameterDefinition(Compilation, ps));
+            }
+
+            TypeReference returnType = new TypeReference(GetModel(node.Declaration).GetFullTypeName(node.Declaration.ReturnType));
+
+            UInt3 computeGroupCounts = new UInt3();
+            bool isFragmentShader = false, isComputeShader = false;
+            bool isVertexShader = Utilities.GetMethodAttributes(node.Declaration, "VertexShader").Any();
+            if (!isVertexShader)
+            {
+                isFragmentShader = Utilities.GetMethodAttributes(node.Declaration, "FragmentShader").Any();
+            }
+            if (!isVertexShader && !isFragmentShader)
+            {
+                AttributeSyntax computeShaderAttr = Utilities.GetMethodAttributes(node.Declaration, "ComputeShader").FirstOrDefault();
+                if (computeShaderAttr != null)
+                {
+                    isComputeShader = true;
+                    computeGroupCounts.X = GetAttributeArgumentUIntValue(computeShaderAttr, 0);
+                    computeGroupCounts.Y = GetAttributeArgumentUIntValue(computeShaderAttr, 1);
+                    computeGroupCounts.Z = GetAttributeArgumentUIntValue(computeShaderAttr, 2);
+                }
+            }
+
+            ShaderFunctionType type = isVertexShader
+                ? ShaderFunctionType.VertexEntryPoint
+                : isFragmentShader
+                    ? ShaderFunctionType.FragmentEntryPoint
+                    : isComputeShader
+                        ? ShaderFunctionType.ComputeEntryPoint
+                        : ShaderFunctionType.Normal;
+
+            ShaderFunction sf = new ShaderFunction(
+                node.Name.TypeName,
+                node.Name.MethodName,
+                returnType,
+                parameters.ToArray(),
+                type,
+                computeGroupCounts);
+            ShaderFunctionAndBlockSyntax sfab = new ShaderFunctionAndBlockSyntax(sf, node.Declaration.Body);
+
+            result.Add(sfab);
+        }
+
+        private static uint GetAttributeArgumentUIntValue(AttributeSyntax attr, int index)
+        {
+            if (attr.ArgumentList.Arguments.Count < index + 1)
+            {
+                throw new ShaderGenerationException(
+                    "Too few arguments in attribute " + attr.ToFullString() + ". Required + " + (index + 1));
+            }
+            string fullArg0 = attr.ArgumentList.Arguments[index].ToFullString();
+            if (uint.TryParse(fullArg0, out uint ret))
+            {
+                return ret;
+            }
+            else
+            {
+                throw new ShaderGenerationException("Incorrectly formatted attribute: " + attr.ToFullString());
+            }
         }
 
         public void GenerateFullGraph()

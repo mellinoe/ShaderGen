@@ -220,13 +220,12 @@ namespace ShaderGen.Metal
                 new TypeAndMethodName { TypeName = function.DeclaringType, MethodName = function.Name });
             fcgd.GenerateFullGraph();
             // TODO: Necessary for Metal?
-            TypeAndMethodName[] orderedFunctionList = fcgd.GetOrderedCallList();
+            ShaderFunctionAndBlockSyntax[] orderedFunctionList = fcgd.GetOrderedCallList();
 
             StringBuilder functionsSB = new StringBuilder();
-            foreach (TypeAndMethodName name in orderedFunctionList)
+            foreach (ShaderFunctionAndBlockSyntax name in orderedFunctionList)
             {
-                ShaderFunctionAndBlockSyntax f = setContext.Functions.Single(
-                    sfabs => sfabs.Function.DeclaringType == name.TypeName && sfabs.Function.Name == name.MethodName);
+                ShaderFunctionAndBlockSyntax f = name;
                 if (!f.Function.IsEntryPoint)
                 {
                     MethodProcessResult processResult = new MetalMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block);
