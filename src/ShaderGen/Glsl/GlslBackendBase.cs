@@ -97,6 +97,13 @@ namespace ShaderGen.Glsl
                 new TypeAndMethodName { TypeName = function.DeclaringType, MethodName = function.Name });
             fcgd.GenerateFullGraph();
             ShaderFunctionAndBlockSyntax[] orderedFunctionList = fcgd.GetOrderedCallList();
+            foreach (ShaderFunctionAndBlockSyntax sfabs in orderedFunctionList)
+            {
+                if (!context.Functions.Contains(sfabs))
+                {
+                    AddFunction(setName, sfabs);
+                }
+            }
 
             foreach (ShaderFunctionAndBlockSyntax name in orderedFunctionList)
             {

@@ -31,5 +31,7 @@
             Type = type;
             ComputeGroupCounts = computeGroupCounts;
         }
+
+        public override string ToString() => $"{DeclaringType}.{Name} [{Type}]";
     }
 }
