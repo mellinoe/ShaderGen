@@ -89,7 +89,7 @@ namespace ShaderGen
                 parameters.ToArray(),
                 type,
                 computeGroupCounts);
-            ShaderFunctionAndBlockSyntax sfab = new ShaderFunctionAndBlockSyntax(sf, node.Declaration.Body);
+            ShaderFunctionAndBlockSyntax sfab = new ShaderFunctionAndBlockSyntax(sf, node.Declaration.Body, new ShaderFunctionAndBlockSyntax[0]);
 
             result.Add(sfab);
         }

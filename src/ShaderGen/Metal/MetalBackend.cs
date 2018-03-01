@@ -215,24 +215,9 @@ namespace ShaderGen.Metal
                 WriteStructure(sb, sd);
             }
 
-            FunctionCallGraphDiscoverer fcgd = new FunctionCallGraphDiscoverer(
-                Compilation,
-                new TypeAndMethodName { TypeName = function.DeclaringType, MethodName = function.Name });
-            fcgd.GenerateFullGraph();
-            // TODO: Necessary for Metal?
-            ShaderFunctionAndBlockSyntax[] orderedFunctionList = fcgd.GetOrderedCallList();
-            foreach (ShaderFunctionAndBlockSyntax sfabs in orderedFunctionList)
-            {
-                if (!setContext.Functions.Contains(sfabs))
-                {
-                    AddFunction(setName, sfabs);
-                }
-            }
-
             StringBuilder functionsSB = new StringBuilder();
-            foreach (ShaderFunctionAndBlockSyntax name in orderedFunctionList)
+            foreach (ShaderFunctionAndBlockSyntax f in entryPoint.OrderedFunctionList)
             {
-                ShaderFunctionAndBlockSyntax f = name;
                 if (!f.Function.IsEntryPoint)
                 {
                     MethodProcessResult processResult = new MetalMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block);

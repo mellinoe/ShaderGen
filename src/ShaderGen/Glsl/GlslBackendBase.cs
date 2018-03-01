@@ -92,22 +92,8 @@ namespace ShaderGen.Glsl
                 }
             }
 
-            FunctionCallGraphDiscoverer fcgd = new FunctionCallGraphDiscoverer(
-                Compilation,
-                new TypeAndMethodName { TypeName = function.DeclaringType, MethodName = function.Name });
-            fcgd.GenerateFullGraph();
-            ShaderFunctionAndBlockSyntax[] orderedFunctionList = fcgd.GetOrderedCallList();
-            foreach (ShaderFunctionAndBlockSyntax sfabs in orderedFunctionList)
+            foreach (ShaderFunctionAndBlockSyntax f in entryPoint.OrderedFunctionList)
             {
-                if (!context.Functions.Contains(sfabs))
-                {
-                    AddFunction(setName, sfabs);
-                }
-            }
-
-            foreach (ShaderFunctionAndBlockSyntax name in orderedFunctionList)
-            {
-                ShaderFunctionAndBlockSyntax f = name;
                 if (!f.Function.IsEntryPoint)
                 {
                     MethodProcessResult processResult = new ShaderMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block);

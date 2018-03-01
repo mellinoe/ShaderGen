@@ -73,8 +73,31 @@ namespace ShaderGen
                 parameters.ToArray(),
                 type,
                 computeGroupCounts);
-            ShaderFunctionAndBlockSyntax sfab = new ShaderFunctionAndBlockSyntax(sf, node.Body);
-            foreach (LanguageBackend b in _backends) { b.AddFunction(_shaderSet.Name, sfab); }
+
+            ShaderFunctionAndBlockSyntax[] orderedFunctionList;
+            if (type != ShaderFunctionType.Normal)
+            {
+                FunctionCallGraphDiscoverer fcgd = new FunctionCallGraphDiscoverer(
+                    _compilation,
+                    new TypeAndMethodName { TypeName = sf.DeclaringType, MethodName = sf.Name });
+                fcgd.GenerateFullGraph();
+                orderedFunctionList = fcgd.GetOrderedCallList();
+            }
+            else
+            {
+                orderedFunctionList = new ShaderFunctionAndBlockSyntax[0];
+            }
+
+            ShaderFunctionAndBlockSyntax sfab = new ShaderFunctionAndBlockSyntax(sf, node.Body, orderedFunctionList);
+            foreach (LanguageBackend b in _backends)
+            {
+                b.AddFunction(_shaderSet.Name, sfab);
+
+                foreach (var calledFunction in orderedFunctionList)
+                {
+                    b.AddFunction(_shaderSet.Name, calledFunction);
+                }
+            }
         }
 
         public override void VisitStructDeclaration(StructDeclarationSyntax node)

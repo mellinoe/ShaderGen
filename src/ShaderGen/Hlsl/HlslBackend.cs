@@ -156,31 +156,20 @@ namespace ShaderGen.Hlsl
                 WriteStructure(sb, sd);
             }
 
-            FunctionCallGraphDiscoverer fcgd = new FunctionCallGraphDiscoverer(
-                Compilation,
-                new TypeAndMethodName { TypeName = function.DeclaringType, MethodName = function.Name });
-            fcgd.GenerateFullGraph();
-            ShaderFunctionAndBlockSyntax[] orderedFunctionList = fcgd.GetOrderedCallList();
-
             List<ResourceDefinition[]> resourcesBySet = setContext.Resources.GroupBy(rd => rd.Set)
                 .Select(g => g.ToArray()).ToList();
 
             StringBuilder functionsSB = new StringBuilder();
-            foreach (ShaderFunctionAndBlockSyntax syntax in orderedFunctionList)
+            foreach (ShaderFunctionAndBlockSyntax f in entryPoint.OrderedFunctionList)
             {
-                if (!syntax.Function.IsEntryPoint)
+                if (!f.Function.IsEntryPoint)
                 {
-                    MethodProcessResult processResult = new HlslMethodVisitor(Compilation, setName, syntax.Function, this).VisitFunction(syntax.Block);
+                    MethodProcessResult processResult = new HlslMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block);
                     foreach (ResourceDefinition rd in processResult.ResourcesUsed)
                     {
                         resourcesUsed.Add(rd);
                     }
                     functionsSB.AppendLine(processResult.FullText);
-
-                    if (!GetContext(setName).Functions.Any(x => x.Block == syntax.Block))
-                    {
-                        GetContext(setName).Functions.Add(syntax);
-                    }
                 }
             }
 
