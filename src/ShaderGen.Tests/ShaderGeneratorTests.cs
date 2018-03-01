@@ -43,6 +43,7 @@ namespace ShaderGen.Tests
             yield return new object[] { "TestShaders.VeldridShaders.UIntVertexAttribs.VS", null };
             yield return new object[] { "TestShaders.SwitchStatements.VS", null };
             yield return new object[] { "TestShaders.VariableTypes.VS", null };
+            yield return new object[] { "TestShaders.OutParameters.VS", null };
         }
 
         public static IEnumerable<object[]> ComputeShaders()

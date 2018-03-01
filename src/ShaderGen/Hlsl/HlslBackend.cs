@@ -291,6 +291,19 @@ namespace ShaderGen.Hlsl
             return $"[numthreads({groupCounts.X}, {groupCounts.Y}, {groupCounts.Z})]";
         }
 
+        internal override string ParameterDirection(ParameterDirection direction)
+        {
+            switch (direction)
+            {
+                case ShaderGen.ParameterDirection.Out:
+                    return "out";
+                case ShaderGen.ParameterDirection.InOut:
+                    return "inout";
+                default:
+                    return "in";
+            }
+        }
+
         private struct HlslSemanticTracker
         {
             public int Position;

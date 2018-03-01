@@ -7,18 +7,43 @@ namespace ShaderGen
     {
         public string Name { get; }
         public TypeReference Type { get; }
+        public ParameterDirection Direction { get; }
 
-        public ParameterDefinition(string name, TypeReference type)
+        public ParameterDefinition(string name, TypeReference type, ParameterDirection direction)
         {
             Name = name;
             Type = type;
+            Direction = direction;
         }
 
         public static ParameterDefinition GetParameterDefinition(Compilation compilation, ParameterSyntax ps)
         {
-            string fullType = compilation.GetSemanticModel(ps.SyntaxTree).GetFullTypeName(ps.Type);
+            SemanticModel semanticModel = compilation.GetSemanticModel(ps.SyntaxTree);
+
+            string fullType = semanticModel.GetFullTypeName(ps.Type);
             string name = ps.Identifier.ToFullString();
-            return new ParameterDefinition(name, new TypeReference(fullType));
+
+            ParameterDirection direction = ParameterDirection.In;
+
+            IParameterSymbol declaredSymbol = (IParameterSymbol) semanticModel.GetDeclaredSymbol(ps);
+            RefKind refKind = declaredSymbol.RefKind;
+            if (refKind == RefKind.Out)
+            {
+                direction = ParameterDirection.Out;
+            }
+            else if (refKind == RefKind.Ref)
+            {
+                direction = ParameterDirection.InOut;
+            }
+
+            return new ParameterDefinition(name, new TypeReference(fullType), direction);
         }
+    }
+
+    public enum ParameterDirection
+    {
+        In,
+        Out,
+        InOut
     }
 }

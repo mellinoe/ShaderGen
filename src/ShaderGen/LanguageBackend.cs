@@ -347,5 +347,7 @@ namespace ShaderGen
 
             return literal;
         }
+
+        internal abstract string ParameterDirection(ParameterDirection direction);
     }
 }

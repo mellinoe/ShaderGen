@@ -463,5 +463,17 @@ namespace ShaderGen.Metal
         {
             return identifier;
         }
+
+        internal override string ParameterDirection(ParameterDirection direction)
+        {
+            switch (direction)
+            {
+                case ShaderGen.ParameterDirection.Out:
+                case ShaderGen.ParameterDirection.InOut:
+                    return "&";
+                default:
+                    return string.Empty;
+            }
+        }
     }
 }
