@@ -219,10 +219,19 @@ namespace ShaderGen
             Debug.Assert(parameterInfos != null);
 
             ShaderFunctionAndBlockSyntax function = GetContext(setName).Functions
-                .SingleOrDefault(sfabs => sfabs.Function.DeclaringType == type && sfabs.Function.Name == method);
+                .SingleOrDefault(
+                    sfabs => sfabs.Function.DeclaringType == type && sfabs.Function.Name == method
+                        && parameterInfos.Length == sfabs.Function.Parameters.Length);
             if (function != null)
             {
-                string invocationList = string.Join(", ", parameterInfos.Select(ipi => CSharpToIdentifierNameCore(ipi.FullTypeName, ipi.Identifier)));
+                ParameterDefinition[] funcParameters = function.Function.Parameters;
+                string[] formattedParams = new string[funcParameters.Length];
+                for (int i = 0; i < formattedParams.Length; i++)
+                {
+                    formattedParams[i] = FormatInvocationParameter(funcParameters[i], parameterInfos[i]);
+                }
+
+                string invocationList = string.Join(", ", formattedParams);
                 string fullMethodName = CSharpToShaderType(function.Function.DeclaringType) + "_" + function.Function.Name;
                 return $"{fullMethodName}({invocationList})";
             }
@@ -230,6 +239,11 @@ namespace ShaderGen
             {
                 return FormatInvocationCore(setName, type, method, parameterInfos);
             }
+        }
+
+        protected virtual string FormatInvocationParameter(ParameterDefinition def, InvocationParameterInfo ipi)
+        {
+            return CSharpToIdentifierNameCore(ipi.FullTypeName, ipi.Identifier);
         }
 
         protected void ValidateRequiredSemantics(string setName, ShaderFunction function, ShaderFunctionType type)

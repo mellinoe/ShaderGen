@@ -18,6 +18,7 @@ namespace TestShaders
         private Position4 Reverse(Position4 vert)
         {
             vert.Position = vert.Position.WZYX();
+            vert.Position.X = Invert(3);
             return vert;
         }
 
@@ -31,6 +32,11 @@ namespace TestShaders
         {
             Vector4 result = v.XZYW();
             return result;
+        }
+
+        private float Invert(float x)
+        {
+            return -x;
         }
     }
 }

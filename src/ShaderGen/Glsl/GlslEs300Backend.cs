@@ -99,7 +99,8 @@ namespace ShaderGen.Glsl
 
         private bool IsIntegerType(string exprType)
         {
-            return exprType == "System.Int32" || exprType == "System.UInt32";
+            return exprType == "System.Int32" || exprType == "System.UInt32"
+                || exprType == "int" || exprType == "uint";
         }
 
         internal override string CorrectAssignedValue(string leftExprType, string value, string valueType)
@@ -110,6 +111,18 @@ namespace ShaderGen.Glsl
             }
 
             return $"{value}";
+        }
+
+        protected override string FormatInvocationParameter(ParameterDefinition def, InvocationParameterInfo ipi)
+        {
+            if (def.Type.Name == "System.Single" && IsIntegerType(ipi.FullTypeName))
+            {
+                return $"float({ipi.Identifier})";
+            }
+            else
+            {
+                return ipi.Identifier;
+            }
         }
 
         protected override void WriteInOutVariable(
