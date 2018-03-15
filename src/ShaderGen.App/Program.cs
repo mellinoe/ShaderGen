@@ -125,12 +125,14 @@ namespace ShaderGen.App
 
             HlslBackend hlsl = new HlslBackend(compilation);
             Glsl330Backend glsl330 = new Glsl330Backend(compilation);
+            GlslEs300Backend glsles300 = new GlslEs300Backend(compilation);
             Glsl450Backend glsl450 = new Glsl450Backend(compilation);
             MetalBackend metal = new MetalBackend(compilation);
             LanguageBackend[] languages = new LanguageBackend[]
             {
                 hlsl,
                 glsl330,
+                glsles300,
                 glsl450,
                 metal,
             };
@@ -446,6 +448,10 @@ namespace ShaderGen.App
             else if (lang.GetType() == typeof(Glsl330Backend))
             {
                 return "330.glsl";
+            }
+            else if (lang.GetType() == typeof(GlslEs300Backend))
+            {
+                return "300.glsles";
             }
             else if (lang.GetType() == typeof(Glsl450Backend))
             {

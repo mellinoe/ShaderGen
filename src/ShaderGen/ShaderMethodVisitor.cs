@@ -83,7 +83,7 @@ namespace ShaderGen
 
         public override string VisitLocalDeclarationStatement(LocalDeclarationStatementSyntax node)
         {
-            return Visit(node.Declaration) + ";";
+            return Visit(node.Declaration);
         }
 
         public override string VisitEqualsValueClause(EqualsValueClauseSyntax node)
@@ -98,14 +98,15 @@ namespace ShaderGen
             {
                 throw new ShaderGenerationException(
                     "Modulus operator not supported in shader functions. Use ShaderBuiltins.Mod instead.");
-
             }
 
-            return base.Visit(node.Left)
-                + " "
-                + token
-                + base.Visit(node.Right)
-                + ";";
+            string leftExpr = base.Visit(node.Left);
+            string leftExprType = Utilities.GetFullTypeName(GetModel(node), node.Left);
+            string rightExpr = base.Visit(node.Right);
+            string rightExprType = Utilities.GetFullTypeName(GetModel(node), node.Right);
+
+            string assignedValue = _backend.CorrectAssignedValue(leftExprType, rightExpr, rightExprType);
+            return $"{leftExpr} {token} {assignedValue};";
         }
 
         public override string VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
@@ -233,9 +234,13 @@ namespace ShaderGen
                     "Modulus operator not supported in shader functions. Use ShaderBuiltins.Mod instead.");
             }
 
-            return Visit(node.Left) + " "
-                + node.OperatorToken + " "
-                + Visit(node.Right);
+            string leftExpr = Visit(node.Left);
+            string leftExprType = Utilities.GetFullTypeName(GetModel(node), node.Left);
+            string operatorToken = node.OperatorToken.ToString();
+            string rightExpr = Visit(node.Right);
+            string rightExprType = Utilities.GetFullTypeName(GetModel(node), node.Right);
+
+            return _backend.CorrectBinaryExpression(leftExpr, leftExprType, operatorToken, rightExpr, rightExprType);
         }
 
         public override string VisitParenthesizedExpression(ParenthesizedExpressionSyntax node)
@@ -286,6 +291,8 @@ namespace ShaderGen
                 string symbolName = symbol.Name;
                 ResourceDefinition referencedResource = _backend.GetContext(_setName).Resources.Single(rd => rd.Name == symbolName);
                 _resourcesUsed.Add(referencedResource);
+                _shaderFunction.UsesTexture2DMS |= referencedResource.ValueType.Name == "ShaderGen.Texture2DMSResource";
+
                 return _backend.CorrectFieldAccess(symbolInfo);
             }
             else if (symbol.Kind == SymbolKind.Property)
@@ -367,7 +374,7 @@ namespace ShaderGen
             string declaration = Visit(node.Declaration);
             string incrementers = string.Join(", ", node.Incrementors.Select(es => Visit(es)));
             string condition = Visit(node.Condition);
-            sb.AppendLine($"for ({declaration}; {condition}; {incrementers})");
+            sb.AppendLine($"for ({declaration} {condition}; {incrementers})");
             sb.AppendLine(Visit(node.Statement));
             return sb.ToString();
         }
@@ -425,17 +432,32 @@ namespace ShaderGen
                 throw new NotImplementedException();
             }
 
-            string csName = _compilation.GetSemanticModel(node.Type.SyntaxTree).GetFullTypeName(node.Type);
-            string mappedType = _backend.CSharpToShaderType(csName);
-            string initializerStr = Visit(node.Variables[0].Initializer);
-            string result = mappedType + " "
-                + _backend.CorrectIdentifier(node.Variables[0].Identifier.ToString());
-            if (!string.IsNullOrEmpty(initializerStr))
+            StringBuilder sb = new StringBuilder();
+
+            string varType = _compilation.GetSemanticModel(node.Type.SyntaxTree).GetFullTypeName(node.Type);
+            string mappedType = _backend.CSharpToShaderType(varType);
+
+            sb.Append(mappedType);
+            sb.Append(' ');
+            VariableDeclaratorSyntax varDeclarator = node.Variables[0];
+            string identifier = _backend.CorrectIdentifier(varDeclarator.Identifier.ToString());
+            sb.Append(identifier);
+
+            if (varDeclarator.Initializer != null)
             {
-                result += " " + initializerStr;
+                sb.Append(' ');
+                sb.Append(varDeclarator.Initializer.EqualsToken.ToString());
+                sb.Append(' ');
+
+                string rightExpr = base.Visit(varDeclarator.Initializer.Value);
+                string rightExprType = Utilities.GetFullTypeName(GetModel(node), varDeclarator.Initializer.Value);
+
+                sb.Append(_backend.CorrectAssignedValue(varType, rightExpr, rightExprType));
             }
 
-            return result;
+            sb.Append(';');
+
+            return sb.ToString();
         }
 
         public override string VisitElementAccessExpression(ElementAccessExpressionSyntax node)

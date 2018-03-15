@@ -106,6 +106,14 @@ namespace ShaderGen
                 computeResources);
         }
 
+        internal virtual string CorrectAssignedValue(
+            string leftExprType,
+            string rightExpr,
+            string rightExprType)
+        {
+            return rightExpr;
+        }
+
         private void ForceTypeDiscovery(string setName, TypeReference fd)
         {
             if (ShaderPrimitiveTypes.IsPrimitiveType(fd.Name))
@@ -266,6 +274,16 @@ namespace ShaderGen
             }
 
             return result;
+        }
+
+        internal virtual string CorrectBinaryExpression(
+            string leftExpr,
+            string leftExprType,
+            string operatorToken,
+            string rightExpr,
+            string rightExprType)
+        {
+            return $"{leftExpr} {operatorToken} {rightExpr}";
         }
 
         internal virtual string CorrectFieldAccess(SymbolInfo symbolInfo)

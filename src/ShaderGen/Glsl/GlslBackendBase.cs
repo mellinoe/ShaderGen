@@ -22,7 +22,8 @@ namespace ShaderGen.Glsl
             StringBuilder fb = new StringBuilder();
             foreach (FieldDefinition field in sd.Fields)
             {
-                fb.Append(CSharpToShaderType(field.Type.Name.Trim()));
+                string fieldTypeStr = GetStructureFieldType(field);
+                fb.Append(fieldTypeStr);
                 fb.Append(' ');
                 fb.Append(CorrectIdentifier(field.Name.Trim()));
                 int arrayCount = field.ArrayElementCount;
@@ -39,6 +40,10 @@ namespace ShaderGen.Glsl
             sb.AppendLine();
         }
 
+        protected virtual string GetStructureFieldType(FieldDefinition field)
+        {
+            return CSharpToShaderType(field.Type.Name.Trim());
+        }
 
         protected override MethodProcessResult GenerateFullTextCore(string setName, ShaderFunction function)
         {
@@ -54,8 +59,6 @@ namespace ShaderGen.Glsl
             }
 
             ValidateRequiredSemantics(setName, entryPoint.Function, function.Type);
-
-            WriteVersionHeader(function, sb);
 
             StructureDefinition[] orderedStructures
                 = StructureDependencyGraph.GetOrderedStructureList(Compilation, context.Structures);
@@ -122,6 +125,12 @@ namespace ShaderGen.Glsl
             sb.AppendLine(result.FullText);
 
             WriteMainFunction(setName, sb, entryPoint.Function);
+
+            // Append version last because it relies on information from parsing the shader.
+            StringBuilder versionSB = new StringBuilder();
+            WriteVersionHeader(function, versionSB);
+
+            sb.Insert(0, versionSB.ToString());
 
             return new MethodProcessResult(sb.ToString(), resourcesUsed);
         }

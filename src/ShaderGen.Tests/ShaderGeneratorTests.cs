@@ -116,6 +116,38 @@ namespace ShaderGen.Tests
 
         [Theory]
         [MemberData(nameof(ShaderSets))]
+        public void GlslEs300EndToEnd(string vsName, string fsName)
+        {
+            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            GlslEs300Backend backend = new GlslEs300Backend(compilation);
+            ShaderGenerator sg = new ShaderGenerator(
+                compilation,
+                vsName,
+                fsName,
+                backend);
+
+            ShaderGenerationResult result = sg.GenerateShaders();
+            IReadOnlyList<GeneratedShaderSet> sets = result.GetOutput(backend);
+            Assert.Equal(1, sets.Count);
+            GeneratedShaderSet set = sets[0];
+            ShaderModel shaderModel = set.Model;
+
+            if (vsName != null)
+            {
+                ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
+                string vsCode = set.VertexShaderCode;
+                GlsLangValidatorTool.AssertCompilesCode(vsCode, "vert", false);
+            }
+            if (fsName != null)
+            {
+                ShaderFunction fsFunction = shaderModel.GetFunction(fsName);
+                string fsCode = set.FragmentShaderCode;
+                GlsLangValidatorTool.AssertCompilesCode(fsCode, "frag", false);
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(ShaderSets))]
         public void Glsl450EndToEnd(string vsName, string fsName)
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
@@ -259,7 +291,7 @@ namespace ShaderGen.Tests
 
         [Theory]
         [MemberData(nameof(ErrorSets))]
-        public void ExceptedException(string vsName, string fsName)
+        public void ExpectedException(string vsName, string fsName)
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             Glsl330Backend backend = new Glsl330Backend(compilation);
