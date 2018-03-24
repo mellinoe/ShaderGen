@@ -29,71 +29,12 @@ namespace ShaderGen
 
         public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
-            string functionName = node.Identifier.ToFullString();
-            List<ParameterDefinition> parameters = new List<ParameterDefinition>();
-            foreach (ParameterSyntax ps in node.ParameterList.Parameters)
-            {
-                parameters.Add(ParameterDefinition.GetParameterDefinition(_compilation, ps));
-            }
-
-            TypeReference returnType = new TypeReference(GetModel(node).GetFullTypeName(node.ReturnType));
-
-            UInt3 computeGroupCounts = new UInt3();
-            bool isFragmentShader = false, isComputeShader = false;
-            bool isVertexShader = Utilities.GetMethodAttributes(node, "VertexShader").Any();
-            if (!isVertexShader)
-            {
-                isFragmentShader = Utilities.GetMethodAttributes(node, "FragmentShader").Any();
-            }
-            if (!isVertexShader && !isFragmentShader)
-            {
-                AttributeSyntax computeShaderAttr = Utilities.GetMethodAttributes(node, "ComputeShader").FirstOrDefault();
-                if (computeShaderAttr != null)
-                {
-                    isComputeShader = true;
-                    computeGroupCounts.X = GetAttributeArgumentUIntValue(computeShaderAttr, 0);
-                    computeGroupCounts.Y = GetAttributeArgumentUIntValue(computeShaderAttr, 1);
-                    computeGroupCounts.Z = GetAttributeArgumentUIntValue(computeShaderAttr, 2);
-                }
-            }
-
-            ShaderFunctionType type = isVertexShader
-                ? ShaderFunctionType.VertexEntryPoint
-                : isFragmentShader
-                    ? ShaderFunctionType.FragmentEntryPoint
-                    : isComputeShader
-                        ? ShaderFunctionType.ComputeEntryPoint
-                        : ShaderFunctionType.Normal;
-
-            string nestedTypePrefix = Utilities.GetFullNestedTypePrefix(node, out bool nested);
-            ShaderFunction sf = new ShaderFunction(
-                nestedTypePrefix,
-                functionName,
-                returnType,
-                parameters.ToArray(),
-                type,
-                computeGroupCounts);
-
-            ShaderFunctionAndBlockSyntax[] orderedFunctionList;
-            if (type != ShaderFunctionType.Normal)
-            {
-                FunctionCallGraphDiscoverer fcgd = new FunctionCallGraphDiscoverer(
-                    _compilation,
-                    new TypeAndMethodName { TypeName = sf.DeclaringType, MethodName = sf.Name });
-                fcgd.GenerateFullGraph();
-                orderedFunctionList = fcgd.GetOrderedCallList();
-            }
-            else
-            {
-                orderedFunctionList = new ShaderFunctionAndBlockSyntax[0];
-            }
-
-            ShaderFunctionAndBlockSyntax sfab = new ShaderFunctionAndBlockSyntax(sf, node.Body, orderedFunctionList);
+            ShaderFunctionAndBlockSyntax sfab = Utilities.GetShaderFunction(node, _compilation, true);
             foreach (LanguageBackend b in _backends)
             {
                 b.AddFunction(_shaderSet.Name, sfab);
 
-                foreach (var calledFunction in orderedFunctionList)
+                foreach (var calledFunction in sfab.OrderedFunctionList)
                 {
                     b.AddFunction(_shaderSet.Name, calledFunction);
                 }
