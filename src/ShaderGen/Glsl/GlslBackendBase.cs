@@ -369,6 +369,19 @@ namespace ShaderGen.Glsl
             return $"layout(local_size_x = {groupCounts.X}, local_size_y = {groupCounts.Y}, local_size_z = {groupCounts.Z}) in;";
         }
 
+        internal override string ParameterDirection(ParameterDirection direction)
+        {
+            switch (direction)
+            {
+                case ShaderGen.ParameterDirection.Out:
+                    return "out";
+                case ShaderGen.ParameterDirection.InOut:
+                    return "inout";
+                default:
+                    return string.Empty;
+            }
+        }
+
         private static readonly HashSet<string> s_glslKeywords = new HashSet<string>()
         {
             "input", "output",

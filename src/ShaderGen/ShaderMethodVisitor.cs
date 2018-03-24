@@ -106,7 +106,7 @@ namespace ShaderGen
             string rightExprType = Utilities.GetFullTypeName(GetModel(node), node.Right);
 
             string assignedValue = _backend.CorrectAssignedValue(leftExprType, rightExpr, rightExprType);
-            return $"{leftExpr} {token} {assignedValue};";
+            return $"{leftExpr} {token} {assignedValue}";
         }
 
         public override string VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
@@ -149,7 +149,7 @@ namespace ShaderGen
 
         public override string VisitExpressionStatement(ExpressionStatementSyntax node)
         {
-            return Visit(node.Expression);
+            return Visit(node.Expression) + ";";
         }
 
         public override string VisitReturnStatement(ReturnStatementSyntax node)
@@ -479,7 +479,7 @@ namespace ShaderGen
 
         protected virtual string FormatParameter(ParameterDefinition pd)
         {
-            return $"{_backend.CSharpToShaderType(pd.Type.Name)} {_backend.CorrectIdentifier(pd.Name)}";
+            return $"{_backend.ParameterDirection(pd.Direction)} {_backend.CSharpToShaderType(pd.Type.Name)} {_backend.CorrectIdentifier(pd.Name)}";
         }
 
         private InvocationParameterInfo[] GetParameterInfos(ArgumentListSyntax argumentList)
