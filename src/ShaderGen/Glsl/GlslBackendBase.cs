@@ -378,7 +378,7 @@ namespace ShaderGen.Glsl
                 case ShaderGen.ParameterDirection.InOut:
                     return "inout";
                 default:
-                    return "in";
+                    return string.Empty;
             }
         }
 
