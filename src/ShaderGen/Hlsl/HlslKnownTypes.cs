@@ -14,6 +14,7 @@ namespace ShaderGen.Hlsl
             { "System.Numerics.Vector4", "float4" },
             { "System.Numerics.Matrix4x4", "float4x4" },
             { "System.Void", "void" },
+            { "ShaderGen.SamplerResource", "SamplerState" },
             { "ShaderGen.Texture2DResource", "Texture2D" },
             { "ShaderGen.TextureCubeResource", "TextureCube" },
             { "System.Boolean", "bool" },
