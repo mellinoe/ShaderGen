@@ -39,7 +39,7 @@ public class MinExample
 
     public struct FragmentInput
     {
-        [PositionSemantic] public Vector4 Position;
+        [SystemPositionSemanticAttribute] public Vector4 Position;
         [TextureCoordinateSemantic] public Vector2 TextureCoord;
     }
 
