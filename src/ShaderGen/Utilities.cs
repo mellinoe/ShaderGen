@@ -215,5 +215,92 @@ namespace ShaderGen
         {
             return string.Join(separator, value.Where(s => !string.IsNullOrEmpty(s)));
         }
+
+        internal static ShaderFunctionAndBlockSyntax GetShaderFunction(
+            MethodDeclarationSyntax node, 
+            Compilation compilation,
+            bool generateOrderedFunctionList)
+        {
+            string functionName = node.Identifier.ToFullString();
+            List<ParameterDefinition> parameters = new List<ParameterDefinition>();
+            foreach (ParameterSyntax ps in node.ParameterList.Parameters)
+            {
+                parameters.Add(ParameterDefinition.GetParameterDefinition(compilation, ps));
+            }
+
+            SemanticModel semanticModel = compilation.GetSemanticModel(node.SyntaxTree);
+
+            TypeReference returnType = new TypeReference(semanticModel.GetFullTypeName(node.ReturnType));
+
+            UInt3 computeGroupCounts = new UInt3();
+            bool isFragmentShader = false, isComputeShader = false;
+            bool isVertexShader = GetMethodAttributes(node, "VertexShader").Any();
+            if (!isVertexShader)
+            {
+                isFragmentShader = GetMethodAttributes(node, "FragmentShader").Any();
+            }
+            if (!isVertexShader && !isFragmentShader)
+            {
+                AttributeSyntax computeShaderAttr = GetMethodAttributes(node, "ComputeShader").FirstOrDefault();
+                if (computeShaderAttr != null)
+                {
+                    isComputeShader = true;
+                    computeGroupCounts.X = GetAttributeArgumentUIntValue(computeShaderAttr, 0);
+                    computeGroupCounts.Y = GetAttributeArgumentUIntValue(computeShaderAttr, 1);
+                    computeGroupCounts.Z = GetAttributeArgumentUIntValue(computeShaderAttr, 2);
+                }
+            }
+
+            ShaderFunctionType type = isVertexShader
+                ? ShaderFunctionType.VertexEntryPoint
+                : isFragmentShader
+                    ? ShaderFunctionType.FragmentEntryPoint
+                    : isComputeShader
+                        ? ShaderFunctionType.ComputeEntryPoint
+                        : ShaderFunctionType.Normal;
+
+            string nestedTypePrefix = GetFullNestedTypePrefix(node, out bool nested);
+            ShaderFunction sf = new ShaderFunction(
+                nestedTypePrefix,
+                functionName,
+                returnType,
+                parameters.ToArray(),
+                type,
+                computeGroupCounts);
+
+            ShaderFunctionAndBlockSyntax[] orderedFunctionList;
+            if (type != ShaderFunctionType.Normal && generateOrderedFunctionList)
+            {
+                FunctionCallGraphDiscoverer fcgd = new FunctionCallGraphDiscoverer(
+                    compilation,
+                    new TypeAndMethodName { TypeName = sf.DeclaringType, MethodName = sf.Name });
+                fcgd.GenerateFullGraph();
+                orderedFunctionList = fcgd.GetOrderedCallList();
+            }
+            else
+            {
+                orderedFunctionList = new ShaderFunctionAndBlockSyntax[0];
+            }
+
+            return new ShaderFunctionAndBlockSyntax(sf, node.Body, orderedFunctionList);
+        }
+
+        private static uint GetAttributeArgumentUIntValue(AttributeSyntax attr, int index)
+        {
+            if (attr.ArgumentList.Arguments.Count < index + 1)
+            {
+                throw new ShaderGenerationException(
+                    "Too few arguments in attribute " + attr.ToFullString() + ". Required + " + (index + 1));
+            }
+            string fullArg0 = attr.ArgumentList.Arguments[index].ToFullString();
+            if (uint.TryParse(fullArg0, out uint ret))
+            {
+                return ret;
+            }
+            else
+            {
+                throw new ShaderGenerationException("Incorrectly formatted attribute: " + attr.ToFullString());
+            }
+        }
     }
 }

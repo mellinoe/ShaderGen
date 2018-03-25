@@ -200,7 +200,12 @@ namespace ShaderGen
                 throw new ArgumentNullException(nameof(sf));
             }
 
-            GetContext(setName).Functions.Add(sf);
+            var context = GetContext(setName);
+
+            if (!context.Functions.Contains(sf))
+            {
+                context.Functions.Add(sf);
+            }
         }
 
         internal virtual string CSharpToShaderIdentifierName(SymbolInfo symbolInfo)

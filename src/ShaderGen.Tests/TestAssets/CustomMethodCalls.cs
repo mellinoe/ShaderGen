@@ -1,6 +1,8 @@
 ﻿using ShaderGen;
 using System.Numerics;
 
+using static TestShaders.AnotherClass;
+
 namespace TestShaders
 {
     public class CustomMethodCalls
@@ -12,6 +14,7 @@ namespace TestShaders
             Position4 shuffled = ShufflePosition4(reversed);
             SystemPosition4 output;
             output.Position = shuffled.Position;
+            output.Position.X = CustomAbs(output.Position.X);
             return output;
         }
 
