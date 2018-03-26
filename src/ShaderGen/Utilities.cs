@@ -65,6 +65,13 @@ namespace ShaderGen
                 return string.Empty;
             }
 
+            if (s is INamedTypeSymbol nts && nts.Arity > 0)
+            {
+                return s.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
+                    .WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)
+                    .RemoveMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes));
+            }
+
             StringBuilder sb = new StringBuilder(s.MetadataName);
             ISymbol last = s;
 
