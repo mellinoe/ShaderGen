@@ -220,7 +220,7 @@ namespace ShaderGen.Metal
             {
                 if (!f.Function.IsEntryPoint)
                 {
-                    MethodProcessResult processResult = new MetalMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block);
+                    MethodProcessResult processResult = new MetalMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.MethodDeclaration);
                     foreach (ResourceDefinition rd in processResult.ResourcesUsed)
                     {
                         resourcesUsed.Add(rd);
@@ -230,7 +230,7 @@ namespace ShaderGen.Metal
             }
 
             MethodProcessResult entryResult = new MetalMethodVisitor(Compilation, setName, entryPoint.Function, this)
-                .VisitFunction(entryPoint.Block);
+                .VisitFunction(entryPoint.MethodDeclaration);
             foreach (ResourceDefinition rd in entryResult.ResourcesUsed)
             {
                 resourcesUsed.Add(rd);

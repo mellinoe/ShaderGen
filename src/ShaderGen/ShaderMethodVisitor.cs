@@ -32,11 +32,25 @@ namespace ShaderGen
 
         private SemanticModel GetModel(SyntaxNode node) => _compilation.GetSemanticModel(node.SyntaxTree);
 
-        public MethodProcessResult VisitFunction(BlockSyntax node)
+        public MethodProcessResult VisitFunction(MethodDeclarationSyntax node)
         {
-            _containingTypeName = Utilities.GetFullNestedTypePrefix(node, out bool _);
+            _containingTypeName = Utilities.GetFullNestedTypePrefix((SyntaxNode)node.Body ?? node.ExpressionBody, out bool _);
             StringBuilder sb = new StringBuilder();
-            string blockResult = VisitBlock(node); // Visit block first in order to discover builtin variables.
+            string blockResult;
+            // Visit block first in order to discover builtin variables.
+            if (node.Body != null)
+            {
+                blockResult = VisitBlock(node.Body);
+            }
+            else if (node.ExpressionBody != null)
+            {
+                blockResult = VisitArrowExpressionClause(node.ExpressionBody);
+            }
+            else
+            {
+                throw new NotSupportedException("Methods without bodies cannot be shader functions.");
+            }
+
             string functionDeclStr = GetFunctionDeclStr();
 
             if (_shaderFunction.Type == ShaderFunctionType.ComputeEntryPoint)
@@ -65,6 +79,30 @@ namespace ShaderGen
                 {
                     sb.AppendLine("    " + statementResult);
                 }
+            }
+
+            sb.AppendLine("}");
+            return sb.ToString();
+        }
+
+        public override string VisitArrowExpressionClause(ArrowExpressionClauseSyntax node)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("{");
+
+            string expressionResult = Visit(node.Expression);
+            if (string.IsNullOrEmpty(expressionResult))
+            {
+                throw new NotImplementedException($"{node.Expression.GetType()} expressions are not implemented.");
+            }
+
+            if (_shaderFunction.ReturnType.Name == "System.Void")
+            {
+                sb.AppendLine("    " + expressionResult + ";");
+            }
+            else
+            {
+                sb.AppendLine("    return " + expressionResult + ";");
             }
 
             sb.AppendLine("}");

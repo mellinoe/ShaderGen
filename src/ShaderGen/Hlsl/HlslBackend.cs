@@ -164,7 +164,7 @@ namespace ShaderGen.Hlsl
             {
                 if (!f.Function.IsEntryPoint)
                 {
-                    MethodProcessResult processResult = new HlslMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block);
+                    MethodProcessResult processResult = new HlslMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.MethodDeclaration);
                     foreach (ResourceDefinition rd in processResult.ResourcesUsed)
                     {
                         resourcesUsed.Add(rd);
@@ -174,7 +174,7 @@ namespace ShaderGen.Hlsl
             }
 
             MethodProcessResult result = new HlslMethodVisitor(Compilation, setName, entryPoint.Function, this)
-                .VisitFunction(entryPoint.Block);
+                .VisitFunction(entryPoint.MethodDeclaration);
             foreach (ResourceDefinition rd in result.ResourcesUsed)
             {
                 resourcesUsed.Add(rd);

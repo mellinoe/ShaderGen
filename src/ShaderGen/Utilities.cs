@@ -282,7 +282,7 @@ namespace ShaderGen
                 orderedFunctionList = new ShaderFunctionAndBlockSyntax[0];
             }
 
-            return new ShaderFunctionAndBlockSyntax(sf, node.Body, orderedFunctionList);
+            return new ShaderFunctionAndBlockSyntax(sf, node, orderedFunctionList);
         }
 
         private static uint GetAttributeArgumentUIntValue(AttributeSyntax attr, int index)

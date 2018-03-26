@@ -6,17 +6,17 @@ namespace ShaderGen
     public class ShaderFunctionAndBlockSyntax : IEquatable<ShaderFunctionAndBlockSyntax>
     {
         public ShaderFunction Function { get; }
-        public BlockSyntax Block { get; }
+        public MethodDeclarationSyntax MethodDeclaration { get; }
 
         /// <summary>
         /// Only present for entry-point functions.
         /// </summary>
         public ShaderFunctionAndBlockSyntax[] OrderedFunctionList { get; }
 
-        public ShaderFunctionAndBlockSyntax(ShaderFunction function, BlockSyntax block, ShaderFunctionAndBlockSyntax[] orderedFunctionList)
+        public ShaderFunctionAndBlockSyntax(ShaderFunction function, MethodDeclarationSyntax methodDeclaration, ShaderFunctionAndBlockSyntax[] orderedFunctionList)
         {
             Function = function;
-            Block = block;
+            MethodDeclaration = methodDeclaration;
             OrderedFunctionList = orderedFunctionList;
         }
 

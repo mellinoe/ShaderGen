@@ -99,7 +99,7 @@ namespace ShaderGen.Glsl
             {
                 if (!f.Function.IsEntryPoint)
                 {
-                    MethodProcessResult processResult = new ShaderMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block);
+                    MethodProcessResult processResult = new ShaderMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.MethodDeclaration);
                     foreach (ResourceDefinition rd in processResult.ResourcesUsed)
                     {
                         resourcesUsed.Add(rd);
@@ -109,7 +109,7 @@ namespace ShaderGen.Glsl
             }
 
             MethodProcessResult result = new ShaderMethodVisitor(Compilation, setName, entryPoint.Function, this)
-                .VisitFunction(entryPoint.Block);
+                .VisitFunction(entryPoint.MethodDeclaration);
             foreach (ResourceDefinition rd in result.ResourcesUsed)
             {
                 resourcesUsed.Add(rd);
