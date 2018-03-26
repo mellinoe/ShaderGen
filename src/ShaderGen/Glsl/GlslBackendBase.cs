@@ -51,7 +51,7 @@ namespace ShaderGen.Glsl
             StringBuilder sb = new StringBuilder();
             HashSet<ResourceDefinition> resourcesUsed = new HashSet<ResourceDefinition>();
 
-            ShaderFunctionAndBlockSyntax entryPoint = context.Functions.SingleOrDefault(
+            ShaderFunctionAndMethodDeclarationSyntax entryPoint = context.Functions.SingleOrDefault(
                 sfabs => sfabs.Function.Name == function.Name);
             if (entryPoint == null)
             {
@@ -95,11 +95,11 @@ namespace ShaderGen.Glsl
                 }
             }
 
-            foreach (ShaderFunctionAndBlockSyntax f in entryPoint.OrderedFunctionList)
+            foreach (ShaderFunctionAndMethodDeclarationSyntax f in entryPoint.OrderedFunctionList)
             {
                 if (!f.Function.IsEntryPoint)
                 {
-                    MethodProcessResult processResult = new ShaderMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block);
+                    MethodProcessResult processResult = new ShaderMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.MethodDeclaration);
                     foreach (ResourceDefinition rd in processResult.ResourcesUsed)
                     {
                         resourcesUsed.Add(rd);
@@ -109,7 +109,7 @@ namespace ShaderGen.Glsl
             }
 
             MethodProcessResult result = new ShaderMethodVisitor(Compilation, setName, entryPoint.Function, this)
-                .VisitFunction(entryPoint.Block);
+                .VisitFunction(entryPoint.MethodDeclaration);
             foreach (ResourceDefinition rd in result.ResourcesUsed)
             {
                 resourcesUsed.Add(rd);

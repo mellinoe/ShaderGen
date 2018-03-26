@@ -15,7 +15,7 @@ namespace ShaderGen
         {
             internal List<StructureDefinition> Structures { get; } = new List<StructureDefinition>();
             internal List<ResourceDefinition> Resources { get; } = new List<ResourceDefinition>();
-            internal List<ShaderFunctionAndBlockSyntax> Functions { get; } = new List<ShaderFunctionAndBlockSyntax>();
+            internal List<ShaderFunctionAndMethodDeclarationSyntax> Functions { get; } = new List<ShaderFunctionAndMethodDeclarationSyntax>();
         }
 
         internal Dictionary<string, BackendContext> Contexts = new Dictionary<string, BackendContext>();
@@ -75,7 +75,7 @@ namespace ShaderGen
             ResourceDefinition[] computeResources = null;
 
             // HACK: Discover all method input structures.
-            foreach (ShaderFunctionAndBlockSyntax sf in context.Functions.ToArray())
+            foreach (ShaderFunctionAndMethodDeclarationSyntax sf in context.Functions.ToArray())
             {
                 if (sf.Function.IsEntryPoint)
                 {
@@ -193,7 +193,7 @@ namespace ShaderGen
             GetContext(setName).Resources.Add(rd);
         }
 
-        internal virtual void AddFunction(string setName, ShaderFunctionAndBlockSyntax sf)
+        internal virtual void AddFunction(string setName, ShaderFunctionAndMethodDeclarationSyntax sf)
         {
             if (sf == null)
             {
@@ -223,7 +223,7 @@ namespace ShaderGen
             Debug.Assert(method != null);
             Debug.Assert(parameterInfos != null);
 
-            ShaderFunctionAndBlockSyntax function = GetContext(setName).Functions
+            ShaderFunctionAndMethodDeclarationSyntax function = GetContext(setName).Functions
                 .SingleOrDefault(
                     sfabs => sfabs.Function.DeclaringType == type && sfabs.Function.Name == method
                         && parameterInfos.Length == sfabs.Function.Parameters.Length);

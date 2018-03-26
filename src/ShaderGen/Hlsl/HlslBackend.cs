@@ -140,7 +140,7 @@ namespace ShaderGen.Hlsl
             HashSet<ResourceDefinition> resourcesUsed = new HashSet<ResourceDefinition>();
 
             BackendContext setContext = GetContext(setName);
-            ShaderFunctionAndBlockSyntax entryPoint = setContext.Functions.SingleOrDefault(
+            ShaderFunctionAndMethodDeclarationSyntax entryPoint = setContext.Functions.SingleOrDefault(
                 sfabs => sfabs.Function.Name == function.Name);
             if (entryPoint == null)
             {
@@ -160,11 +160,11 @@ namespace ShaderGen.Hlsl
                 .Select(g => g.ToArray()).ToList();
 
             StringBuilder functionsSB = new StringBuilder();
-            foreach (ShaderFunctionAndBlockSyntax f in entryPoint.OrderedFunctionList)
+            foreach (ShaderFunctionAndMethodDeclarationSyntax f in entryPoint.OrderedFunctionList)
             {
                 if (!f.Function.IsEntryPoint)
                 {
-                    MethodProcessResult processResult = new HlslMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.Block);
+                    MethodProcessResult processResult = new HlslMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.MethodDeclaration);
                     foreach (ResourceDefinition rd in processResult.ResourcesUsed)
                     {
                         resourcesUsed.Add(rd);
@@ -174,7 +174,7 @@ namespace ShaderGen.Hlsl
             }
 
             MethodProcessResult result = new HlslMethodVisitor(Compilation, setName, entryPoint.Function, this)
-                .VisitFunction(entryPoint.Block);
+                .VisitFunction(entryPoint.MethodDeclaration);
             foreach (ResourceDefinition rd in result.ResourcesUsed)
             {
                 resourcesUsed.Add(rd);
