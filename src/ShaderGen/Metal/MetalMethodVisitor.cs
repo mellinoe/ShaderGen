@@ -34,7 +34,8 @@ namespace ShaderGen.Metal
 
         protected override string FormatParameter(ParameterDefinition pd)
         {
-            return $"{_backend.CSharpToShaderType(pd.Type.Name)} {_backend.ParameterDirection(pd.Direction)}{_backend.CorrectIdentifier(pd.Name)}";
+            string addressSpace = pd.Direction == ParameterDirection.In ? string.Empty : "thread";
+            return $"{addressSpace} {_backend.CSharpToShaderType(pd.Type.Name)} {_backend.ParameterDirection(pd.Direction)}{_backend.CorrectIdentifier(pd.Name)}";
         }
     }
 }
