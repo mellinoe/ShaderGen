@@ -15,6 +15,7 @@ namespace TestShaders
             SystemPosition4 output;
             output.Position = shuffled.Position;
             output.Position.X = CustomAbs(output.Position.X);
+            output.Position.X += HelperMethod(output.Position.X);
             return output;
         }
 

@@ -27,5 +27,13 @@ namespace ShaderGen
             return Function.DeclaringType == other.Function.DeclaringType
                 && Function.Name == other.Function.Name;
         }
+
+        public override int GetHashCode()
+        {
+            var hashCode = 1204124163;
+            hashCode = hashCode * -1521134295 + Function.DeclaringType.GetHashCode();
+            hashCode = hashCode * -1521134295 + Function.Name.GetHashCode();
+            return hashCode;
+        }
     }
 }
