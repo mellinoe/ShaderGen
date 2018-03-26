@@ -31,10 +31,15 @@ namespace ShaderGen.Glsl
                 sb.AppendLine($"precision mediump sampler2DMS;");
             }
             sb.AppendLine();
+
+            sb.AppendLine($"struct SamplerDummy {{ int _dummyValue; }};");
+            sb.AppendLine();
         }
 
         protected override void WriteSampler(StringBuilder sb, ResourceDefinition rd)
         {
+            sb.AppendLine($"const SamplerDummy {CorrectIdentifier(rd.Name)} = SamplerDummy(0);");
+            sb.AppendLine();
         }
 
         protected override void WriteTexture2D(StringBuilder sb, ResourceDefinition rd)

@@ -22,10 +22,14 @@ namespace ShaderGen.Glsl
             string version = function.Type == ShaderFunctionType.ComputeEntryPoint ? "430" : "330 core";
             sb.AppendLine($"#version {version}");
             sb.AppendLine();
+            sb.AppendLine($"struct SamplerDummy {{ int _dummyValue; }};");
+            sb.AppendLine();
         }
 
         protected override void WriteSampler(StringBuilder sb, ResourceDefinition rd)
         {
+            sb.AppendLine($"const SamplerDummy {CorrectIdentifier(rd.Name)} = SamplerDummy(0);");
+            sb.AppendLine();
         }
 
         protected override void WriteTexture2D(StringBuilder sb, ResourceDefinition rd)

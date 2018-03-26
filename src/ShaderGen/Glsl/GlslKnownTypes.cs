@@ -28,12 +28,14 @@ namespace ShaderGen.Glsl
         {
             { "ShaderGen.Texture2DResource", "sampler2D" },
             { "ShaderGen.TextureCubeResource", "samplerCube" },
+            { "ShaderGen.SamplerResource", "SamplerDummy" },
         };
 
         private static readonly Dictionary<string, string> s_knownTypesVulkan = new Dictionary<string, string>()
         {
             { "ShaderGen.Texture2DResource", "texture2D" },
             { "ShaderGen.TextureCubeResource", "textureCube" },
+            { "ShaderGen.SamplerResource", "sampler" },
         };
 
 
