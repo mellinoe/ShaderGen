@@ -23,16 +23,16 @@ namespace ShaderGen
             _nodesByName.Add(rootMethod, _rootNode);
         }
 
-        public ShaderFunctionAndBlockSyntax[] GetOrderedCallList()
+        public ShaderFunctionAndMethodDeclarationSyntax[] GetOrderedCallList()
         {
-            HashSet<ShaderFunctionAndBlockSyntax> result = new HashSet<ShaderFunctionAndBlockSyntax>();
+            HashSet<ShaderFunctionAndMethodDeclarationSyntax> result = new HashSet<ShaderFunctionAndMethodDeclarationSyntax>();
             TraverseNode(result, _rootNode);
             return result.ToArray();
         }
 
-        private void TraverseNode(HashSet<ShaderFunctionAndBlockSyntax> result, CallGraphNode node)
+        private void TraverseNode(HashSet<ShaderFunctionAndMethodDeclarationSyntax> result, CallGraphNode node)
         {
-            foreach (ShaderFunctionAndBlockSyntax existing in result)
+            foreach (ShaderFunctionAndMethodDeclarationSyntax existing in result)
             {
                 if (node.Parents.Any(cgn => cgn.Name.Equals(existing)))
                 {
@@ -45,7 +45,7 @@ namespace ShaderGen
                 TraverseNode(result, child);
             }
 
-            ShaderFunctionAndBlockSyntax sfab = Utilities.GetShaderFunction(node.Declaration, Compilation, false);
+            ShaderFunctionAndMethodDeclarationSyntax sfab = Utilities.GetShaderFunction(node.Declaration, Compilation, false);
 
             result.Add(sfab);
         }

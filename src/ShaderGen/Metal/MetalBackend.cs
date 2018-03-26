@@ -194,7 +194,7 @@ namespace ShaderGen.Metal
             StringBuilder sb = new StringBuilder();
             HashSet<ResourceDefinition> resourcesUsed = new HashSet<ResourceDefinition>();
             BackendContext setContext = GetContext(setName);
-            ShaderFunctionAndBlockSyntax entryPoint = setContext.Functions.SingleOrDefault(
+            ShaderFunctionAndMethodDeclarationSyntax entryPoint = setContext.Functions.SingleOrDefault(
                 sfabs => sfabs.Function.Name == function.Name);
             if (entryPoint == null)
             {
@@ -216,7 +216,7 @@ namespace ShaderGen.Metal
             }
 
             StringBuilder functionsSB = new StringBuilder();
-            foreach (ShaderFunctionAndBlockSyntax f in entryPoint.OrderedFunctionList)
+            foreach (ShaderFunctionAndMethodDeclarationSyntax f in entryPoint.OrderedFunctionList)
             {
                 if (!f.Function.IsEntryPoint)
                 {

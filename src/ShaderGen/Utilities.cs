@@ -216,7 +216,7 @@ namespace ShaderGen
             return string.Join(separator, value.Where(s => !string.IsNullOrEmpty(s)));
         }
 
-        internal static ShaderFunctionAndBlockSyntax GetShaderFunction(
+        internal static ShaderFunctionAndMethodDeclarationSyntax GetShaderFunction(
             MethodDeclarationSyntax node, 
             Compilation compilation,
             bool generateOrderedFunctionList)
@@ -268,7 +268,7 @@ namespace ShaderGen
                 type,
                 computeGroupCounts);
 
-            ShaderFunctionAndBlockSyntax[] orderedFunctionList;
+            ShaderFunctionAndMethodDeclarationSyntax[] orderedFunctionList;
             if (type != ShaderFunctionType.Normal && generateOrderedFunctionList)
             {
                 FunctionCallGraphDiscoverer fcgd = new FunctionCallGraphDiscoverer(
@@ -279,10 +279,10 @@ namespace ShaderGen
             }
             else
             {
-                orderedFunctionList = new ShaderFunctionAndBlockSyntax[0];
+                orderedFunctionList = new ShaderFunctionAndMethodDeclarationSyntax[0];
             }
 
-            return new ShaderFunctionAndBlockSyntax(sf, node, orderedFunctionList);
+            return new ShaderFunctionAndMethodDeclarationSyntax(sf, node, orderedFunctionList);
         }
 
         private static uint GetAttributeArgumentUIntValue(AttributeSyntax attr, int index)

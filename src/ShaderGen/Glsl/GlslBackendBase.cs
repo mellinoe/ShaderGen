@@ -51,7 +51,7 @@ namespace ShaderGen.Glsl
             StringBuilder sb = new StringBuilder();
             HashSet<ResourceDefinition> resourcesUsed = new HashSet<ResourceDefinition>();
 
-            ShaderFunctionAndBlockSyntax entryPoint = context.Functions.SingleOrDefault(
+            ShaderFunctionAndMethodDeclarationSyntax entryPoint = context.Functions.SingleOrDefault(
                 sfabs => sfabs.Function.Name == function.Name);
             if (entryPoint == null)
             {
@@ -95,7 +95,7 @@ namespace ShaderGen.Glsl
                 }
             }
 
-            foreach (ShaderFunctionAndBlockSyntax f in entryPoint.OrderedFunctionList)
+            foreach (ShaderFunctionAndMethodDeclarationSyntax f in entryPoint.OrderedFunctionList)
             {
                 if (!f.Function.IsEntryPoint)
                 {

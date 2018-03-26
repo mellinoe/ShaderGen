@@ -29,7 +29,7 @@ namespace ShaderGen
 
         public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
-            ShaderFunctionAndBlockSyntax sfab = Utilities.GetShaderFunction(node, _compilation, true);
+            ShaderFunctionAndMethodDeclarationSyntax sfab = Utilities.GetShaderFunction(node, _compilation, true);
             foreach (LanguageBackend b in _backends)
             {
                 b.AddFunction(_shaderSet.Name, sfab);
