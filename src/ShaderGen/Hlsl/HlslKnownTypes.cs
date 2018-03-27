@@ -15,6 +15,7 @@ namespace ShaderGen.Hlsl
             { "System.Numerics.Matrix4x4", "float4x4" },
             { "System.Void", "void" },
             { "ShaderGen.SamplerResource", "SamplerState" },
+            { "ShaderGen.StructuredBuffer", "StructuredBuffer" },
             { "ShaderGen.Texture2DResource", "Texture2D" },
             { "ShaderGen.TextureCubeResource", "TextureCube" },
             { "System.Boolean", "bool" },
@@ -28,6 +29,15 @@ namespace ShaderGen.Hlsl
 
         public static string GetMappedName(string name)
         {
+            var genericParameterIndex = name.IndexOf("<");
+            if (genericParameterIndex > -1)
+            {
+                string originalType = name.Substring(0, genericParameterIndex);
+                string genericParameter = name.Substring(genericParameterIndex + 1, name.IndexOf(">") - (genericParameterIndex + 1));
+
+                return GetMappedName(originalType) + "<" + GetMappedName(genericParameter) + ">";
+            }
+
             if (s_knownTypes.TryGetValue(name, out string mapped))
             {
                 return mapped;
