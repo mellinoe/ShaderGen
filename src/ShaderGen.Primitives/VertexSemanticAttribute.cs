@@ -46,4 +46,9 @@ namespace ShaderGen
     {
         public ColorTargetSemanticAttribute() : base(SemanticType.ColorTarget) { }
     }
+
+    public class SystemVertexIdSemanticAttribute : VertexSemanticAttribute
+    {
+        public SystemVertexIdSemanticAttribute() : base(SemanticType.SystemVertexId) { }
+    }
 }

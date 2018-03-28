@@ -10,6 +10,7 @@ namespace TestShaders
         {
             FragmentInput output;
             output.Position = new Vector4(input.Position, 1);
+            output.Position.X += input.VertexID;
             return output;
         }
 
@@ -23,6 +24,9 @@ namespace TestShaders
         {
             [VertexSemantic(SemanticType.Position)]
             public Vector3 Position;
+
+            [VertexSemantic(SemanticType.SystemVertexId)]
+            public uint VertexID;
         }
 
         public struct FragmentInput

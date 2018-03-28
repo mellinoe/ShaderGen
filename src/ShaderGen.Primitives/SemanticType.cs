@@ -10,5 +10,6 @@
         Tangent,
         SystemPosition,
         ColorTarget,
+        SystemVertexId
     }
 }

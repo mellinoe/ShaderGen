@@ -51,6 +51,10 @@ namespace ShaderGen.Metal
                 {
                     fb.Append($" [[ position ]]");
                 }
+                else if (field.SemanticType == SemanticType.SystemVertexId)
+                {
+                    fb.Append($" [[ vertex_id ]]");
+                }
                 else if (field.SemanticType == SemanticType.ColorTarget)
                 {
                     fb.Append($" [[ color({colorTarget++}) ]]");
