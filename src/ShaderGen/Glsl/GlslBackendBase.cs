@@ -127,10 +127,6 @@ namespace ShaderGen.Glsl
             return new MethodProcessResult(sb.ToString(), resourcesUsed);
         }
 
-        private static bool IsSystemSemantic(SemanticType semanticType) => 
-            semanticType == SemanticType.SystemPosition || 
-            semanticType == SemanticType.SystemVertexId;
-
         private void WriteMainFunction(string setName, StringBuilder sb, ShaderFunction entryFunction)
         {
             ParameterDefinition input = entryFunction.Parameters.Length > 0
