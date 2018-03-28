@@ -127,6 +127,10 @@ namespace ShaderGen.Glsl
             return new MethodProcessResult(sb.ToString(), resourcesUsed);
         }
 
+        private static bool IsSystemSemantic(SemanticType semanticType) => 
+            semanticType == SemanticType.SystemPosition || 
+            semanticType == SemanticType.SystemVertexId;
+
         private void WriteMainFunction(string setName, StringBuilder sb, ShaderFunction entryFunction)
         {
             ParameterDefinition input = entryFunction.Parameters.Length > 0
@@ -141,16 +145,24 @@ namespace ShaderGen.Glsl
                     ? GetRequiredStructureType(setName, entryFunction.ReturnType)
                     : null;
 
+            string vertexIdName = null;
             string fragCoordName = null;
 
             if (inputType != null)
             {
                 // Declare "in" variables
                 int inVarIndex = 0;
+                vertexIdName = null;
                 fragCoordName = null;
                 foreach (FieldDefinition field in inputType.Fields)
                 {
-                    if (entryFunction.Type == ShaderFunctionType.FragmentEntryPoint
+                    if (entryFunction.Type == ShaderFunctionType.VertexEntryPoint
+                        && vertexIdName == null
+                        && field.SemanticType == SemanticType.SystemVertexId)
+                    {
+                        vertexIdName = field.Name;
+                    }
+                    else if (entryFunction.Type == ShaderFunctionType.FragmentEntryPoint
                         && fragCoordName == null
                         && field.SemanticType == SemanticType.SystemPosition)
                     {
@@ -229,12 +241,22 @@ namespace ShaderGen.Glsl
 
                 // Assign synthetic "in" variables (with real field name) to structure passed to actual function.
                 int inoutIndex = 0;
+                bool foundSystemVertexId = false;
                 bool foundSystemPosition = false;
                 foreach (FieldDefinition field in inputType.Fields)
                 {
                     if (entryFunction.Type == ShaderFunctionType.VertexEntryPoint)
                     {
-                        sb.AppendLine($"    {CorrectIdentifier("input")}.{CorrectIdentifier(field.Name)} = {CorrectIdentifier(field.Name)};");
+                        if (field.SemanticType == SemanticType.SystemVertexId && !foundSystemVertexId)
+                        {
+                            Debug.Assert(field.Name == vertexIdName);
+                            foundSystemVertexId = true;
+                            sb.AppendLine($"    {CorrectIdentifier("input")}.{CorrectIdentifier(field.Name)} = gl_VertexID;");
+                        }
+                        else
+                        {
+                            sb.AppendLine($"    {CorrectIdentifier("input")}.{CorrectIdentifier(field.Name)} = {CorrectIdentifier(field.Name)};");
+                        }
                     }
                     else
                     {

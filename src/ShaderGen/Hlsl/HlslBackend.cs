@@ -80,6 +80,10 @@ namespace ShaderGen.Hlsl
                     {
                         return " : SV_Position";
                     }
+                case SemanticType.SystemVertexId:
+                    {
+                        return " : SV_VertexID";
+                    }
                 case SemanticType.ColorTarget:
                     {
                         int val = tracker.ColorTarget++;

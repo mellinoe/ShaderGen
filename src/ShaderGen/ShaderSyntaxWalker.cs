@@ -162,6 +162,10 @@ namespace ShaderGen
             {
                 return SemanticType.SystemPosition;
             }
+            else if (CheckSingleAttribute(vds, "SystemVertexId"))
+            {
+                return SemanticType.SystemVertexId;
+            }
             else if (CheckSingleAttribute(vds, "PositionSemantic"))
             {
                 return SemanticType.Position;
