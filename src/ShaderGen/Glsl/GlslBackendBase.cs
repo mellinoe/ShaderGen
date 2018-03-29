@@ -17,7 +17,7 @@ namespace ShaderGen.Glsl
 
         protected void WriteStructure(StringBuilder sb, StructureDefinition sd)
         {
-            sb.AppendLine($"BAD CODE struct {CSharpToShaderType(sd.Name)}");
+            sb.AppendLine($"struct {CSharpToShaderType(sd.Name)}");
             sb.AppendLine("{");
             StringBuilder fb = new StringBuilder();
             foreach (FieldDefinition field in sd.Fields)

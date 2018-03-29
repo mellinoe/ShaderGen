@@ -21,7 +21,7 @@ namespace ShaderGen.Hlsl
 
         protected void WriteStructure(StringBuilder sb, StructureDefinition sd)
         {
-            sb.AppendLine($"BAD CODE struct {CSharpToShaderType(sd.Name)}");
+            sb.AppendLine($"struct {CSharpToShaderType(sd.Name)}");
             sb.AppendLine("{");
             HlslSemanticTracker tracker = new HlslSemanticTracker();
             StringBuilder fb = new StringBuilder();
