@@ -1,6 +1,14 @@
 build_script:
   ci-build.cmd
 
+before_test:
+  - appveyor DownloadFile https://github.com/KhronosGroup/glslang/releases/download/master-tot/glslang-master-windows-x64-Release.zip -FileName glslangvalidator.zip
+  - unzip glslangvalidator.zip
+  - set PATH=%APPVEYOR_BUILD_FOLDER%\bin;%PATH%
+
+test_script:
+  - ci-test.cmd
+
 artifacts:
   - path: bin\Packages\Release\*.nupkg
     name: nugetPackages
