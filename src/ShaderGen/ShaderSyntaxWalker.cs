@@ -262,6 +262,7 @@ namespace ShaderGen
         {
             string name = typeInfo.Type.ToDisplayString();
             if (name != nameof(ShaderGen) + "." + nameof(Texture2DResource)
+                && name != nameof(ShaderGen) + "." + nameof(Texture2DArrayResource)
                 && name != nameof(ShaderGen) + "." + nameof(TextureCubeResource)
                 && name != nameof(ShaderGen) + "." + nameof(Texture2DMSResource)
                 && name != nameof(ShaderGen) + "." + nameof(SamplerResource))
@@ -278,6 +279,10 @@ namespace ShaderGen
             if (fullTypeName == "ShaderGen.Texture2DResource")
             {
                 return ShaderResourceKind.Texture2D;
+            }
+            if (fullTypeName == "ShaderGen.Texture2DArrayResource")
+            {
+                return ShaderResourceKind.Texture2DArray;
             }
             else if (fullTypeName == "ShaderGen.TextureCubeResource")
             {

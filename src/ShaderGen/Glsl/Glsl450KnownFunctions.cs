@@ -225,6 +225,10 @@ namespace ShaderGen.Glsl
             {
                 return $"texture(sampler2D({parameters[0].Identifier}, {parameters[1].Identifier}), {parameters[2].Identifier})";
             }
+            else if (parameters[0].FullTypeName == "ShaderGen.Texture2DArrayResource")
+            {
+                return $"texture(sampler2DArray({parameters[0].Identifier}, {parameters[1].Identifier}), {parameters[2].Identifier})";
+            }
             else if (parameters[0].FullTypeName == "ShaderGen.TextureCubeResource")
             {
                 return $"texture(samplerCube({parameters[0].Identifier}, {parameters[1].Identifier}), {parameters[2].Identifier})";

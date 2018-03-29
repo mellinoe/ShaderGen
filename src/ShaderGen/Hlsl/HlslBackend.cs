@@ -101,6 +101,12 @@ namespace ShaderGen.Hlsl
             sb.AppendLine();
         }
 
+        private void WriteTexture2DArray(StringBuilder sb, ResourceDefinition rd, int binding)
+        {
+            sb.AppendLine($"Texture2DArray {CorrectIdentifier(rd.Name)} : register(t{binding});");
+            sb.AppendLine();
+        }
+
         private void WriteTextureCube(StringBuilder sb, ResourceDefinition rd, int binding)
         {
             sb.AppendLine($"TextureCube {CorrectIdentifier(rd.Name)} : register(t{binding});");
@@ -203,6 +209,13 @@ namespace ShaderGen.Hlsl
                             if (resourcesUsed.Contains(rd))
                             {
                                 WriteTexture2D(sb, rd, textureBinding);
+                            }
+                            textureBinding++;
+                            break;
+                        case ShaderResourceKind.Texture2DArray:
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                WriteTexture2DArray(sb, rd, textureBinding);
                             }
                             textureBinding++;
                             break;

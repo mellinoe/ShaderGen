@@ -16,6 +16,7 @@ namespace ShaderGen.Hlsl
             { "System.Void", "void" },
             { "ShaderGen.SamplerResource", "SamplerState" },
             { "ShaderGen.Texture2DResource", "Texture2D" },
+            { "ShaderGen.Texture2DArrayResource", "Texture2DArray" },
             { "ShaderGen.TextureCubeResource", "TextureCube" },
             { "System.Boolean", "bool" },
             { "ShaderGen.UInt2", "uint2" },

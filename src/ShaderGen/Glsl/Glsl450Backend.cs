@@ -62,6 +62,15 @@ namespace ShaderGen.Glsl
             sb.AppendLine(";");
         }
 
+        protected override void WriteTexture2DArray(StringBuilder sb, ResourceDefinition rd)
+        {
+            sb.Append(FormatLayoutStr(rd));
+            sb.Append(' ');
+            sb.Append("uniform texture2DArray ");
+            sb.Append(CorrectIdentifier(rd.Name));
+            sb.AppendLine(";");
+        }
+
         protected override void WriteTextureCube(StringBuilder sb, ResourceDefinition rd)
         {
             sb.Append(FormatLayoutStr(rd));

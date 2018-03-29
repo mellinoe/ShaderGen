@@ -4,6 +4,7 @@
     {
         Uniform,
         Texture2D,
+        Texture2DArray,
         TextureCube,
         Texture2DMS,
         Sampler,
