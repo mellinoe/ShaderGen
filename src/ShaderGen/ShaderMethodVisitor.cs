@@ -205,6 +205,12 @@ namespace ShaderGen
                 SymbolInfo symbolInfo = GetModel(node).GetSymbolInfo(ins);
                 string type = symbolInfo.Symbol.ContainingType.ToDisplayString();
                 string method = symbolInfo.Symbol.Name;
+
+                if (type == "ShaderGen.ShaderBuiltins")
+                {
+                    ValidateBuiltInMethod(method);
+                }
+
                 return _backend.FormatInvocation(_setName, type, method, parameterInfos);
             }
             else if (node.Expression is MemberAccessExpressionSyntax maes)
@@ -260,6 +266,17 @@ namespace ShaderGen
                 message += Environment.NewLine + "This node used a " + node.Expression.GetType().Name;
                 message += Environment.NewLine + node.ToFullString();
                 throw new NotImplementedException(message);
+            }
+        }
+
+        private void ValidateBuiltInMethod(string name)
+        {
+            if (name == nameof(ShaderBuiltins.Ddx) || name == nameof(ShaderBuiltins.Ddy))
+            {
+                if (_shaderFunction.Type != ShaderFunctionType.FragmentEntryPoint)
+                {
+                    throw new ShaderGenerationException("Ddx and Ddy can only be used within Fragment shaders.");
+                }
             }
         }
 
