@@ -50,6 +50,18 @@ namespace TestShaders
             r3 = Cos(VH.V3);
             r4 = Cos(VH.V4);
 
+            // Ddx
+            r = Ddx(f);
+            r2 = Ddx(VH.V2);
+            r3 = Ddx(VH.V3);
+            r4 = Ddx(VH.V4);
+
+            // Ddy
+            r = Ddy(f);
+            r2 = Ddy(VH.V2);
+            r3 = Ddy(VH.V3);
+            r4 = Ddy(VH.V4);
+
             // Frac
             r = Frac(f);
             r2 = Frac(VH.V2);

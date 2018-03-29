@@ -43,6 +43,18 @@ namespace ShaderGen
         public static Vector3 Cos(Vector3 value) => throw new ShaderBuiltinException();
         public static Vector4 Cos(Vector4 value) => throw new ShaderBuiltinException();
 
+        // Ddx
+        public static float Ddx(float value) => throw new ShaderBuiltinException();
+        public static Vector2 Ddx(Vector2 value) => throw new ShaderBuiltinException();
+        public static Vector3 Ddx(Vector3 value) => throw new ShaderBuiltinException();
+        public static Vector4 Ddx(Vector4 value) => throw new ShaderBuiltinException();
+
+        // Ddy
+        public static float Ddy(float value) => throw new ShaderBuiltinException();
+        public static Vector2 Ddy(Vector2 value) => throw new ShaderBuiltinException();
+        public static Vector3 Ddy(Vector3 value) => throw new ShaderBuiltinException();
+        public static Vector4 Ddy(Vector4 value) => throw new ShaderBuiltinException();
+
         // Frac
         public static float Frac(float value) => throw new ShaderBuiltinException();
         public static Vector2 Frac(Vector2 value) => throw new ShaderBuiltinException();
