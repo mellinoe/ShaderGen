@@ -29,6 +29,7 @@ namespace ShaderGen.Glsl
                 { "Mod", SimpleNameTranslator("mod") },
                 { "Mul", MatrixMul },
                 { "Sample", Sample },
+                { "SampleGrad", SampleGrad },
                 { "Load", Load },
                 { "Discard", Discard },
                 { "Saturate", Saturate },
@@ -232,6 +233,22 @@ namespace ShaderGen.Glsl
             else if (parameters[0].FullTypeName == "ShaderGen.TextureCubeResource")
             {
                 return $"texture(samplerCube({parameters[0].Identifier}, {parameters[1].Identifier}), {parameters[2].Identifier})";
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        private static string SampleGrad(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            if (parameters[0].FullTypeName == "ShaderGen.Texture2DResource")
+            {
+                return $"textureGrad(sampler2D({parameters[0].Identifier}, {parameters[1].Identifier}), {parameters[2].Identifier}, {parameters[3].Identifier}, {parameters[4].Identifier})";
+            }
+            else if (parameters[0].FullTypeName == "ShaderGen.Texture2DArrayResource")
+            {
+                return $"textureGrad(sampler2DArray({parameters[0].Identifier}, {parameters[1].Identifier}), vec3({parameters[2].Identifier}, {parameters[3].Identifier}), {parameters[4].Identifier}, {parameters[5].Identifier})";
             }
             else
             {

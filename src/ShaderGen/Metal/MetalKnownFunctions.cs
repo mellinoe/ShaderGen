@@ -29,6 +29,7 @@ namespace ShaderGen.Metal
                 { "Clamp", Clamp },
                 { "Mod", SimpleNameTranslator("fmod") },
                 { "Sample", Sample },
+                { "SampleGrad", SampleGrad },
                 { "Load", Load },
                 { "Discard", Discard },
                 { nameof(ShaderBuiltins.ClipToTextureCoordinates), ClipToTextureCoordinates },
@@ -253,6 +254,18 @@ namespace ShaderGen.Metal
             else
             {
                 return $"{parameters[0].Identifier}.sample({parameters[1].Identifier}, {parameters[2].Identifier})";
+            }
+        }
+
+        private static string SampleGrad(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            if (parameters[0].FullTypeName == "ShaderGen.Texture2DArrayResource")
+            {
+                return $"{parameters[0].Identifier}.sample({parameters[1].Identifier}, {parameters[2].Identifier}, {parameters[3].Identifier}, gradient2d({parameters[4].Identifier}, {parameters[5].Identifier}))";
+            }
+            else
+            {
+                return $"{parameters[0].Identifier}.sample({parameters[1].Identifier}, {parameters[2].Identifier}, gradient2d({parameters[3].Identifier}, {parameters[4].Identifier}))";
             }
         }
 

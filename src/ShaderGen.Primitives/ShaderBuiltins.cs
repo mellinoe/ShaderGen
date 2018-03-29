@@ -13,6 +13,10 @@ namespace ShaderGen
             => throw new ShaderBuiltinException();
         public static Vector4 Sample(Texture2DArrayResource texture, SamplerResource sampler, Vector2 texCoords, uint arrayLayer)
             => throw new ShaderBuiltinException();
+        public static Vector4 SampleGrad(Texture2DResource texture, SamplerResource sampler, Vector2 texCoords, Vector2 ddx, Vector2 ddy)
+            => throw new ShaderBuiltinException();
+        public static Vector4 SampleGrad(Texture2DArrayResource texture, SamplerResource sampler, Vector2 texCoords, uint arrayLayer, Vector2 ddx, Vector2 ddy)
+            => throw new ShaderBuiltinException();
         public static Vector4 Load(
             Texture2DMSResource texture,
             SamplerResource sampler,
