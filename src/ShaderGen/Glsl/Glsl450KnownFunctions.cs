@@ -28,7 +28,7 @@ namespace ShaderGen.Glsl
                 { "Clamp", SimpleNameTranslator("clamp") },
                 { "Mod", SimpleNameTranslator("mod") },
                 { "Mul", MatrixMul },
-                { "Sample", Sample2D },
+                { "Sample", Sample },
                 { "Load", Load },
                 { "Discard", Discard },
                 { "Saturate", Saturate },
@@ -219,7 +219,7 @@ namespace ShaderGen.Glsl
             return $"{parameters[0].Identifier} * {parameters[1].Identifier}";
         }
 
-        private static string Sample2D(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        private static string Sample(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
             if (parameters[0].FullTypeName == "ShaderGen.Texture2DResource")
             {
@@ -227,7 +227,7 @@ namespace ShaderGen.Glsl
             }
             else if (parameters[0].FullTypeName == "ShaderGen.Texture2DArrayResource")
             {
-                return $"texture(sampler2DArray({parameters[0].Identifier}, {parameters[1].Identifier}), {parameters[2].Identifier})";
+                return $"texture(sampler2DArray({parameters[0].Identifier}, {parameters[1].Identifier}), vec3({parameters[2].Identifier}, {parameters[3].Identifier}))";
             }
             else if (parameters[0].FullTypeName == "ShaderGen.TextureCubeResource")
             {
