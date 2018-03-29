@@ -71,6 +71,15 @@ namespace ShaderGen.Tests
 
         private static string FindExe()
         {
+            // First, try to launch from the current environment.
+            try
+            {
+                Process.Start("glslangvalidator").WaitForExit();
+                return "glslangvalidator";
+            }
+            catch { }
+
+            // Check if the Vulkan SDK is installed, and use the compiler bundled there.
             const string VulkanSdkEnvVar = "VULKAN_SDK";
             string vulkanSdkPath = Environment.GetEnvironmentVariable(VulkanSdkEnvVar);
             if (vulkanSdkPath != null)
