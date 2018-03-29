@@ -237,7 +237,14 @@ namespace ShaderGen.Glsl
 
         private static string Load(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"texelFetch(sampler2DMS({parameters[0].Identifier}, {parameters[1].Identifier}), ivec2({parameters[2].Identifier}), {parameters[3].Identifier})";
+            if (parameters[0].FullTypeName == "ShaderGen.Texture2DResource")
+            {
+                return $"texelFetch(sampler2D({parameters[0].Identifier}, {parameters[1].Identifier}), ivec2({parameters[2].Identifier}), {parameters[3].Identifier})";
+            }
+            else
+            {
+                return $"texelFetch(sampler2DMS({parameters[0].Identifier}, {parameters[1].Identifier}), ivec2({parameters[2].Identifier}), {parameters[3].Identifier})";
+            }
         }
 
         private static string Discard(string typeName, string methodName, InvocationParameterInfo[] parameters)

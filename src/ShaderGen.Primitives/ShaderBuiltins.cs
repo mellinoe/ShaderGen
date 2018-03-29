@@ -12,6 +12,11 @@ namespace ShaderGen
         public static Vector4 Sample(TextureCubeResource texture, SamplerResource sampler, Vector3 texCoords)
             => throw new ShaderBuiltinException();
         public static Vector4 Load(
+            Texture2DResource texture,
+            SamplerResource sampler,
+            Vector2 texCoords,
+            uint lod) => throw new ShaderBuiltinException();
+        public static Vector4 Load(
             Texture2DMSResource texture,
             SamplerResource sampler,
             Vector2 texCoords,
