@@ -26,6 +26,7 @@ namespace ShaderGen.Glsl
             sb.AppendLine($"precision mediump float;");
             sb.AppendLine($"precision mediump int;");
             sb.AppendLine($"precision mediump sampler2D;");
+            sb.AppendLine($"precision mediump sampler2DArray;");
             if (useVersion320)
             {
                 sb.AppendLine($"precision mediump sampler2DMS;");
