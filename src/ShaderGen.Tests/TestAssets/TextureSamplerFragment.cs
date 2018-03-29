@@ -24,6 +24,8 @@ namespace TestShaders
         {
             Vector4 cubeSample = Sample(TexCube, Sampler, new Vector3(1, 2, 3));
             Vector4 arraySample = Sample(TexArray, Sampler, new Vector2(1, 2), 3);
+            Vector4 gradSample = SampleGrad(Tex2D, Sampler, input.TextureCoordinate, Vector2.One, Vector2.One);
+            Vector4 arrayGradSample = SampleGrad(TexArray, Sampler, input.TextureCoordinate, 3, Vector2.One, Vector2.One);
             Vector4 calledMethodSample = SampleTexture(Tex2D, Sampler);
             Vector4 loaded = Load(Tex2D, Sampler, new Vector2(1, 2), 0);
             return Sample(Tex2D, Sampler, input.TextureCoordinate);
