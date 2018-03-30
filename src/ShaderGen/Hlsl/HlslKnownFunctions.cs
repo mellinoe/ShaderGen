@@ -228,7 +228,14 @@ namespace ShaderGen.Hlsl
 
         private static string Load(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"{parameters[0].Identifier}.Load({parameters[2].Identifier}, {parameters[3].Identifier})";
+            if (parameters[0].FullTypeName == "ShaderGen.Texture2DResource")
+            {
+                return $"{parameters[0].Identifier}.Load(int3({parameters[2].Identifier}, {parameters[3].Identifier}))";
+            }
+            else
+            {
+                return $"{parameters[0].Identifier}.Load({parameters[2].Identifier}, {parameters[3].Identifier})";
+            }
         }
 
         private static string Discard(string typeName, string methodName, InvocationParameterInfo[] parameters)
