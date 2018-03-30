@@ -112,6 +112,18 @@ namespace TestShaders
                 ret += Vector4.One;
             }
 
+            // Ddx
+            float r = Ddx(ret.X);
+            Vector2 r2 = Ddx(ret.XY());
+            Vector3 r3 = Ddx(ret.XYZ());
+            Vector4 r4 = Ddx(ret);
+
+            // Ddy
+            r = Ddy(ret.X);
+            r2 = Ddy(ret.XY());
+            r3 = Ddy(ret.XYZ());
+            r4 = Ddy(ret);
+
             return ret;
         }
     }

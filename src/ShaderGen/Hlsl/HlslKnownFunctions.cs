@@ -19,6 +19,8 @@ namespace ShaderGen.Hlsl
                 { "Saturate", SimpleNameTranslator("saturate") },
                 { "Abs", SimpleNameTranslator("abs") },
                 { "Cos", SimpleNameTranslator("cos") },
+                { "Ddx", SimpleNameTranslator("ddx") },
+                { "Ddy", SimpleNameTranslator("ddy") },
                 { "Frac", SimpleNameTranslator("frac") },
                 { "Lerp", SimpleNameTranslator("lerp") },
                 { "Pow", SimpleNameTranslator("pow") },

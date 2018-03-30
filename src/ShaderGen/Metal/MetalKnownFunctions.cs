@@ -22,6 +22,8 @@ namespace ShaderGen.Metal
                 { "Pow", Pow },
                 { "Acos", SimpleNameTranslator("acos") },
                 { "Cos", SimpleNameTranslator("cos") },
+                { "Ddx", SimpleNameTranslator("dfdx") },
+                { "Ddy", SimpleNameTranslator("dfdy") },
                 { "Frac", SimpleNameTranslator("fract") },
                 { "Lerp", SimpleNameTranslator("mix") },
                 { "Sin", SimpleNameTranslator("sin") },
