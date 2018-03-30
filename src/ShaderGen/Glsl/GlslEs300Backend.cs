@@ -26,6 +26,7 @@ namespace ShaderGen.Glsl
             sb.AppendLine($"precision mediump float;");
             sb.AppendLine($"precision mediump int;");
             sb.AppendLine($"precision mediump sampler2D;");
+            sb.AppendLine($"precision mediump sampler2DArray;");
             if (useVersion320)
             {
                 sb.AppendLine($"precision mediump sampler2DMS;");
@@ -45,6 +46,12 @@ namespace ShaderGen.Glsl
         protected override void WriteTexture2D(StringBuilder sb, ResourceDefinition rd)
         {
             sb.AppendLine($"uniform sampler2D {CorrectIdentifier(rd.Name)};");
+            sb.AppendLine();
+        }
+
+        protected override void WriteTexture2DArray(StringBuilder sb, ResourceDefinition rd)
+        {
+            sb.AppendLine($"uniform sampler2DArray {CorrectIdentifier(rd.Name)};");
             sb.AppendLine();
         }
 

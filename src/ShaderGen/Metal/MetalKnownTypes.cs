@@ -15,6 +15,7 @@ namespace ShaderGen.Metal
             { "System.Numerics.Matrix4x4", "float4x4" },
             { "System.Void", "void" },
             { "ShaderGen.Texture2DResource", "texture2d<float>" },
+            { "ShaderGen.Texture2DArrayResource", "texture2d_array<float>" },
             { "ShaderGen.TextureCubeResource", "texturecube<float>" },
             { "ShaderGen.SamplerResource", "sampler" },
             { "System.Boolean", "bool" },

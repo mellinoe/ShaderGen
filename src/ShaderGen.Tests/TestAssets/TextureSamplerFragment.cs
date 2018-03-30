@@ -16,12 +16,14 @@ namespace TestShaders
 
         public Texture2DResource Tex2D;
         public TextureCubeResource TexCube;
+        public Texture2DArrayResource TexArray;
         public SamplerResource Sampler;
 
         [FragmentShader]
         public Vector4 FS(FragmentInput input)
         {
             Vector4 cubeSample = Sample(TexCube, Sampler, new Vector3(1, 2, 3));
+            Vector4 arraySample = Sample(TexArray, Sampler, new Vector2(1, 2), 3);
             Vector4 calledMethodSample = SampleTexture(Tex2D, Sampler);
             return Sample(Tex2D, Sampler, input.TextureCoordinate);
         }

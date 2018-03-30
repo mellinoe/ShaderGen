@@ -28,7 +28,7 @@ namespace ShaderGen.Metal
                 { "Tan", SimpleNameTranslator("tan") },
                 { "Clamp", Clamp },
                 { "Mod", SimpleNameTranslator("fmod") },
-                { "Sample", Sample2D },
+                { "Sample", Sample },
                 { "Load", Load },
                 { "Discard", Discard },
                 { nameof(ShaderBuiltins.ClipToTextureCoordinates), ClipToTextureCoordinates },
@@ -242,9 +242,18 @@ namespace ShaderGen.Metal
             };
         }
 
-        private static string Sample2D(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        private static string Sample(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"{parameters[0].Identifier}.sample({parameters[1].Identifier}, {parameters[2].Identifier})";
+            if (parameters[0].FullTypeName == "ShaderGen.Texture2DArrayResource")
+            {
+                // Metal texture array sample function:
+                // sample(sampler s, float2 coord, uint array)
+                return $"{parameters[0].Identifier}.sample({parameters[1].Identifier}, {parameters[2].Identifier}, {parameters[3].Identifier})";
+            }
+            else
+            {
+                return $"{parameters[0].Identifier}.sample({parameters[1].Identifier}, {parameters[2].Identifier})";
+            }
         }
 
         private static string Load(string typeName, string methodName, InvocationParameterInfo[] parameters)

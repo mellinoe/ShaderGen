@@ -109,6 +109,13 @@ namespace ShaderGen.Metal
                             }
                             textureBinding++;
                             break;
+                        case ShaderResourceKind.Texture2DArray:
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                resourceArgList.Add(WriteTexture2DArray(rd, textureBinding));
+                            }
+                            textureBinding++;
+                            break;
                         case ShaderResourceKind.TextureCube:
                             if (resourcesUsed.Contains(rd))
                             {
@@ -160,6 +167,11 @@ namespace ShaderGen.Metal
         private string WriteTexture2D(ResourceDefinition rd, int binding)
         {
             return $"texture2d<float> {rd.Name} [[ texture({binding}) ]]";
+        }
+
+        private string WriteTexture2DArray(ResourceDefinition rd, int binding)
+        {
+            return $"texture2d_array<float> {rd.Name} [[ texture({binding}) ]]";
         }
 
         private string WriteTextureCube(ResourceDefinition rd, int binding)
@@ -361,6 +373,8 @@ namespace ShaderGen.Metal
             {
                 case ShaderResourceKind.Texture2D:
                     return $"thread texture2d<float> {rd.Name};";
+                case ShaderResourceKind.Texture2DArray:
+                    return $"thread texture2d_array<float> {rd.Name};";
                 case ShaderResourceKind.Texture2DMS:
                     return $"thread texture2d_ms<float> {rd.Name};";
                 case ShaderResourceKind.TextureCube:
@@ -384,6 +398,8 @@ namespace ShaderGen.Metal
             {
                 case ShaderResourceKind.Texture2D:
                     return $"thread texture2d<float> {rd.Name}_param";
+                case ShaderResourceKind.Texture2DArray:
+                    return $"thread texture2d_array<float> {rd.Name}_param";
                 case ShaderResourceKind.Texture2DMS:
                     return $"thread texture2d_ms<float> {rd.Name}_param";
                 case ShaderResourceKind.TextureCube:

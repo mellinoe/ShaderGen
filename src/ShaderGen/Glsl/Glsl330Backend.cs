@@ -38,6 +38,12 @@ namespace ShaderGen.Glsl
             sb.AppendLine();
         }
 
+        protected override void WriteTexture2DArray(StringBuilder sb, ResourceDefinition rd)
+        {
+            sb.AppendLine($"uniform sampler2DArray {CorrectIdentifier(rd.Name)};");
+            sb.AppendLine();
+        }
+
         protected override void WriteTextureCube(StringBuilder sb, ResourceDefinition rd)
         {
             sb.AppendLine($"uniform samplerCube {CorrectIdentifier(rd.Name)};");

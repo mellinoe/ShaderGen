@@ -27,7 +27,7 @@ namespace ShaderGen.Glsl
                 { "Clamp", SimpleNameFloatParameterTranslator("clamp") },
                 { "Mod", SimpleNameFloatParameterTranslator("mod") },
                 { "Mul", MatrixMul },
-                { "Sample", Sample2D },
+                { "Sample", Sample },
                 { "Load", Load },
                 { "Discard", Discard },
                 { "Saturate", Saturate },
@@ -238,9 +238,16 @@ namespace ShaderGen.Glsl
             return $"{parameters[0].Identifier} * {parameters[1].Identifier}";
         }
 
-        private static string Sample2D(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        private static string Sample(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"texture({parameters[0].Identifier}, {parameters[2].Identifier})";
+            if (parameters[0].FullTypeName == "ShaderGen.Texture2DArrayResource")
+            {
+                return $"texture({parameters[0].Identifier}, vec3({parameters[2].Identifier}, {parameters[3].Identifier}))";
+            }
+            else
+            {
+                return $"texture({parameters[0].Identifier}, {parameters[2].Identifier})";
+            }
         }
 
         private static string Load(string typeName, string methodName, InvocationParameterInfo[] parameters)

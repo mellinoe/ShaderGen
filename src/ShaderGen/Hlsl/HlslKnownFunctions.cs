@@ -27,7 +27,7 @@ namespace ShaderGen.Hlsl
                 { "Tan", SimpleNameTranslator("tan") },
                 { "Clamp", SimpleNameTranslator("clamp") },
                 { "Mod", SimpleNameTranslator("fmod") },
-                { "Sample", Sample2D },
+                { "Sample", Sample },
                 { "Load", Load },
                 { "Discard", Discard },
                 { nameof(ShaderBuiltins.ClipToTextureCoordinates), ClipToTextureCoordinates },
@@ -212,9 +212,16 @@ namespace ShaderGen.Hlsl
             };
         }
 
-        private static string Sample2D(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        private static string Sample(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"{parameters[0].Identifier}.Sample({parameters[1].Identifier}, {parameters[2].Identifier})";
+            if (parameters[0].FullTypeName == "ShaderGen.Texture2DArrayResource")
+            {
+                return $"{parameters[0].Identifier}.Sample({parameters[1].Identifier}, float3({parameters[2].Identifier}, {parameters[3].Identifier}))";
+            }
+            else
+            {
+                return $"{parameters[0].Identifier}.Sample({parameters[1].Identifier}, {parameters[2].Identifier})";
+            }
         }
 
         private static string Load(string typeName, string methodName, InvocationParameterInfo[] parameters)

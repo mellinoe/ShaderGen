@@ -78,6 +78,9 @@ namespace ShaderGen.Glsl
                     case ShaderResourceKind.Texture2D:
                         WriteTexture2D(sb, rd);
                         break;
+                    case ShaderResourceKind.Texture2DArray:
+                        WriteTexture2DArray(sb, rd);
+                        break;
                     case ShaderResourceKind.TextureCube:
                         WriteTextureCube(sb, rd);
                         break;
@@ -383,6 +386,7 @@ namespace ShaderGen.Glsl
         protected abstract void WriteUniform(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteSampler(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteTexture2D(StringBuilder sb, ResourceDefinition rd);
+        protected abstract void WriteTexture2DArray(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteTextureCube(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteTexture2DMS(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteStructuredBuffer(StringBuilder sb, ResourceDefinition rd, bool isReadOnly);
