@@ -30,6 +30,7 @@ namespace ShaderGen.Hlsl
                 { "Clamp", SimpleNameTranslator("clamp") },
                 { "Mod", SimpleNameTranslator("fmod") },
                 { "Sample", Sample },
+                { "SampleGrad", SampleGrad },
                 { "Load", Load },
                 { "Discard", Discard },
                 { nameof(ShaderBuiltins.ClipToTextureCoordinates), ClipToTextureCoordinates },
@@ -223,6 +224,18 @@ namespace ShaderGen.Hlsl
             else
             {
                 return $"{parameters[0].Identifier}.Sample({parameters[1].Identifier}, {parameters[2].Identifier})";
+            }
+        }
+
+        private static string SampleGrad(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            if (parameters[0].FullTypeName == "ShaderGen.Texture2DArrayResource")
+            {
+                return $"{parameters[0].Identifier}.SampleGrad({parameters[1].Identifier}, float3({parameters[2].Identifier}, {parameters[3].Identifier}), {parameters[4].Identifier}, {parameters[5].Identifier})";
+            }
+            else
+            {
+                return $"{parameters[0].Identifier}.SampleGrad({parameters[1].Identifier}, {parameters[2].Identifier}, {parameters[3].Identifier}, {parameters[4].Identifier})";
             }
         }
 
