@@ -21,6 +21,7 @@ namespace TestShaders
             }
             float l = 0;
             uint l2 = (uint) l;
+            uint l3 = 0xFF;
             return output;
         }
 
