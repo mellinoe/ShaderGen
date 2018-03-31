@@ -74,7 +74,13 @@ namespace ShaderGen.Tests
             // First, try to launch from the current environment.
             try
             {
-                Process.Start("glslangvalidator").WaitForExit();
+                ProcessStartInfo psi = new ProcessStartInfo()
+                {
+                    FileName = "glslangvalidator",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                };
+                Process.Start(psi).WaitForExit();
                 return "glslangvalidator";
             }
             catch { }
