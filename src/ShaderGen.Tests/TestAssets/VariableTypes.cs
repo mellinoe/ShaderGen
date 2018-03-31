@@ -19,6 +19,8 @@ namespace TestShaders
             {
                 output.Position = new Vector4(0, 1, 1, 1);
             }
+            float l = 0;
+            uint l2 = (uint) l;
             return output;
         }
 
