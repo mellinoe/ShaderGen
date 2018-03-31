@@ -80,7 +80,10 @@ namespace ShaderGen.Tests
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                 };
-                Process.Start(psi).WaitForExit();
+                Process p = Process.Start(psi);
+                p.StandardOutput.ReadToEndAsync();
+                p.StandardError.ReadToEndAsync();
+                p.WaitForExit(2000);
                 return "glslangvalidator";
             }
             catch { }
