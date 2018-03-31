@@ -341,7 +341,7 @@ namespace ShaderGen
 
         internal string CorrectLiteral(string literal)
         {
-            if (literal.EndsWith("f", StringComparison.OrdinalIgnoreCase))
+            if (!literal.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && literal.EndsWith("f", StringComparison.OrdinalIgnoreCase))
             {
                 if (!literal.Contains("."))
                 {
