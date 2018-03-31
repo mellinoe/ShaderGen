@@ -354,5 +354,10 @@ namespace ShaderGen
         }
 
         internal abstract string ParameterDirection(ParameterDirection direction);
+
+        internal virtual string CorrectCastExpression(string type, string expression)
+        {
+            return $"({type}) {expression}";
+        }
     }
 }

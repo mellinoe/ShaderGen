@@ -399,5 +399,10 @@ namespace ShaderGen.Glsl
             string normalizedIdentifier,
             int index);
         protected abstract void EmitGlPositionCorrection(StringBuilder sb);
+
+        internal override string CorrectCastExpression(string type, string expression)
+        {
+            return $"{type}({expression})";
+        }
     }
 }

@@ -532,7 +532,7 @@ namespace ShaderGen
             string varType = _compilation.GetSemanticModel(node.Type.SyntaxTree).GetFullTypeName(node.Type);
             string mappedType = _backend.CSharpToShaderType(varType);
 
-            return "(" + mappedType + ") " + Visit(node.Expression);
+            return _backend.CorrectCastExpression(mappedType, Visit(node.Expression));
         }
 
         protected string GetParameterDeclList()
