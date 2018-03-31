@@ -527,6 +527,14 @@ namespace ShaderGen
                 + node.CloseBracketToken.ToFullString();
         }
 
+        public override string VisitCastExpression(CastExpressionSyntax node)
+        {
+            string varType = _compilation.GetSemanticModel(node.Type.SyntaxTree).GetFullTypeName(node.Type);
+            string mappedType = _backend.CSharpToShaderType(varType);
+
+            return "(" + mappedType + ") " + Visit(node.Expression);
+        }
+
         protected string GetParameterDeclList()
         {
             return string.Join(", ", _shaderFunction.Parameters.Select(FormatParameter));
