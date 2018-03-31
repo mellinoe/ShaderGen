@@ -273,7 +273,7 @@ namespace ShaderGen
         {
             if (name == nameof(ShaderBuiltins.Ddx) || name == nameof(ShaderBuiltins.Ddy))
             {
-                if (_shaderFunction.Type != ShaderFunctionType.FragmentEntryPoint)
+                if (_shaderFunction.Type == ShaderFunctionType.VertexEntryPoint || _shaderFunction.Type == ShaderFunctionType.ComputeEntryPoint)
                 {
                     throw new ShaderGenerationException("Ddx and Ddy can only be used within Fragment shaders.");
                 }
