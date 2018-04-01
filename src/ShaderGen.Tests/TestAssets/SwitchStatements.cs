@@ -18,8 +18,10 @@ namespace TestShaders
                     break;
 
                 case 1:
+                {
                     x = 3;
                     break;
+                }
 
                 default:
                     x = 0;
