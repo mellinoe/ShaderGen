@@ -191,7 +191,7 @@ namespace ShaderGen.Metal
 
         private string WriteStructuredBuffer(ResourceDefinition rd, int binding)
         {
-            return $"constant {CSharpToShaderType(rd.ValueType.Name)} &{rd.Name} [[ buffer({binding}) ]]";
+            return $"constant {CSharpToShaderType(rd.ValueType.Name)} *{rd.Name} [[ buffer({binding}) ]]";
         }
 
         private string WriteRWStructuredBuffer(ResourceDefinition rd, int binding)
@@ -382,8 +382,9 @@ namespace ShaderGen.Metal
                 case ShaderResourceKind.Sampler:
                     return $"thread sampler {rd.Name};";
                 case ShaderResourceKind.Uniform:
-                case ShaderResourceKind.StructuredBuffer:
                     return $"constant {CSharpToShaderType(rd.ValueType.Name)}& {rd.Name};";
+                case ShaderResourceKind.StructuredBuffer:
+                    return $"constant {CSharpToShaderType(rd.ValueType.Name)}* {rd.Name};";
                 case ShaderResourceKind.RWStructuredBuffer:
                     return $"device {CSharpToShaderType(rd.ValueType.Name)}* {rd.Name};";
                 default:
@@ -407,8 +408,9 @@ namespace ShaderGen.Metal
                 case ShaderResourceKind.Sampler:
                     return $"thread sampler {rd.Name}_param";
                 case ShaderResourceKind.Uniform:
-                case ShaderResourceKind.StructuredBuffer:
                     return $"constant {CSharpToShaderType(rd.ValueType.Name)}& {rd.Name}_param";
+                case ShaderResourceKind.StructuredBuffer:
+                    return $"constant {CSharpToShaderType(rd.ValueType.Name)}* {rd.Name}_param";
                 case ShaderResourceKind.RWStructuredBuffer:
                     return $"device {CSharpToShaderType(rd.ValueType.Name)}* {rd.Name}_param";
                 default:
