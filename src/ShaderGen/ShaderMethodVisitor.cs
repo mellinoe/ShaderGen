@@ -450,12 +450,10 @@ namespace ShaderGen
                 {
                     sb.AppendLine(Visit(statement));
                 }
-                sb.AppendLine("break;");
             }
             sb.AppendLine("}");
             return sb.ToString();
         }
-
         public override string VisitCaseSwitchLabel(CaseSwitchLabelSyntax node)
         {
             StringBuilder sb = new StringBuilder();
@@ -468,6 +466,11 @@ namespace ShaderGen
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("default:");
             return sb.ToString();
+        }
+
+        public override string VisitBreakStatement(BreakStatementSyntax node)
+        {
+            return "break;";
         }
 
         public override string VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node)
