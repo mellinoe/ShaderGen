@@ -77,12 +77,6 @@ namespace ShaderGen.Metal
 
             List<string> resourceArgList = new List<string>();
             int bufferBinding = 0;
-            if (function.Type == ShaderFunctionType.VertexEntryPoint
-                && function.Parameters.Length > 0)
-            {
-                bufferBinding = 1;
-            }
-
             int textureBinding = 0;
             int samplerBinding = 0;
             int setIndex = 0;
