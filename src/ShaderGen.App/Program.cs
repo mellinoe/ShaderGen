@@ -22,10 +22,14 @@ namespace ShaderGen.App
         private static string s_fxcPath;
         private static bool? s_fxcAvailable;
         private static bool? s_glslangValidatorAvailable;
-        private static bool? s_metalToolsAvailable;
 
-        const string metalPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metal";
-        const string metallibPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metallib";
+        private static bool? s_metalMacOSToolsAvailable;
+        const string metalMacOSPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metal";
+        const string metallibMacOSPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metallib";
+
+        private static bool? s_metaliOSToolsAvailable;
+        const string metaliOSPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/usr/bin/metal";
+        const string metallibiOSPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/usr/bin/metallib";
 
         public static int Main(string[] args)
         {
@@ -194,10 +198,10 @@ namespace ShaderGen.App
                             vsOutPath,
                             set.VertexFunction.Name,
                             ShaderFunctionType.VertexEntryPoint,
-                            out string genPath);
+                            out string[] genPaths);
                         if (succeeded)
                         {
-                            generatedFilePaths.Add(genPath);
+                            generatedFilePaths.AddRange(genPaths);
                         }
                         if (!succeeded || listAllFiles)
                         {
@@ -214,10 +218,10 @@ namespace ShaderGen.App
                             fsOutPath,
                             set.FragmentFunction.Name,
                             ShaderFunctionType.FragmentEntryPoint,
-                            out string genPath);
+                            out string[] genPaths);
                         if (succeeded)
                         {
-                            generatedFilePaths.Add(genPath);
+                            generatedFilePaths.AddRange(genPaths);
                         }
                         if (!succeeded || listAllFiles)
                         {
@@ -234,10 +238,10 @@ namespace ShaderGen.App
                             csOutPath,
                             set.ComputeFunction.Name,
                             ShaderFunctionType.ComputeEntryPoint,
-                            out string genPath);
+                            out string[] genPaths);
                         if (succeeded)
                         {
-                            generatedFilePaths.Add(genPath);
+                            generatedFilePaths.AddRange(genPaths);
                         }
                         if (!succeeded || listAllFiles)
                         {
@@ -264,24 +268,31 @@ namespace ShaderGen.App
             }
         }
 
-        private static bool CompileCode(LanguageBackend lang, string shaderPath, string entryPoint, ShaderFunctionType type, out string path)
+        private static bool CompileCode(LanguageBackend lang, string shaderPath, string entryPoint, ShaderFunctionType type, out string[] paths)
         {
             Type langType = lang.GetType();
             if (langType == typeof(HlslBackend) && IsFxcAvailable())
             {
-                return CompileHlsl(shaderPath, entryPoint, type, out path);
+                bool result = CompileHlsl(shaderPath, entryPoint, type, out string path);
+                paths = new[] { path };
+                return result;
             }
             else if (langType == typeof(Glsl450Backend) && IsGlslangValidatorAvailable())
             {
-                return CompileSpirv(shaderPath, entryPoint, type, out path);
+                bool result = CompileSpirv(shaderPath, entryPoint, type, out string path);
+                paths = new[] { path };
+                return result;
             }
-            else if (langType == typeof(MetalBackend) && AreMetalToolsAvailable())
+            else if (langType == typeof(MetalBackend) && AreMetalMacOSToolsAvailable())
             {
-                return CompileMetal(shaderPath, out path);
+                bool macOSresult = CompileMetal(shaderPath, true, out string pathMacOS);
+                bool iosResult = CompileMetal(shaderPath, false, out string pathiOS);
+                paths = new[] { pathMacOS, pathiOS };
+                return macOSresult && iosResult;
             }
             else
             {
-                path = null;
+                paths = Array.Empty<string>();
                 return false;
             }
         }
@@ -360,12 +371,17 @@ namespace ShaderGen.App
             return false;
         }
 
-        private static bool CompileMetal(string shaderPath, out string path)
+        private static bool CompileMetal(string shaderPath, bool mac, out string path)
         {
+            string metalPath = mac ? metalMacOSPath : "xcrun";
+            string metallibPath = mac ? metallibMacOSPath : "xcrun";
+
             string shaderPathWithoutExtension = Path.ChangeExtension(shaderPath, null);
-            string outputPath = shaderPathWithoutExtension + ".metallib";
+            string extension = mac ? ".metallib" : ".ios.metallib";
+            string outputPath = shaderPathWithoutExtension + extension;
             string bitcodePath = Path.GetTempFileName();
-            string metalArgs = $"-x metal -o {bitcodePath} {shaderPath}";
+            string prefix = mac ? string.Empty : "--sdk iphoneos metal";
+            string metalArgs = $"{prefix} -x metal -o {bitcodePath} {shaderPath}";
             try
             {
                 ProcessStartInfo metalPSI = new ProcessStartInfo(metalPath, metalArgs);
@@ -379,7 +395,8 @@ namespace ShaderGen.App
                     throw new ShaderGenerationException(metalProcess.StandardError.ReadToEnd());
                 }
 
-                string metallibArgs = $"-o {outputPath} {bitcodePath}";
+                prefix = mac ? string.Empty : "--sdk iphoneos metallib";
+                string metallibArgs = $"{prefix} -o {outputPath} {bitcodePath}";
                 ProcessStartInfo metallibPSI = new ProcessStartInfo(metallibPath, metallibArgs);
                 metallibPSI.RedirectStandardError = true;
                 metallibPSI.RedirectStandardOutput = true;
@@ -429,14 +446,24 @@ namespace ShaderGen.App
             return s_glslangValidatorAvailable.Value;
         }
 
-        public static bool AreMetalToolsAvailable()
+        public static bool AreMetalMacOSToolsAvailable()
         {
-            if (!s_metalToolsAvailable.HasValue)
+            if (!s_metalMacOSToolsAvailable.HasValue)
             {
-                s_metalToolsAvailable = File.Exists(metalPath) && File.Exists(metallibPath);
+                s_metalMacOSToolsAvailable = File.Exists(metalMacOSPath) && File.Exists(metallibMacOSPath);
             }
 
-            return s_metalToolsAvailable.Value;
+            return s_metalMacOSToolsAvailable.Value;
+        }
+
+        public static bool AreMetaliOSToolsAvailable()
+        {
+            if (!s_metaliOSToolsAvailable.HasValue)
+            {
+                s_metaliOSToolsAvailable = File.Exists(metaliOSPath) && File.Exists(metallibiOSPath);
+            }
+
+            return s_metaliOSToolsAvailable.Value;
         }
 
         private static string BackendExtension(LanguageBackend lang)

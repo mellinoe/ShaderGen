@@ -1,6 +1,5 @@
 <Project>
   <Target Name="GetFilesToPack" AfterTargets="CoreCompile">
-    <Error Condition="!Exists('$(PublishedToolPath)\ShaderGen.App.dll')" Text="The ShaderGen.App project MUST be built before ShaderGen.Build.csproj." />
     <ItemGroup>
       <Content Include="$(PublishedToolPath)\**\*">
         <Pack>true</Pack>
