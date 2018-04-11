@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -49,7 +50,6 @@ namespace ShaderGen.Glsl
         {
             BackendContext context = GetContext(setName);
             StringBuilder sb = new StringBuilder();
-            HashSet<ResourceDefinition> resourcesUsed = new HashSet<ResourceDefinition>();
 
             ShaderFunctionAndMethodDeclarationSyntax entryPoint = context.Functions.SingleOrDefault(
                 sfabs => sfabs.Function.Name == function.Name);
@@ -68,56 +68,62 @@ namespace ShaderGen.Glsl
                 WriteStructure(sb, sd);
             }
 
+            String funcStr, entryStr;
+            HashSet<ResourceDefinition> resourcesUsed = ProcessFunctions(setName, entryPoint, out funcStr, out entryStr);
+
             foreach (ResourceDefinition rd in context.Resources)
             {
                 switch (rd.ResourceKind)
                 {
                     case ShaderResourceKind.Uniform:
-                        WriteUniform(sb, rd);
+                        if (resourcesUsed.Contains(rd))
+                        {
+                            WriteUniform(sb, rd);
+                        }
                         break;
                     case ShaderResourceKind.Texture2D:
-                        WriteTexture2D(sb, rd);
+                        if (resourcesUsed.Contains(rd))
+                        {
+                            WriteTexture2D(sb, rd);
+                        }
                         break;
                     case ShaderResourceKind.Texture2DArray:
-                        WriteTexture2DArray(sb, rd);
+                        if (resourcesUsed.Contains(rd))
+                        {
+                            WriteTexture2DArray(sb, rd);
+                        }
                         break;
                     case ShaderResourceKind.TextureCube:
-                        WriteTextureCube(sb, rd);
+                        if (resourcesUsed.Contains(rd))
+                        {
+                            WriteTextureCube(sb, rd);
+                        }
                         break;
                     case ShaderResourceKind.Texture2DMS:
-                        WriteTexture2DMS(sb, rd);
+                        if (resourcesUsed.Contains(rd))
+                        {
+                            WriteTexture2DMS(sb, rd);
+                        }
                         break;
                     case ShaderResourceKind.Sampler:
-                        WriteSampler(sb, rd);
+                        if (resourcesUsed.Contains(rd))
+                        {
+                            WriteSampler(sb, rd);
+                        }
                         break;
                     case ShaderResourceKind.StructuredBuffer:
                     case ShaderResourceKind.RWStructuredBuffer:
-                        WriteStructuredBuffer(sb, rd, rd.ResourceKind == ShaderResourceKind.StructuredBuffer);
+                        if (resourcesUsed.Contains(rd))
+                        {
+                            WriteStructuredBuffer(sb, rd, rd.ResourceKind == ShaderResourceKind.StructuredBuffer);
+                        }
                         break;
                     default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
                 }
             }
 
-            foreach (ShaderFunctionAndMethodDeclarationSyntax f in entryPoint.OrderedFunctionList)
-            {
-                if (!f.Function.IsEntryPoint)
-                {
-                    MethodProcessResult processResult = new ShaderMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.MethodDeclaration);
-                    foreach (ResourceDefinition rd in processResult.ResourcesUsed)
-                    {
-                        resourcesUsed.Add(rd);
-                    }
-                    sb.AppendLine(processResult.FullText);
-                }
-            }
-
-            MethodProcessResult result = new ShaderMethodVisitor(Compilation, setName, entryPoint.Function, this)
-                .VisitFunction(entryPoint.MethodDeclaration);
-            foreach (ResourceDefinition rd in result.ResourcesUsed)
-            {
-                resourcesUsed.Add(rd);
-            }
-            sb.AppendLine(result.FullText);
+            sb.AppendLine(funcStr);
+            sb.AppendLine(entryStr);
 
             WriteMainFunction(setName, sb, entryPoint.Function);
 

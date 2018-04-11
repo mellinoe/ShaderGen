@@ -198,7 +198,6 @@ namespace ShaderGen.Metal
             Debug.Assert(function.IsEntryPoint);
 
             StringBuilder sb = new StringBuilder();
-            HashSet<ResourceDefinition> resourcesUsed = new HashSet<ResourceDefinition>();
             BackendContext setContext = GetContext(setName);
             ShaderFunctionAndMethodDeclarationSyntax entryPoint = setContext.Functions.SingleOrDefault(
                 sfabs => sfabs.Function.Name == function.Name);
@@ -221,26 +220,8 @@ namespace ShaderGen.Metal
                 WriteStructure(sb, sd);
             }
 
-            StringBuilder functionsSB = new StringBuilder();
-            foreach (ShaderFunctionAndMethodDeclarationSyntax f in entryPoint.OrderedFunctionList)
-            {
-                if (!f.Function.IsEntryPoint)
-                {
-                    MethodProcessResult processResult = new MetalMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.MethodDeclaration);
-                    foreach (ResourceDefinition rd in processResult.ResourcesUsed)
-                    {
-                        resourcesUsed.Add(rd);
-                    }
-                    functionsSB.AppendLine(processResult.FullText);
-                }
-            }
-
-            MethodProcessResult entryResult = new MetalMethodVisitor(Compilation, setName, entryPoint.Function, this)
-                .VisitFunction(entryPoint.MethodDeclaration);
-            foreach (ResourceDefinition rd in entryResult.ResourcesUsed)
-            {
-                resourcesUsed.Add(rd);
-            }
+            String funcsStr, entryStr;
+            HashSet<ResourceDefinition> resourcesUsed = ProcessFunctions(setName, entryPoint,out funcsStr,out entryStr);
 
             StringBuilder containerSB = new StringBuilder();
             containerSB.AppendLine("struct ShaderContainer {");
@@ -261,7 +242,7 @@ namespace ShaderGen.Metal
                 containerSB.AppendLine(sf);
             }
 
-            containerSB.AppendLine(functionsSB.ToString());
+            containerSB.AppendLine(funcsStr);
 
             // Emit the ctor definition
             containerSB.AppendLine($"ShaderContainer(");
@@ -276,7 +257,7 @@ namespace ShaderGen.Metal
             }
             containerSB.AppendLine("{}");
 
-            containerSB.AppendLine(entryResult.FullText);
+            containerSB.AppendLine(entryStr);
 
             containerSB.AppendLine("};"); // Close the global containing struct.
             sb.AppendLine(containerSB.ToString());

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 
 namespace ShaderGen
 {
@@ -358,6 +359,41 @@ namespace ShaderGen
         internal virtual string CorrectCastExpression(string type, string expression)
         {
             return $"({type}) {expression}";
+        }
+
+        protected virtual ShaderMethodVisitor VisitShaderMethod(Compilation compilation,string setName,ShaderFunction func)
+        {
+            return new ShaderMethodVisitor(Compilation, setName,func, this);
+        }
+
+        protected HashSet<ResourceDefinition> ProcessFunctions(string setName, ShaderFunctionAndMethodDeclarationSyntax entryPoint,out String funcs,out String entry)
+        {
+            HashSet<ResourceDefinition> resourcesUsed = new HashSet<ResourceDefinition>();
+            StringBuilder sb = new StringBuilder();
+
+            foreach (ShaderFunctionAndMethodDeclarationSyntax f in entryPoint.OrderedFunctionList)
+            {
+                if (!f.Function.IsEntryPoint)
+                {
+                    MethodProcessResult processResult = VisitShaderMethod(Compilation, setName, f.Function).VisitFunction(f.MethodDeclaration);
+                    foreach (ResourceDefinition rd in processResult.ResourcesUsed)
+                    {
+                        resourcesUsed.Add(rd);
+                    }
+                    sb.AppendLine(processResult.FullText);
+                }
+            }
+            funcs = sb.ToString();
+
+            MethodProcessResult result = VisitShaderMethod(Compilation, setName, entryPoint.Function).VisitFunction(entryPoint.MethodDeclaration);
+            foreach (ResourceDefinition rd in result.ResourcesUsed)
+            {
+                resourcesUsed.Add(rd);
+            }
+
+            entry = result.FullText;
+
+            return resourcesUsed;
         }
     }
 }
