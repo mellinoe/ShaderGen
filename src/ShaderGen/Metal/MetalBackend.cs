@@ -459,5 +459,10 @@ namespace ShaderGen.Metal
                     return string.Empty;
             }
         }
+
+        protected override ShaderMethodVisitor VisitShaderMethod(Compilation compilation, string setName, ShaderFunction func)
+        {
+            return new MetalMethodVisitor(compilation, setName, func, this);
+        }
     }
 }

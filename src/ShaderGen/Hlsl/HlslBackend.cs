@@ -308,7 +308,7 @@ namespace ShaderGen.Hlsl
 
         protected override ShaderMethodVisitor VisitShaderMethod(Compilation compilation, string setName, ShaderFunction func)
         {
-            return new HlslMethodVisitor(compilation, setName, func,this);
+            return new HlslMethodVisitor(compilation, setName, func, this);
         }
     }
 }
