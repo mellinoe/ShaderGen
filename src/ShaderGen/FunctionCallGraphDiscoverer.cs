@@ -131,6 +131,11 @@ namespace ShaderGen
                 else if (node.Expression is MemberAccessExpressionSyntax maes)
                 {
                     SymbolInfo methodSymbol = _discoverer.Compilation.GetSemanticModel(maes.SyntaxTree).GetSymbolInfo(maes);
+                    if (methodSymbol.Symbol == null)
+                    {
+                        throw new ShaderGenerationException($"A member reference could not be identified: {node.Expression}");
+                    }
+
                     if (methodSymbol.Symbol is IMethodSymbol ims)
                     {
                         string containingType = Utilities.GetFullMetadataName(ims.ContainingType);
