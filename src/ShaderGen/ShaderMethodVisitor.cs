@@ -337,6 +337,7 @@ namespace ShaderGen
             SymbolInfo symbolInfo = GetModel(node).GetSymbolInfo(node);
             ISymbol symbol = symbolInfo.Symbol;
             string containingTypeName = Utilities.GetFullName(symbolInfo.Symbol.ContainingType);
+
             if (containingTypeName == "ShaderGen.ShaderBuiltins")
             {
                 TryRecognizeBuiltInVariable(symbolInfo);
@@ -347,6 +348,7 @@ namespace ShaderGen
                 ResourceDefinition referencedResource = _backend.GetContext(_setName).Resources.Single(rd => rd.Name == symbolName);
                 _resourcesUsed.Add(referencedResource);
                 _shaderFunction.UsesTexture2DMS |= referencedResource.ValueType.Name == "ShaderGen.Texture2DMSResource";
+                _shaderFunction.UsesStructuredBuffer |= referencedResource.ResourceKind == ShaderResourceKind.StructuredBuffer;
 
                 return _backend.CorrectFieldAccess(symbolInfo);
             }
