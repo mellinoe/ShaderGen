@@ -19,7 +19,8 @@ namespace ShaderGen.Glsl
 
         protected override void WriteVersionHeader(ShaderFunction function, StringBuilder sb)
         {
-            string version = function.Type == ShaderFunctionType.ComputeEntryPoint ? "430" : "330 core";
+            string version = (function.Type == ShaderFunctionType.ComputeEntryPoint
+                           || function.UsesStructuredBuffer) ? "430" : "330 core";
             sb.AppendLine($"#version {version}");
             sb.AppendLine();
             sb.AppendLine($"struct SamplerDummy {{ int _dummyValue; }};");

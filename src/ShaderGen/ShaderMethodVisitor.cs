@@ -346,7 +346,8 @@ namespace ShaderGen
                 string symbolName = symbol.Name;
                 ResourceDefinition referencedResource = _backend.GetContext(_setName).Resources.Single(rd => rd.Name == symbolName);
                 _resourcesUsed.Add(referencedResource);
-                _shaderFunction.UsesTexture2DMS |= referencedResource.ValueType.Name == "ShaderGen.Texture2DMSResource";
+                _shaderFunction.UsesTexture2DMS |= referencedResource.ResourceKind == ShaderResourceKind.Texture2DMS;
+                _shaderFunction.UsesStructuredBuffer |= referencedResource.ResourceKind == ShaderResourceKind.StructuredBuffer;
 
                 return _backend.CorrectFieldAccess(symbolInfo);
             }

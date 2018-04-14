@@ -46,6 +46,7 @@ namespace ShaderGen.Tests
             yield return new object[] { "TestShaders.OutParameters.VS", null };
             yield return new object[] { null, "TestShaders.ExpressionBodiedMethods.ExpressionBodyWithReturn" };
             yield return new object[] { null, "TestShaders.ExpressionBodiedMethods.ExpressionBodyWithoutReturn" };
+            yield return new object[] { "TestShaders.StructuredBufferTestShader.VS", null };
         }
 
         public static IEnumerable<object[]> ComputeShaders()

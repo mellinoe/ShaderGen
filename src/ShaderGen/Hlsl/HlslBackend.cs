@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -148,7 +149,6 @@ namespace ShaderGen.Hlsl
             Debug.Assert(function.IsEntryPoint);
 
             StringBuilder sb = new StringBuilder();
-            HashSet<ResourceDefinition> resourcesUsed = new HashSet<ResourceDefinition>();
 
             BackendContext setContext = GetContext(setName);
             ShaderFunctionAndMethodDeclarationSyntax entryPoint = setContext.Functions.SingleOrDefault(
@@ -170,26 +170,8 @@ namespace ShaderGen.Hlsl
             List<ResourceDefinition[]> resourcesBySet = setContext.Resources.GroupBy(rd => rd.Set)
                 .Select(g => g.ToArray()).ToList();
 
-            StringBuilder functionsSB = new StringBuilder();
-            foreach (ShaderFunctionAndMethodDeclarationSyntax f in entryPoint.OrderedFunctionList)
-            {
-                if (!f.Function.IsEntryPoint)
-                {
-                    MethodProcessResult processResult = new HlslMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.MethodDeclaration);
-                    foreach (ResourceDefinition rd in processResult.ResourcesUsed)
-                    {
-                        resourcesUsed.Add(rd);
-                    }
-                    functionsSB.AppendLine(processResult.FullText);
-                }
-            }
-
-            MethodProcessResult result = new HlslMethodVisitor(Compilation, setName, entryPoint.Function, this)
-                .VisitFunction(entryPoint.MethodDeclaration);
-            foreach (ResourceDefinition rd in result.ResourcesUsed)
-            {
-                resourcesUsed.Add(rd);
-            }
+            HashSet<ResourceDefinition> resourcesUsed
+                = ProcessFunctions(setName, entryPoint, out string funcStr, out string entryStr);
 
             // Emit all of the resources now, because we've learned which ones are actually used by this function.
             int uniformBinding = 0, textureBinding = 0, samplerBinding = 0, uavBinding = function.ColorOutputCount;
@@ -201,63 +183,43 @@ namespace ShaderGen.Hlsl
 
                 foreach (ResourceDefinition rd in set)
                 {
+                    if (!resourcesUsed.Contains(rd))
+                    {
+                        continue;
+                    }
+
                     switch (rd.ResourceKind)
                     {
                         case ShaderResourceKind.Uniform:
-                            if (resourcesUsed.Contains(rd))
-                            {
-                                WriteUniform(sb, rd, uniformBinding);
-                            }
+                            WriteUniform(sb, rd, uniformBinding);
                             uniformBinding++;
                             break;
                         case ShaderResourceKind.Texture2D:
-                            if (resourcesUsed.Contains(rd))
-                            {
-                                WriteTexture2D(sb, rd, textureBinding);
-                            }
+                            WriteTexture2D(sb, rd, textureBinding);
                             textureBinding++;
                             break;
                         case ShaderResourceKind.Texture2DArray:
-                            if (resourcesUsed.Contains(rd))
-                            {
-                                WriteTexture2DArray(sb, rd, textureBinding);
-                            }
+                            WriteTexture2DArray(sb, rd, textureBinding);
                             textureBinding++;
                             break;
                         case ShaderResourceKind.TextureCube:
-                            if (resourcesUsed.Contains(rd))
-                            {
-                                WriteTextureCube(sb, rd, textureBinding);
-                            }
+                            WriteTextureCube(sb, rd, textureBinding);
                             textureBinding++;
                             break;
                         case ShaderResourceKind.Texture2DMS:
-                            if (resourcesUsed.Contains(rd))
-                            {
-
-                                WriteTexture2DMS(sb, rd, textureBinding);
-                            }
+                            WriteTexture2DMS(sb, rd, textureBinding);
                             textureBinding++;
                             break;
                         case ShaderResourceKind.Sampler:
-                            if (resourcesUsed.Contains(rd))
-                            {
-                                WriteSampler(sb, rd, samplerBinding);
-                            }
+                            WriteSampler(sb, rd, samplerBinding);
                             samplerBinding++;
                             break;
                         case ShaderResourceKind.StructuredBuffer:
-                            if (resourcesUsed.Contains(rd))
-                            {
-                                WriteStructuredBuffer(sb, rd, textureBinding);
-                            }
+                            WriteStructuredBuffer(sb, rd, textureBinding);
                             textureBinding++;
                             break;
                         case ShaderResourceKind.RWStructuredBuffer:
-                            if (resourcesUsed.Contains(rd))
-                            {
-                                WriteRWStructuredBuffer(sb, rd, uavBinding);
-                            }
+                            WriteRWStructuredBuffer(sb, rd, uavBinding);
                             uavBinding++;
                             break;
                         case ShaderResourceKind.RWTexture2D:
@@ -273,8 +235,8 @@ namespace ShaderGen.Hlsl
             }
 
             // Resources need to be defined before the function that uses them -- so append this after the resources.
-            sb.Append(functionsSB.ToString());
-            sb.AppendLine(result.FullText);
+            sb.AppendLine(funcStr);
+            sb.AppendLine(entryStr);
 
             return new MethodProcessResult(sb.ToString(), resourcesUsed);
         }
@@ -334,6 +296,11 @@ namespace ShaderGen.Hlsl
         internal override string CorrectIdentifier(string identifier)
         {
             return identifier;
+        }
+
+        protected override ShaderMethodVisitor VisitShaderMethod(string setName, ShaderFunction func)
+        {
+            return new HlslMethodVisitor(Compilation, setName, func, this);
         }
     }
 }

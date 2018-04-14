@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -49,7 +50,6 @@ namespace ShaderGen.Glsl
         {
             BackendContext context = GetContext(setName);
             StringBuilder sb = new StringBuilder();
-            HashSet<ResourceDefinition> resourcesUsed = new HashSet<ResourceDefinition>();
 
             ShaderFunctionAndMethodDeclarationSyntax entryPoint = context.Functions.SingleOrDefault(
                 sfabs => sfabs.Function.Name == function.Name);
@@ -68,8 +68,16 @@ namespace ShaderGen.Glsl
                 WriteStructure(sb, sd);
             }
 
+            HashSet<ResourceDefinition> resourcesUsed
+                = ProcessFunctions(setName, entryPoint, out string funcStr, out string entryStr);
+
             foreach (ResourceDefinition rd in context.Resources)
             {
+                if (!resourcesUsed.Contains(rd))
+                {
+                    continue;
+                }
+
                 switch (rd.ResourceKind)
                 {
                     case ShaderResourceKind.Uniform:
@@ -101,26 +109,8 @@ namespace ShaderGen.Glsl
                 }
             }
 
-            foreach (ShaderFunctionAndMethodDeclarationSyntax f in entryPoint.OrderedFunctionList)
-            {
-                if (!f.Function.IsEntryPoint)
-                {
-                    MethodProcessResult processResult = new ShaderMethodVisitor(Compilation, setName, f.Function, this).VisitFunction(f.MethodDeclaration);
-                    foreach (ResourceDefinition rd in processResult.ResourcesUsed)
-                    {
-                        resourcesUsed.Add(rd);
-                    }
-                    sb.AppendLine(processResult.FullText);
-                }
-            }
-
-            MethodProcessResult result = new ShaderMethodVisitor(Compilation, setName, entryPoint.Function, this)
-                .VisitFunction(entryPoint.MethodDeclaration);
-            foreach (ResourceDefinition rd in result.ResourcesUsed)
-            {
-                resourcesUsed.Add(rd);
-            }
-            sb.AppendLine(result.FullText);
+            sb.AppendLine(funcStr);
+            sb.AppendLine(entryStr);
 
             WriteMainFunction(setName, sb, entryPoint.Function);
 

@@ -20,7 +20,9 @@ namespace ShaderGen.Glsl
         protected override void WriteVersionHeader(ShaderFunction function, StringBuilder sb)
         {
             bool useVersion320 = function.UsesTexture2DMS;
-            string versionNumber = useVersion320 ? "320" : "300";
+            bool useVersion310 = function.UsesStructuredBuffer;
+            string versionNumber = useVersion320 ? "320" :
+                                   useVersion310 ? "310" : "300";
             string version = $"{versionNumber} es";
             sb.AppendLine($"#version {version}");
             sb.AppendLine($"precision mediump float;");
