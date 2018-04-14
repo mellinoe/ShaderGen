@@ -361,12 +361,12 @@ namespace ShaderGen
             return $"({type}) {expression}";
         }
 
-        protected virtual ShaderMethodVisitor VisitShaderMethod(Compilation compilation,string setName,ShaderFunction func)
+        protected virtual ShaderMethodVisitor VisitShaderMethod(string setName, ShaderFunction func)
         {
-            return new ShaderMethodVisitor(Compilation, setName,func, this);
+            return new ShaderMethodVisitor(Compilation, setName, func, this);
         }
 
-        protected HashSet<ResourceDefinition> ProcessFunctions(string setName, ShaderFunctionAndMethodDeclarationSyntax entryPoint,out String funcs,out String entry)
+        protected HashSet<ResourceDefinition> ProcessFunctions(string setName, ShaderFunctionAndMethodDeclarationSyntax entryPoint, out string funcs, out string entry)
         {
             HashSet<ResourceDefinition> resourcesUsed = new HashSet<ResourceDefinition>();
             StringBuilder sb = new StringBuilder();
@@ -375,7 +375,7 @@ namespace ShaderGen
             {
                 if (!f.Function.IsEntryPoint)
                 {
-                    MethodProcessResult processResult = VisitShaderMethod(Compilation, setName, f.Function).VisitFunction(f.MethodDeclaration);
+                    MethodProcessResult processResult = VisitShaderMethod(setName, f.Function).VisitFunction(f.MethodDeclaration);
                     foreach (ResourceDefinition rd in processResult.ResourcesUsed)
                     {
                         resourcesUsed.Add(rd);
@@ -385,7 +385,7 @@ namespace ShaderGen
             }
             funcs = sb.ToString();
 
-            MethodProcessResult result = VisitShaderMethod(Compilation, setName, entryPoint.Function).VisitFunction(entryPoint.MethodDeclaration);
+            MethodProcessResult result = VisitShaderMethod(setName, entryPoint.Function).VisitFunction(entryPoint.MethodDeclaration);
             foreach (ResourceDefinition rd in result.ResourcesUsed)
             {
                 resourcesUsed.Add(rd);

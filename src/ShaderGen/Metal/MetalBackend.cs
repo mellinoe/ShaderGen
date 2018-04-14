@@ -220,8 +220,8 @@ namespace ShaderGen.Metal
                 WriteStructure(sb, sd);
             }
 
-            String funcsStr, entryStr;
-            HashSet<ResourceDefinition> resourcesUsed = ProcessFunctions(setName, entryPoint,out funcsStr,out entryStr);
+            HashSet<ResourceDefinition> resourcesUsed
+                = ProcessFunctions(setName, entryPoint, out string funcsStr, out string entryStr);
 
             StringBuilder containerSB = new StringBuilder();
             containerSB.AppendLine("struct ShaderContainer {");
@@ -460,9 +460,9 @@ namespace ShaderGen.Metal
             }
         }
 
-        protected override ShaderMethodVisitor VisitShaderMethod(Compilation compilation, string setName, ShaderFunction func)
+        protected override ShaderMethodVisitor VisitShaderMethod(string setName, ShaderFunction func)
         {
-            return new MetalMethodVisitor(compilation, setName, func, this);
+            return new MetalMethodVisitor(Compilation, setName, func, this);
         }
     }
 }

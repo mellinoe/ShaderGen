@@ -68,55 +68,39 @@ namespace ShaderGen.Glsl
                 WriteStructure(sb, sd);
             }
 
-            String funcStr, entryStr;
-            HashSet<ResourceDefinition> resourcesUsed = ProcessFunctions(setName, entryPoint, out funcStr, out entryStr);
+            HashSet<ResourceDefinition> resourcesUsed
+                = ProcessFunctions(setName, entryPoint, out string funcStr, out string entryStr);
 
             foreach (ResourceDefinition rd in context.Resources)
             {
+                if (!resourcesUsed.Contains(rd))
+                {
+                    continue;
+                }
+
                 switch (rd.ResourceKind)
                 {
                     case ShaderResourceKind.Uniform:
-                        if (resourcesUsed.Contains(rd))
-                        {
-                            WriteUniform(sb, rd);
-                        }
+                        WriteUniform(sb, rd);
                         break;
                     case ShaderResourceKind.Texture2D:
-                        if (resourcesUsed.Contains(rd))
-                        {
-                            WriteTexture2D(sb, rd);
-                        }
+                        WriteTexture2D(sb, rd);
                         break;
                     case ShaderResourceKind.Texture2DArray:
-                        if (resourcesUsed.Contains(rd))
-                        {
-                            WriteTexture2DArray(sb, rd);
-                        }
+                        WriteTexture2DArray(sb, rd);
                         break;
                     case ShaderResourceKind.TextureCube:
-                        if (resourcesUsed.Contains(rd))
-                        {
-                            WriteTextureCube(sb, rd);
-                        }
+                        WriteTextureCube(sb, rd);
                         break;
                     case ShaderResourceKind.Texture2DMS:
-                        if (resourcesUsed.Contains(rd))
-                        {
-                            WriteTexture2DMS(sb, rd);
-                        }
+                        WriteTexture2DMS(sb, rd);
                         break;
                     case ShaderResourceKind.Sampler:
-                        if (resourcesUsed.Contains(rd))
-                        {
-                            WriteSampler(sb, rd);
-                        }
+                        WriteSampler(sb, rd);
                         break;
                     case ShaderResourceKind.StructuredBuffer:
                     case ShaderResourceKind.RWStructuredBuffer:
-                        if (resourcesUsed.Contains(rd))
-                        {
-                            WriteStructuredBuffer(sb, rd, rd.ResourceKind == ShaderResourceKind.StructuredBuffer);
-                        }
+                        WriteStructuredBuffer(sb, rd, rd.ResourceKind == ShaderResourceKind.StructuredBuffer);
                         break;
                     default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
                 }

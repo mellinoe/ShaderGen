@@ -165,8 +165,8 @@ namespace ShaderGen.Hlsl
             List<ResourceDefinition[]> resourcesBySet = setContext.Resources.GroupBy(rd => rd.Set)
                 .Select(g => g.ToArray()).ToList();
 
-            String funcStr, entryStr;
-            HashSet<ResourceDefinition> resourcesUsed = ProcessFunctions(setName, entryPoint, out funcStr,out entryStr);
+            HashSet<ResourceDefinition> resourcesUsed
+                = ProcessFunctions(setName, entryPoint, out string funcStr, out string entryStr);
 
             // Emit all of the resources now, because we've learned which ones are actually used by this function.
             int uniformBinding = 0, textureBinding = 0, samplerBinding = 0, uavBinding = function.ColorOutputCount;
@@ -178,63 +178,43 @@ namespace ShaderGen.Hlsl
 
                 foreach (ResourceDefinition rd in set)
                 {
+                    if (!resourcesUsed.Contains(rd))
+                    {
+                        continue;
+                    }
+
                     switch (rd.ResourceKind)
                     {
                         case ShaderResourceKind.Uniform:
-                            if (resourcesUsed.Contains(rd))
-                            {
-                                WriteUniform(sb, rd, uniformBinding);
-                            }
+                            WriteUniform(sb, rd, uniformBinding);
                             uniformBinding++;
                             break;
                         case ShaderResourceKind.Texture2D:
-                            if (resourcesUsed.Contains(rd))
-                            {
-                                WriteTexture2D(sb, rd, textureBinding);
-                            }
+                            WriteTexture2D(sb, rd, textureBinding);
                             textureBinding++;
                             break;
                         case ShaderResourceKind.Texture2DArray:
-                            if (resourcesUsed.Contains(rd))
-                            {
-                                WriteTexture2DArray(sb, rd, textureBinding);
-                            }
+                            WriteTexture2DArray(sb, rd, textureBinding);
                             textureBinding++;
                             break;
                         case ShaderResourceKind.TextureCube:
-                            if (resourcesUsed.Contains(rd))
-                            {
-                                WriteTextureCube(sb, rd, textureBinding);
-                            }
+                            WriteTextureCube(sb, rd, textureBinding);
                             textureBinding++;
                             break;
                         case ShaderResourceKind.Texture2DMS:
-                            if (resourcesUsed.Contains(rd))
-                            {
-
-                                WriteTexture2DMS(sb, rd, textureBinding);
-                            }
+                            WriteTexture2DMS(sb, rd, textureBinding);
                             textureBinding++;
                             break;
                         case ShaderResourceKind.Sampler:
-                            if (resourcesUsed.Contains(rd))
-                            {
-                                WriteSampler(sb, rd, samplerBinding);
-                            }
+                            WriteSampler(sb, rd, samplerBinding);
                             samplerBinding++;
                             break;
                         case ShaderResourceKind.StructuredBuffer:
-                            if (resourcesUsed.Contains(rd))
-                            {
-                                WriteStructuredBuffer(sb, rd, textureBinding);
-                            }
+                            WriteStructuredBuffer(sb, rd, textureBinding);
                             textureBinding++;
                             break;
                         case ShaderResourceKind.RWStructuredBuffer:
-                            if (resourcesUsed.Contains(rd))
-                            {
-                                WriteRWStructuredBuffer(sb, rd, uavBinding);
-                            }
+                            WriteRWStructuredBuffer(sb, rd, uavBinding);
                             uavBinding++;
                             break;
                         default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
@@ -306,9 +286,9 @@ namespace ShaderGen.Hlsl
             return identifier;
         }
 
-        protected override ShaderMethodVisitor VisitShaderMethod(Compilation compilation, string setName, ShaderFunction func)
+        protected override ShaderMethodVisitor VisitShaderMethod(string setName, ShaderFunction func)
         {
-            return new HlslMethodVisitor(compilation, setName, func, this);
+            return new HlslMethodVisitor(Compilation, setName, func, this);
         }
     }
 }
