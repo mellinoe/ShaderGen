@@ -145,6 +145,13 @@ namespace ShaderGen.Metal
                             }
                             bufferBinding++;
                             break;
+                        case ShaderResourceKind.RWTexture2D:
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                resourceArgList.Add(WriteRWTexture2D(rd, textureBinding));
+                            }
+                            textureBinding++;
+                            break;
                         default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
                     }
                 }
@@ -191,6 +198,11 @@ namespace ShaderGen.Metal
         private string WriteRWStructuredBuffer(ResourceDefinition rd, int binding)
         {
             return $"device {CSharpToShaderType(rd.ValueType.Name)} *{rd.Name} [[ buffer({binding}) ]]";
+        }
+
+        private string WriteRWTexture2D(ResourceDefinition rd, int binding)
+        {
+            return $"texture2d<float, access::write> {rd.Name} [[ texture({binding}) ]]";
         }
 
         protected override MethodProcessResult GenerateFullTextCore(string setName, ShaderFunction function)
@@ -381,6 +393,8 @@ namespace ShaderGen.Metal
                     return $"constant {CSharpToShaderType(rd.ValueType.Name)}* {rd.Name};";
                 case ShaderResourceKind.RWStructuredBuffer:
                     return $"device {CSharpToShaderType(rd.ValueType.Name)}* {rd.Name};";
+                case ShaderResourceKind.RWTexture2D:
+                    return $"device texture2d<float, access::write> {rd.Name}";
                 default:
                     Debug.Fail("Invalid ResourceKind: " + rd.ResourceKind);
                     throw new InvalidOperationException();
@@ -407,9 +421,10 @@ namespace ShaderGen.Metal
                     return $"constant {CSharpToShaderType(rd.ValueType.Name)}* {rd.Name}_param";
                 case ShaderResourceKind.RWStructuredBuffer:
                     return $"device {CSharpToShaderType(rd.ValueType.Name)}* {rd.Name}_param";
+                case ShaderResourceKind.RWTexture2D:
+                    return $"device texture2d<float, access::write> {rd.Name}_param";
                 default:
-                    Debug.Fail("Invalid ResourceKind: " + rd.ResourceKind);
-                    throw new InvalidOperationException();
+                    throw new InvalidOperationException("Invalid ResourceKind: " + rd.ResourceKind);
             }
         }
 

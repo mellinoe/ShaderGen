@@ -33,6 +33,7 @@ namespace ShaderGen.Metal
                 { "Sample", Sample },
                 { "SampleGrad", SampleGrad },
                 { "Load", Load },
+                { "Store", Store },
                 { "Discard", Discard },
                 { nameof(ShaderBuiltins.ClipToTextureCoordinates), ClipToTextureCoordinates },
                 { "VertexID", VertexID },
@@ -140,6 +141,13 @@ namespace ShaderGen.Metal
             };
             ret.Add("System.Numerics.Vector4", new DictionaryTypeInvocationTranslator(v4Mappings));
 
+            Dictionary<string, InvocationTranslator> u2Mappings = new Dictionary<string, InvocationTranslator>()
+            {
+                { "ctor", VectorCtor },
+            };
+            ret.Add("ShaderGen.UInt2", new DictionaryTypeInvocationTranslator(u2Mappings));
+            ret.Add("ShaderGen.Int2", new DictionaryTypeInvocationTranslator(u2Mappings));
+
             Dictionary<string, InvocationTranslator> m4x4Mappings = new Dictionary<string, InvocationTranslator>()
             {
                 { "ctor", MatrixCtor }
@@ -153,6 +161,7 @@ namespace ShaderGen.Metal
                 { "Min", SimpleNameTranslator("min") },
                 { "Pow", Pow },
                 { "Sin", SimpleNameTranslator("sin") },
+                { "Sqrt", SimpleNameTranslator("sqrt") },
             };
             ret.Add("System.MathF", new DictionaryTypeInvocationTranslator(mathfMappings));
 
@@ -273,7 +282,19 @@ namespace ShaderGen.Metal
 
         private static string Load(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"{parameters[0].Identifier}.read(uint2({parameters[2].Identifier}.x, {parameters[2].Identifier}.y), {parameters[3].Identifier})";
+            if (parameters[0].FullTypeName.Contains("RWTexture2D"))
+            {
+                return $"{parameters[0].Identifier}.read({parameters[1].Identifier})";
+            }
+            else
+            {
+                return $"{parameters[0].Identifier}.read(uint2({parameters[2].Identifier}.x, {parameters[2].Identifier}.y), {parameters[3].Identifier})";
+            }
+        }
+
+        private static string Store(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return $"{parameters[0].Identifier}.write(uint2({parameters[1].Identifier}.x, {parameters[1].Identifier}.y), {parameters[2].Identifier})";
         }
 
         private static string Discard(string typeName, string methodName, InvocationParameterInfo[] parameters)
@@ -424,6 +445,8 @@ namespace ShaderGen.Metal
             if (name == "System.Numerics.Vector2") { shaderType = "float2"; elementCount = 2; }
             else if (name == "System.Numerics.Vector3") { shaderType = "float3"; elementCount = 3; }
             else if (name == "System.Numerics.Vector4") { shaderType = "float4"; elementCount = 4; }
+            else if (name == "ShaderGen.Int2") { shaderType = "ivec2"; elementCount = 2; }
+            else if (name == "ShaderGen.UInt2") { shaderType = "uvec2"; elementCount = 2; }
             else { throw new ShaderGenerationException("VectorCtor translator was called on an invalid type: " + name); }
         }
     }

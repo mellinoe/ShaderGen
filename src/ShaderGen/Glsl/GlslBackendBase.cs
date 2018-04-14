@@ -94,6 +94,9 @@ namespace ShaderGen.Glsl
                     case ShaderResourceKind.RWStructuredBuffer:
                         WriteStructuredBuffer(sb, rd, rd.ResourceKind == ShaderResourceKind.StructuredBuffer);
                         break;
+                    case ShaderResourceKind.RWTexture2D:
+                        WriteRWTexture2D(sb, rd);
+                        break;
                     default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
                 }
             }
@@ -390,6 +393,7 @@ namespace ShaderGen.Glsl
         protected abstract void WriteTextureCube(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteTexture2DMS(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteStructuredBuffer(StringBuilder sb, ResourceDefinition rd, bool isReadOnly);
+        protected abstract void WriteRWTexture2D(StringBuilder sb, ResourceDefinition rd);
 
         protected abstract void WriteInOutVariable(
             StringBuilder sb,

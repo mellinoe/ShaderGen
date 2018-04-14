@@ -21,7 +21,9 @@ namespace TestShaders
             }
             float l = 0;
             uint l2 = (uint) l;
+#pragma warning disable CS0219 // Variable is assigned but its value is never used
             uint l3 = 0xFFu;
+#pragma warning restore CS0219 // Variable is assigned but its value is never used
             return output;
         }
 

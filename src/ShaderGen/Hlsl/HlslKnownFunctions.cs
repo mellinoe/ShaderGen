@@ -32,6 +32,7 @@ namespace ShaderGen.Hlsl
                 { "Sample", Sample },
                 { "SampleGrad", SampleGrad },
                 { "Load", Load },
+                { "Store", Store },
                 { "Discard", Discard },
                 { nameof(ShaderBuiltins.ClipToTextureCoordinates), ClipToTextureCoordinates },
                 { "VertexID", VertexID },
@@ -139,6 +140,13 @@ namespace ShaderGen.Hlsl
             };
             ret.Add("System.Numerics.Vector4", new DictionaryTypeInvocationTranslator(v4Mappings));
 
+            Dictionary<string, InvocationTranslator> u2Mappings = new Dictionary<string, InvocationTranslator>()
+            {
+                { "ctor", VectorCtor },
+            };
+            ret.Add("ShaderGen.UInt2", new DictionaryTypeInvocationTranslator(u2Mappings));
+            ret.Add("ShaderGen.Int2", new DictionaryTypeInvocationTranslator(u2Mappings));
+
             Dictionary<string, InvocationTranslator> m4x4Mappings = new Dictionary<string, InvocationTranslator>()
             {
                 { "ctor", MatrixCtor }
@@ -152,6 +160,7 @@ namespace ShaderGen.Hlsl
                 { "Min", SimpleNameTranslator("min") },
                 { "Pow", SimpleNameTranslator("pow") },
                 { "Sin", SimpleNameTranslator("sin") },
+                { "Sqrt", SimpleNameTranslator("sqrt") },
             };
             ret.Add("System.MathF", new DictionaryTypeInvocationTranslator(mathfMappings));
 
@@ -241,15 +250,29 @@ namespace ShaderGen.Hlsl
 
         private static string Load(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            if (parameters[0].FullTypeName == "ShaderGen.Texture2DResource")
+            if (parameters[0].FullTypeName == nameof(ShaderGen) + "." + nameof(Texture2DResource))
             {
                 return $"{parameters[0].Identifier}.Load(int3({parameters[2].Identifier}, {parameters[3].Identifier}))";
             }
-            else
+            else if (parameters[0].FullTypeName == nameof(ShaderGen) + "." + nameof(Texture2DMSResource))
             {
                 return $"{parameters[0].Identifier}.Load({parameters[2].Identifier}, {parameters[3].Identifier})";
             }
+            else if (parameters[0].FullTypeName.Contains("RWTexture2D"))
+            {
+                return $"{parameters[0].Identifier}[{parameters[1].Identifier}]";
+            }
+            else
+            {
+                throw new ShaderGenerationException($"Unable to process ShaderBuiltins.Load because type {parameters[0].FullTypeName} was not recognized.");
+            }
         }
+
+        private static string Store(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return $"{parameters[0].Identifier}[{parameters[1].Identifier}] = {parameters[2].Identifier}";
+        }
+
 
         private static string Discard(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
@@ -399,6 +422,8 @@ namespace ShaderGen.Hlsl
             if (name == "System.Numerics.Vector2") { shaderType = "float2"; elementCount = 2; }
             else if (name == "System.Numerics.Vector3") { shaderType = "float3"; elementCount = 3; }
             else if (name == "System.Numerics.Vector4") { shaderType = "float4"; elementCount = 4; }
+            else if (name == "ShaderGen.Int2") { shaderType = "int2"; elementCount = 2; }
+            else if (name == "ShaderGen.UInt2") { shaderType = "uint2"; elementCount = 2; }
             else { throw new ShaderGenerationException("VectorCtor translator was called on an invalid type: " + name); }
         }
     }

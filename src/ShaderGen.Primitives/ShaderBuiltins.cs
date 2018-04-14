@@ -27,6 +27,8 @@ namespace ShaderGen
             SamplerResource sampler,
             Vector2 texCoords,
             uint sampleIndex) => throw new ShaderBuiltinException();
+        public static T Load<T>(RWTexture2DResource<T> texture, UInt2 texCoords) where T : struct => throw new ShaderBuiltinException();
+        public static T Store<T>(RWTexture2DResource<T> texture, UInt2 texCoords, T value) where T : struct => throw new ShaderBuiltinException();
         public static void Discard() => throw new ShaderBuiltinException();
         public static Vector2 ClipToTextureCoordinates(Vector4 clipCoordinates) => throw new ShaderBuiltinException();
 

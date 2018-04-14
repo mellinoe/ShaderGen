@@ -211,9 +211,11 @@ namespace ShaderGen
             TypeReference valueType = new TypeReference(fullTypeName);
             ShaderResourceKind kind = ClassifyResourceKind(fullTypeName);
 
-            if (kind == ShaderResourceKind.StructuredBuffer || kind == ShaderResourceKind.RWStructuredBuffer)
+            if (kind == ShaderResourceKind.StructuredBuffer
+                || kind == ShaderResourceKind.RWStructuredBuffer
+                || kind == ShaderResourceKind.RWTexture2D)
             {
-                valueType = ParseStructuredBufferElementType(vds);
+                valueType = ParseElementType(vds);
             }
 
             int set = 0; // Default value if not otherwise specified.
@@ -233,7 +235,7 @@ namespace ShaderGen
             foreach (LanguageBackend b in _backends) { b.AddResource(_shaderSet.Name, rd); }
         }
 
-        private TypeReference ParseStructuredBufferElementType(VariableDeclaratorSyntax vds)
+        private TypeReference ParseElementType(VariableDeclaratorSyntax vds)
         {
             FieldDeclarationSyntax fieldDecl = (FieldDeclarationSyntax)vds.Parent.Parent;
             GenericNameSyntax gns = (GenericNameSyntax)fieldDecl.Declaration.Type;
@@ -303,6 +305,10 @@ namespace ShaderGen
             else if (fullTypeName.Contains("ShaderGen.StructuredBuffer"))
             {
                 return ShaderResourceKind.StructuredBuffer;
+            }
+            else if (fullTypeName.Contains("ShaderGen.RWTexture2DResource"))
+            {
+                return ShaderResourceKind.RWTexture2D;
             }
             else
             {

@@ -32,6 +32,11 @@ namespace ShaderGen
 
         private void TraverseNode(HashSet<ShaderFunctionAndMethodDeclarationSyntax> result, CallGraphNode node)
         {
+            if (node.Name.FullName.Contains("Scatter"))
+            {
+
+            }
+
             foreach (ShaderFunctionAndMethodDeclarationSyntax existing in result)
             {
                 if (node.Parents.Any(cgn => cgn.Name.Equals(existing)))
@@ -113,20 +118,24 @@ namespace ShaderGen
             private readonly FunctionCallGraphDiscoverer _discoverer;
             private readonly HashSet<TypeAndMethodName> _children = new HashSet<TypeAndMethodName>();
 
-            public MethodWalker(FunctionCallGraphDiscoverer discoverer)
+            public MethodWalker(FunctionCallGraphDiscoverer discoverer) : base(SyntaxWalkerDepth.StructuredTrivia)
             {
                 _discoverer = discoverer;
             }
 
             public override void VisitInvocationExpression(InvocationExpressionSyntax node)
             {
+                if (node.ToFullString().Contains("RandomInUnitSphere"))
+                {
+
+                }
+
                 if (node.Expression is IdentifierNameSyntax ins)
                 {
                     SymbolInfo symbolInfo = _discoverer.Compilation.GetSemanticModel(node.SyntaxTree).GetSymbolInfo(ins);
                     string containingType = symbolInfo.Symbol.ContainingType.ToDisplayString();
                     string methodName = symbolInfo.Symbol.Name;
                     _children.Add(new TypeAndMethodName() { TypeName = containingType, MethodName = methodName });
-                    return;
                 }
                 else if (node.Expression is MemberAccessExpressionSyntax maes)
                 {
@@ -141,11 +150,14 @@ namespace ShaderGen
                         string containingType = Utilities.GetFullMetadataName(ims.ContainingType);
                         string methodName = ims.MetadataName;
                         _children.Add(new TypeAndMethodName() { TypeName = containingType, MethodName = methodName });
-                        return;
                     }
                 }
+                else
+                {
+                    throw new NotImplementedException();
+                }
 
-                throw new NotImplementedException();
+                base.VisitInvocationExpression(node);
             }
 
             public TypeAndMethodName[] GetChildren() => _children.ToArray();

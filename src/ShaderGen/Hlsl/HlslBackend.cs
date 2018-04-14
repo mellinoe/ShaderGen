@@ -138,6 +138,11 @@ namespace ShaderGen.Hlsl
             sb.AppendLine($"RWStructuredBuffer<{CSharpToShaderType(rd.ValueType.Name)}> {CorrectIdentifier(rd.Name)}: register(u{binding});");
         }
 
+        private void WriteRWTexture2D(StringBuilder sb, ResourceDefinition rd, int binding)
+        {
+            sb.AppendLine($"RWTexture2D<{CSharpToShaderType(rd.ValueType.Name)}> {CorrectIdentifier(rd.Name)}: register(u{binding});");
+        }
+
         protected override MethodProcessResult GenerateFullTextCore(string setName, ShaderFunction function)
         {
             Debug.Assert(function.IsEntryPoint);
@@ -252,6 +257,13 @@ namespace ShaderGen.Hlsl
                             if (resourcesUsed.Contains(rd))
                             {
                                 WriteRWStructuredBuffer(sb, rd, uavBinding);
+                            }
+                            uavBinding++;
+                            break;
+                        case ShaderResourceKind.RWTexture2D:
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                WriteRWTexture2D(sb, rd, uavBinding);
                             }
                             uavBinding++;
                             break;

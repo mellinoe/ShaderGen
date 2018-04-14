@@ -10,5 +10,6 @@
         Sampler,
         StructuredBuffer,
         RWStructuredBuffer,
+        RWTexture2D,
     }
 }

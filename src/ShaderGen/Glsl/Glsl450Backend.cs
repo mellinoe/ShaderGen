@@ -112,6 +112,17 @@ namespace ShaderGen.Glsl
 
         }
 
+        protected override void WriteRWTexture2D(StringBuilder sb, ResourceDefinition rd)
+        {
+            string layoutType = "rgba32f"; // TODO: Support other types ?
+            sb.Append(FormatLayoutStr(rd, layoutType));
+            sb.Append(' ');
+            sb.Append("uniform image2D ");
+            sb.Append(CorrectIdentifier(rd.Name));
+            sb.AppendLine(";");
+            sb.AppendLine();
+        }
+
         protected override string FormatInvocationCore(string setName, string type, string method, InvocationParameterInfo[] parameterInfos)
         {
             return Glsl450KnownFunctions.TranslateInvocation(type, method, parameterInfos);

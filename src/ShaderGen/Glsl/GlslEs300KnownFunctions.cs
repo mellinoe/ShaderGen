@@ -153,6 +153,7 @@ namespace ShaderGen.Glsl
                 { "Min", SimpleNameTranslator("min") },
                 { "Pow", SimpleNameFloatParameterTranslator("pow") },
                 { "Sin", SimpleNameTranslator("sin") },
+                { "Sqrt", SimpleNameTranslator("sqrt") },
             };
             ret.Add("System.MathF", new DictionaryTypeInvocationTranslator(mathfMappings));
 
