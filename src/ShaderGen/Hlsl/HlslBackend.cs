@@ -223,10 +223,7 @@ namespace ShaderGen.Hlsl
                             uavBinding++;
                             break;
                         case ShaderResourceKind.RWTexture2D:
-                            if (resourcesUsed.Contains(rd))
-                            {
-                                WriteRWTexture2D(sb, rd, uavBinding);
-                            }
+                            WriteRWTexture2D(sb, rd, uavBinding);
                             uavBinding++;
                             break;
                         default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
