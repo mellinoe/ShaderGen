@@ -202,7 +202,7 @@ namespace ShaderGen.Metal
 
         private string WriteRWTexture2D(ResourceDefinition rd, int binding)
         {
-            return $"texture2d<float, access::write> {rd.Name} [[ texture({binding}) ]]";
+            return $"texture2d<float, access::read_write> {rd.Name} [[ texture({binding}) ]]";
         }
 
         protected override MethodProcessResult GenerateFullTextCore(string setName, ShaderFunction function)
@@ -394,7 +394,7 @@ namespace ShaderGen.Metal
                 case ShaderResourceKind.RWStructuredBuffer:
                     return $"device {CSharpToShaderType(rd.ValueType.Name)}* {rd.Name};";
                 case ShaderResourceKind.RWTexture2D:
-                    return $"device texture2d<float, access::write> {rd.Name}";
+                    return $"texture2d<float, access::read_write> {rd.Name};";
                 default:
                     Debug.Fail("Invalid ResourceKind: " + rd.ResourceKind);
                     throw new InvalidOperationException();
@@ -422,7 +422,7 @@ namespace ShaderGen.Metal
                 case ShaderResourceKind.RWStructuredBuffer:
                     return $"device {CSharpToShaderType(rd.ValueType.Name)}* {rd.Name}_param";
                 case ShaderResourceKind.RWTexture2D:
-                    return $"device texture2d<float, access::write> {rd.Name}_param";
+                    return $"texture2d<float, access::read_write> {rd.Name}_param";
                 default:
                     throw new InvalidOperationException("Invalid ResourceKind: " + rd.ResourceKind);
             }

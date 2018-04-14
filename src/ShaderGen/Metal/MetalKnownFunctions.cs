@@ -294,7 +294,7 @@ namespace ShaderGen.Metal
 
         private static string Store(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"{parameters[0].Identifier}.write(uint2({parameters[1].Identifier}.x, {parameters[1].Identifier}.y), {parameters[2].Identifier})";
+            return $"{parameters[0].Identifier}.write({parameters[2].Identifier}, {parameters[1].Identifier})";
         }
 
         private static string Discard(string typeName, string methodName, InvocationParameterInfo[] parameters)
@@ -445,8 +445,8 @@ namespace ShaderGen.Metal
             if (name == "System.Numerics.Vector2") { shaderType = "float2"; elementCount = 2; }
             else if (name == "System.Numerics.Vector3") { shaderType = "float3"; elementCount = 3; }
             else if (name == "System.Numerics.Vector4") { shaderType = "float4"; elementCount = 4; }
-            else if (name == "ShaderGen.Int2") { shaderType = "ivec2"; elementCount = 2; }
-            else if (name == "ShaderGen.UInt2") { shaderType = "uvec2"; elementCount = 2; }
+            else if (name == "ShaderGen.Int2") { shaderType = "int2"; elementCount = 2; }
+            else if (name == "ShaderGen.UInt2") { shaderType = "uint2"; elementCount = 2; }
             else { throw new ShaderGenerationException("VectorCtor translator was called on an invalid type: " + name); }
         }
     }
