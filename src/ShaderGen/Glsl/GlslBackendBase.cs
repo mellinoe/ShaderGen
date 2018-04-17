@@ -94,6 +94,7 @@ namespace ShaderGen.Glsl
                         break;
                     case ShaderResourceKind.Texture2DMS:
                         WriteTexture2DMS(sb, rd);
+                        function.UsesTexture2DMS = true;
                         break;
                     case ShaderResourceKind.Sampler:
                         WriteSampler(sb, rd);
@@ -101,6 +102,7 @@ namespace ShaderGen.Glsl
                     case ShaderResourceKind.StructuredBuffer:
                     case ShaderResourceKind.RWStructuredBuffer:
                         WriteStructuredBuffer(sb, rd, rd.ResourceKind == ShaderResourceKind.StructuredBuffer);
+                        function.UsesStructuredBuffer = true;
                         break;
                     case ShaderResourceKind.RWTexture2D:
                         WriteRWTexture2D(sb, rd);
