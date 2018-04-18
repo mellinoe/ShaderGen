@@ -1,6 +1,8 @@
 # ShaderGen
 
-A proof-of-concept library which generates shader code from C#. Currently, the project can generate HLSL (D3D11), GLSL-330 (core-GL-compatible), GLSL-450 (Vulkan-compatible), and Metal shader code from a single shader source specified in C#.
+[![Gitter Chat](https://badges.gitter.im/ShaderGen/Lobby.svg)](https://gitter.im/ShaderGen/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+A proof-of-concept library which generates shader code from C#. Currently, the project can generate HLSL (D3D11), GLSL-330 (core-GL-compatible), GLSLES-300 (OpenGL ES-compatible), GLSL-450 (Vulkan-compatible), and Metal shader code from a single shader source specified in C#.
 
 ## Shaders in C#
 
