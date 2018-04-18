@@ -125,6 +125,7 @@ namespace ShaderGen.Metal
                             textureBinding++;
                             break;
                         case ShaderResourceKind.Sampler:
+                        case ShaderResourceKind.SamplerComparison:
                             if (resourcesUsed.Contains(rd))
                             {
                                 resourceArgList.Add(WriteSampler(rd, samplerBinding));
@@ -367,6 +368,7 @@ namespace ShaderGen.Metal
                 case ShaderResourceKind.TextureCube:
                     return $"thread texturecube<float> {rd.Name};";
                 case ShaderResourceKind.Sampler:
+                case ShaderResourceKind.SamplerComparison:
                     return $"thread sampler {rd.Name};";
                 case ShaderResourceKind.Uniform:
                     return $"constant {CSharpToShaderType(rd.ValueType.Name)}& {rd.Name};";
@@ -395,6 +397,7 @@ namespace ShaderGen.Metal
                 case ShaderResourceKind.TextureCube:
                     return $"thread texturecube<float> {rd.Name}_param";
                 case ShaderResourceKind.Sampler:
+                case ShaderResourceKind.SamplerComparison:
                     return $"thread sampler {rd.Name}_param";
                 case ShaderResourceKind.Uniform:
                     return $"constant {CSharpToShaderType(rd.ValueType.Name)}& {rd.Name}_param";

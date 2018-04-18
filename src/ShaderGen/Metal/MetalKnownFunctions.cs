@@ -32,6 +32,7 @@ namespace ShaderGen.Metal
                 { "Mod", SimpleNameTranslator("fmod") },
                 { "Sample", Sample },
                 { "SampleGrad", SampleGrad },
+                { "SampleComparisonLevelZero", SampleComparisonLevelZero },
                 { "Load", Load },
                 { "Store", Store },
                 { "Discard", Discard },
@@ -277,6 +278,20 @@ namespace ShaderGen.Metal
             else
             {
                 return $"{parameters[0].Identifier}.sample({parameters[1].Identifier}, {parameters[2].Identifier}, gradient2d({parameters[3].Identifier}, {parameters[4].Identifier}))";
+            }
+        }
+
+        private static string SampleComparisonLevelZero(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            if (parameters[0].FullTypeName == "ShaderGen.Texture2DArrayResource")
+            {
+                // Metal texture array sample_compare function:
+                // sample_compare(sampler s, float2 coord, uint array, float compare_value)
+                return $"{parameters[0].Identifier}.sample_compare({parameters[1].Identifier}, {parameters[2].Identifier}, {parameters[3].Identifier}, {parameters[4].Identifier})";
+            }
+            else
+            {
+                return $"{parameters[0].Identifier}.sample_compare({parameters[1].Identifier}, {parameters[2].Identifier}, {parameters[3].Identifier})";
             }
         }
 
