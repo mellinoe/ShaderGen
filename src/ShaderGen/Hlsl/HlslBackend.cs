@@ -96,6 +96,12 @@ namespace ShaderGen.Hlsl
             sb.AppendLine();
         }
 
+        private void WriteSamplerComparison(StringBuilder sb, ResourceDefinition rd, int binding)
+        {
+            sb.AppendLine($"SamplerComparisonState {CorrectIdentifier(rd.Name)} : register(s{binding});");
+            sb.AppendLine();
+        }
+
         private void WriteTexture2D(StringBuilder sb, ResourceDefinition rd, int binding)
         {
             sb.AppendLine($"Texture2D {CorrectIdentifier(rd.Name)} : register(t{binding});");
@@ -212,6 +218,10 @@ namespace ShaderGen.Hlsl
                             break;
                         case ShaderResourceKind.Sampler:
                             WriteSampler(sb, rd, samplerBinding);
+                            samplerBinding++;
+                            break;
+                        case ShaderResourceKind.SamplerComparison:
+                            WriteSamplerComparison(sb, rd, samplerBinding);
                             samplerBinding++;
                             break;
                         case ShaderResourceKind.StructuredBuffer:
