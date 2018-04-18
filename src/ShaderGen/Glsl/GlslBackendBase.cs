@@ -99,6 +99,9 @@ namespace ShaderGen.Glsl
                     case ShaderResourceKind.Sampler:
                         WriteSampler(sb, rd);
                         break;
+                    case ShaderResourceKind.SamplerComparison:
+                        WriteSamplerComparison(sb, rd);
+                        break;
                     case ShaderResourceKind.StructuredBuffer:
                     case ShaderResourceKind.RWStructuredBuffer:
                         WriteStructuredBuffer(sb, rd, rd.ResourceKind == ShaderResourceKind.StructuredBuffer);
@@ -380,6 +383,7 @@ namespace ShaderGen.Glsl
         protected abstract void WriteVersionHeader(ShaderFunction function, StringBuilder sb);
         protected abstract void WriteUniform(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteSampler(StringBuilder sb, ResourceDefinition rd);
+        protected abstract void WriteSamplerComparison(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteTexture2D(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteTexture2DArray(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteTextureCube(StringBuilder sb, ResourceDefinition rd);

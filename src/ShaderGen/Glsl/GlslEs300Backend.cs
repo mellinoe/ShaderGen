@@ -45,6 +45,11 @@ namespace ShaderGen.Glsl
             sb.AppendLine();
         }
 
+        protected override void WriteSamplerComparison(StringBuilder sb, ResourceDefinition rd)
+        {
+            throw new System.NotImplementedException();
+        }
+
         protected override void WriteTexture2D(StringBuilder sb, ResourceDefinition rd)
         {
             sb.AppendLine($"uniform sampler2D {CorrectIdentifier(rd.Name)};");

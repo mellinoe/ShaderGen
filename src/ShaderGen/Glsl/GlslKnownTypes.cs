@@ -38,6 +38,7 @@ namespace ShaderGen.Glsl
             { "ShaderGen.Texture2DArrayResource", "texture2DArray" },
             { "ShaderGen.TextureCubeResource", "textureCube" },
             { "ShaderGen.SamplerResource", "sampler" },
+            { "ShaderGen.SamplerComparisonResource", "samplerShadow" },
         };
 
 
