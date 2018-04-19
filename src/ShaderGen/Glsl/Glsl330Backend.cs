@@ -138,7 +138,7 @@ namespace ShaderGen.Glsl
 
         protected override ShaderMethodVisitor VisitShaderMethod(string setName, ShaderFunction func)
         {
-            return new Glsl330MethodVisitor(Compilation, setName, func, this);
+            return new GlslOpenGLMethodVisitor(Compilation, setName, func, this);
         }
     }
 }

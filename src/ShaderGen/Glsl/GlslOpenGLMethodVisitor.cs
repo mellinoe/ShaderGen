@@ -3,9 +3,9 @@ using Microsoft.CodeAnalysis;
 
 namespace ShaderGen.Glsl
 {
-    internal class Glsl330MethodVisitor : ShaderMethodVisitor
+    internal class GlslOpenGLMethodVisitor : ShaderMethodVisitor
     {
-        public Glsl330MethodVisitor(Compilation compilation, string setName, ShaderFunction shaderFunction, LanguageBackend backend)
+        public GlslOpenGLMethodVisitor(Compilation compilation, string setName, ShaderFunction shaderFunction, LanguageBackend backend)
             : base(compilation, setName, shaderFunction, backend)
         {
         }
