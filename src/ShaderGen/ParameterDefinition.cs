@@ -8,12 +8,14 @@ namespace ShaderGen
         public string Name { get; }
         public TypeReference Type { get; }
         public ParameterDirection Direction { get; }
+        public IParameterSymbol Symbol { get; }
 
-        public ParameterDefinition(string name, TypeReference type, ParameterDirection direction)
+        public ParameterDefinition(string name, TypeReference type, ParameterDirection direction, IParameterSymbol symbol)
         {
             Name = name;
             Type = type;
             Direction = direction;
+            Symbol = symbol;
         }
 
         public static ParameterDefinition GetParameterDefinition(Compilation compilation, ParameterSyntax ps)
@@ -36,7 +38,7 @@ namespace ShaderGen
                 direction = ParameterDirection.InOut;
             }
 
-            return new ParameterDefinition(name, new TypeReference(fullType), direction);
+            return new ParameterDefinition(name, new TypeReference(fullType), direction, declaredSymbol);
         }
     }
 

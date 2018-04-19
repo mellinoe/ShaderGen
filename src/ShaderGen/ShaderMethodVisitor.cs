@@ -211,6 +211,19 @@ namespace ShaderGen
                     ValidateBuiltInMethod(method);
                 }
 
+                if (type == "ShaderGen.ShaderBuiltins" && method == "SampleComparisonLevelZero")
+                {
+                    List<IFieldSymbol> textureFieldSymbols = new List<IFieldSymbol>();
+                    List<IParameterSymbol> textureParameterSymbols = new List<IParameterSymbol>();
+                    FindTextureFieldsRecursive(node.ArgumentList.Arguments[0].Expression, textureFieldSymbols, textureParameterSymbols);
+                    foreach (ISymbol textureFieldSymbol in textureFieldSymbols)
+                    {
+                        ResourceDefinition referencedResource = _backend.GetContext(_setName).Resources.Single(rd => rd.Name == textureFieldSymbol.Name);
+                        referencedResource.IsTextureUsedAsDepthTexture = true;
+                        referencedResource.ParameterSymbols.AddRange(textureParameterSymbols);
+                    }
+                }
+
                 return _backend.FormatInvocation(_setName, type, method, parameterInfos);
             }
             else if (node.Expression is MemberAccessExpressionSyntax maes)
@@ -266,6 +279,55 @@ namespace ShaderGen
                 message += Environment.NewLine + "This node used a " + node.Expression.GetType().Name;
                 message += Environment.NewLine + node.ToFullString();
                 throw new NotImplementedException(message);
+            }
+        }
+
+        /// <summary>
+        /// Given an expression containing a reference to a texture object, this method
+        /// finds the corresponding class instance field declaration(s) for those texture(s).
+        /// The expression may be a direct reference to the field, or it may refer to a
+        /// method parameter, in which case we need to find all texture fields that are passed
+        /// as arguments to that method.
+        /// </summary>
+        /// <returns></returns>
+        private void FindTextureFieldsRecursive(ExpressionSyntax expression, List<IFieldSymbol> fieldSymbols, List<IParameterSymbol> parameterSymbols)
+        {
+            SemanticModel semanticModel = _compilation.GetSemanticModel(expression.SyntaxTree);
+            ISymbol textureSymbol = semanticModel.GetSymbolInfo(expression).Symbol;
+            switch (textureSymbol.Kind)
+            {
+                case SymbolKind.Field:
+                    fieldSymbols.Add((IFieldSymbol) textureSymbol);
+                    break;
+
+                case SymbolKind.Parameter:
+                    IParameterSymbol parameterSymbol = (IParameterSymbol) textureSymbol;
+                    parameterSymbols.Add(parameterSymbol);
+                    int parameterIndex = parameterSymbol.Ordinal;
+                    MethodDeclarationSyntax methodDeclaration = expression.FirstAncestorOrSelf<MethodDeclarationSyntax>();
+                    ISymbol thisMethodSymbol = semanticModel.GetDeclaredSymbol(methodDeclaration);
+                    foreach (var syntaxTree in _compilation.SyntaxTrees)
+                    {
+                        SemanticModel otherSemanticModel = _compilation.GetSemanticModel(syntaxTree);
+
+                        List<InvocationExpressionSyntax> invocationsOfThisMethod = syntaxTree.GetRoot()
+                            .DescendantNodes()
+                            .OfType<InvocationExpressionSyntax>()
+                            .Where(x => otherSemanticModel.GetSymbolInfo(x).Symbol.Equals(thisMethodSymbol))
+                            .ToList();
+
+                        foreach (InvocationExpressionSyntax invocation in invocationsOfThisMethod)
+                        {
+                            FindTextureFieldsRecursive(
+                                invocation.ArgumentList.Arguments[parameterIndex].Expression, 
+                                fieldSymbols,
+                                parameterSymbols);
+                        }
+                    }
+                    break;
+
+                default:
+                    throw new NotImplementedException();
             }
         }
 

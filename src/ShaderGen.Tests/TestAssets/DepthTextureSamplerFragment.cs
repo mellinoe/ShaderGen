@@ -24,7 +24,20 @@ namespace TestShaders
             float arraySample = SampleComparisonLevelZero(TexArray, Sampler, new Vector2(1, 2), 3, 0.5f);
             return new Vector4(
                 SampleComparisonLevelZero(Tex2D, Sampler, input.TextureCoordinate, 0.5f),
-                0, 0, 1);
+                SampleMethod(Tex2D, Sampler), 
+                0, 
+                1);
+        }
+
+        private float SampleMethod(Texture2DResource depthTexture, SamplerComparisonResource mySampler)
+        {
+            return SampleComparisonLevelZero(depthTexture, mySampler, Vector2.Zero, 0.2f)
+                + SampleMethodInner(depthTexture, mySampler);
+        }
+
+        private float SampleMethodInner(Texture2DResource depthTexture2, SamplerComparisonResource mySampler)
+        {
+            return SampleComparisonLevelZero(depthTexture2, mySampler, Vector2.Zero, 0.2f);
         }
     }
 }
