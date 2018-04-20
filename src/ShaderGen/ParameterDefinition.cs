@@ -38,7 +38,7 @@ namespace ShaderGen
                 direction = ParameterDirection.InOut;
             }
 
-            return new ParameterDefinition(name, new TypeReference(fullType), direction, declaredSymbol);
+            return new ParameterDefinition(name, new TypeReference(fullType, semanticModel.GetTypeInfo(ps.Type)), direction, declaredSymbol);
         }
     }
 

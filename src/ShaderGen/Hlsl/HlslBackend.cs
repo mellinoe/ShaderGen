@@ -28,7 +28,7 @@ namespace ShaderGen.Hlsl
             StringBuilder fb = new StringBuilder();
             foreach (FieldDefinition field in sd.Fields)
             {
-                fb.Append(CSharpToShaderType(field.Type.Name.Trim()));
+                fb.Append(CSharpToShaderType(field.Type));
                 fb.Append(' ');
                 fb.Append(CorrectIdentifier(field.Name.Trim()));
                 int arrayCount = field.ArrayElementCount;

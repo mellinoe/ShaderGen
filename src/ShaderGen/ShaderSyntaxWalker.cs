@@ -73,7 +73,7 @@ namespace ShaderGen
                             arrayElementCount = GetArrayCountValue(vds);
                         }
 
-                        TypeReference tr = new TypeReference(typeName);
+                        TypeReference tr = new TypeReference(typeName, model.GetTypeInfo(varDecl.Type));
                         SemanticType semanticType = GetSemanticType(vds);
 
                         fields.Add(new FieldDefinition(fieldName, tr, semanticType, arrayElementCount));
@@ -208,7 +208,7 @@ namespace ShaderGen
             string resourceName = vds.Identifier.Text;
             TypeInfo typeInfo = GetModel(node).GetTypeInfo(node.Type);
             string fullTypeName = GetModel(node).GetFullTypeName(node.Type);
-            TypeReference valueType = new TypeReference(fullTypeName);
+            TypeReference valueType = new TypeReference(fullTypeName, typeInfo);
             ShaderResourceKind kind = ClassifyResourceKind(fullTypeName);
 
             if (kind == ShaderResourceKind.StructuredBuffer
@@ -241,7 +241,7 @@ namespace ShaderGen
             GenericNameSyntax gns = (GenericNameSyntax)fieldDecl.Declaration.Type;
             TypeSyntax type = gns.TypeArgumentList.Arguments[0];
             string fullName = Utilities.GetFullTypeName(GetModel(vds), type);
-            return new TypeReference(fullName);
+            return new TypeReference(fullName, GetModel(vds).GetTypeInfo(type));
         }
 
         private int GetAndIncrementBinding(int set)
