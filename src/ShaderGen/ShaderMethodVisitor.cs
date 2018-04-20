@@ -192,9 +192,25 @@ namespace ShaderGen
             SymbolInfo exprSymbol = GetModel(node).GetSymbolInfo(node.Expression);
             if (exprSymbol.Symbol.Kind == SymbolKind.NamedType)
             {
-                // Static member access
                 SymbolInfo symbolInfo = GetModel(node).GetSymbolInfo(node);
                 ISymbol symbol = symbolInfo.Symbol;
+
+                // Enum field
+                INamedTypeSymbol namedTypeSymbol = (INamedTypeSymbol)exprSymbol.Symbol;
+                if (namedTypeSymbol.TypeKind == TypeKind.Enum)
+                {
+                    IFieldSymbol enumFieldSymbol = (IFieldSymbol) symbol;
+                    string constantValueString = enumFieldSymbol.ConstantValue.ToString();
+                    if (namedTypeSymbol.EnumUnderlyingType.SpecialType == SpecialType.System_UInt32)
+                    {
+                        // TODO: We need to do this for literal values too, if they don't already have this suffix, 
+                        // so this should be refactored.
+                        constantValueString += "u";
+                    }
+                    return constantValueString;
+                }
+
+                // Static member access
                 if (symbol.Kind == SymbolKind.Property)
                 {
                     return Visit(node.Name);
@@ -600,7 +616,7 @@ namespace ShaderGen
 
         protected virtual string FormatParameter(ParameterDefinition pd)
         {
-            return $"{_backend.ParameterDirection(pd.Direction)} {_backend.CSharpToShaderType(pd.Type.Name)} {_backend.CorrectIdentifier(pd.Name)}";
+            return $"{_backend.ParameterDirection(pd.Direction)} {_backend.CSharpToShaderType(pd.Type)} {_backend.CorrectIdentifier(pd.Name)}";
         }
 
         private InvocationParameterInfo[] GetParameterInfos(ArgumentListSyntax argumentList)

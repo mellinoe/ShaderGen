@@ -349,7 +349,7 @@ namespace ShaderGen.Metal
 
         private string FormatParameter(ParameterDefinition pd)
         {
-            return $"{CSharpToShaderType(pd.Type.Name)} {CorrectIdentifier(pd.Name)} [[ stage_in ]]";
+            return $"{CSharpToShaderType(pd.Type)} {CorrectIdentifier(pd.Name)} [[ stage_in ]]";
         }
 
         public static List<(string Type, string Name, string Attribute)> GetBuiltinParameterList(ShaderFunction function)

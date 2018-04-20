@@ -43,7 +43,7 @@ namespace ShaderGen.Glsl
 
         protected virtual string GetStructureFieldType(FieldDefinition field)
         {
-            return CSharpToShaderType(field.Type.Name.Trim());
+            return CSharpToShaderType(field.Type);
         }
 
         protected override MethodProcessResult GenerateFullTextCore(string setName, ShaderFunction function)

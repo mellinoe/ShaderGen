@@ -230,7 +230,7 @@ namespace ShaderGen
 
             SemanticModel semanticModel = compilation.GetSemanticModel(node.SyntaxTree);
 
-            TypeReference returnType = new TypeReference(semanticModel.GetFullTypeName(node.ReturnType));
+            TypeReference returnType = new TypeReference(semanticModel.GetFullTypeName(node.ReturnType), semanticModel.GetTypeInfo(node.ReturnType));
 
             UInt3 computeGroupCounts = new UInt3();
             bool isFragmentShader = false, isComputeShader = false;

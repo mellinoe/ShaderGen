@@ -121,6 +121,17 @@ namespace ShaderGen
             {
                 return;
             }
+            if (fd.TypeInfo.Type.TypeKind == TypeKind.Enum)
+            {
+                INamedTypeSymbol enumBaseType = ((INamedTypeSymbol) fd.TypeInfo.Type).EnumUnderlyingType;
+                if (enumBaseType != null
+                    && enumBaseType.SpecialType != SpecialType.System_Int32
+                    && enumBaseType.SpecialType != SpecialType.System_UInt32)
+                {
+                    throw new ShaderGenerationException("Resource type's field had an invalid enum base type: " + enumBaseType.ToDisplayString());
+                }
+                return;
+            }
             if (!TryDiscoverStructure(setName, fd.Name, out StructureDefinition sd))
             {
                 throw new ShaderGenerationException("" +
@@ -151,6 +162,26 @@ namespace ShaderGen
             }
 
             return result;
+        }
+
+        internal string CSharpToShaderType(TypeReference typeReference)
+        {
+            if (typeReference == null)
+            {
+                throw new ArgumentNullException(nameof(typeReference));
+            }
+
+            string typeNameString;
+            if (typeReference.TypeInfo.Type.TypeKind == TypeKind.Enum)
+            {
+                typeNameString = Utilities.GetFullName(((INamedTypeSymbol) typeReference.TypeInfo.Type).EnumUnderlyingType);
+            }
+            else
+            {
+                typeNameString = typeReference.Name.Trim();
+            }
+
+            return CSharpToShaderTypeCore(typeNameString);
         }
 
         internal string CSharpToShaderType(string fullType)
