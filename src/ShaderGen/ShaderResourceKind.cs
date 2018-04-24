@@ -11,5 +11,6 @@
         StructuredBuffer,
         RWStructuredBuffer,
         RWTexture2D,
+        SamplerComparison,
     }
 }

@@ -208,7 +208,7 @@ namespace ShaderGen
 
                 if (type == "ShaderGen.ShaderBuiltins")
                 {
-                    ValidateBuiltInMethod(method);
+                    ProcessBuiltInMethodInvocation(method, node);
                 }
 
                 return _backend.FormatInvocation(_setName, type, method, parameterInfos);
@@ -269,13 +269,79 @@ namespace ShaderGen
             }
         }
 
-        private void ValidateBuiltInMethod(string name)
+        /// <summary>
+        /// Given an expression containing a reference to a texture object, this method
+        /// finds the corresponding class instance field declaration(s) for those texture(s).
+        /// The expression may be a direct reference to the field, or it may refer to a
+        /// method parameter, in which case we need to find all texture fields that are passed
+        /// as arguments to that method.
+        /// </summary>
+        /// <returns></returns>
+        private void FindTextureFieldsRecursive(ExpressionSyntax expression, List<IFieldSymbol> fieldSymbols, List<IParameterSymbol> parameterSymbols)
         {
-            if (name == nameof(ShaderBuiltins.Ddx) || name == nameof(ShaderBuiltins.Ddy))
+            SemanticModel semanticModel = _compilation.GetSemanticModel(expression.SyntaxTree);
+            ISymbol textureSymbol = semanticModel.GetSymbolInfo(expression).Symbol;
+            switch (textureSymbol.Kind)
             {
-                if (_shaderFunction.Type == ShaderFunctionType.VertexEntryPoint || _shaderFunction.Type == ShaderFunctionType.ComputeEntryPoint)
+                case SymbolKind.Field:
+                    fieldSymbols.Add((IFieldSymbol) textureSymbol);
+                    break;
+
+                case SymbolKind.Parameter:
+                    IParameterSymbol parameterSymbol = (IParameterSymbol) textureSymbol;
+                    parameterSymbols.Add(parameterSymbol);
+                    int parameterIndex = parameterSymbol.Ordinal;
+                    MethodDeclarationSyntax methodDeclaration = expression.FirstAncestorOrSelf<MethodDeclarationSyntax>();
+                    ISymbol thisMethodSymbol = semanticModel.GetDeclaredSymbol(methodDeclaration);
+                    foreach (var syntaxTree in _compilation.SyntaxTrees)
+                    {
+                        SemanticModel otherSemanticModel = _compilation.GetSemanticModel(syntaxTree);
+
+                        List<InvocationExpressionSyntax> invocationsOfThisMethod = syntaxTree.GetRoot()
+                            .DescendantNodes()
+                            .OfType<InvocationExpressionSyntax>()
+                            .Where(x => otherSemanticModel.GetSymbolInfo(x).Symbol.Equals(thisMethodSymbol))
+                            .ToList();
+
+                        foreach (InvocationExpressionSyntax invocation in invocationsOfThisMethod)
+                        {
+                            FindTextureFieldsRecursive(
+                                invocation.ArgumentList.Arguments[parameterIndex].Expression, 
+                                fieldSymbols,
+                                parameterSymbols);
+                        }
+                    }
+                    break;
+
+                default:
+                    throw new ShaderGenerationException($"Unexpected symbol kind for texture object expression: {textureSymbol.Kind}.");
+            }
+        }
+
+        private void ProcessBuiltInMethodInvocation(string name, InvocationExpressionSyntax node)
+        {
+            switch (name)
+            {
+                case nameof(ShaderBuiltins.Ddx):
+                case nameof(ShaderBuiltins.Ddy):
+                case nameof(ShaderBuiltins.SampleComparisonLevelZero):
+                    if (_shaderFunction.Type == ShaderFunctionType.VertexEntryPoint || _shaderFunction.Type == ShaderFunctionType.ComputeEntryPoint)
+                    {
+                        throw new ShaderGenerationException($"{name} can only be used within Fragment shaders.");
+                    }
+                    break;
+            }
+
+            if (name == nameof(ShaderBuiltins.SampleComparisonLevelZero))
+            {
+                List<IFieldSymbol> textureFieldSymbols = new List<IFieldSymbol>();
+                List<IParameterSymbol> textureParameterSymbols = new List<IParameterSymbol>();
+                FindTextureFieldsRecursive(node.ArgumentList.Arguments[0].Expression, textureFieldSymbols, textureParameterSymbols);
+                foreach (ISymbol textureFieldSymbol in textureFieldSymbols)
                 {
-                    throw new ShaderGenerationException("Ddx and Ddy can only be used within Fragment shaders.");
+                    ResourceDefinition referencedResource = _backend.GetContext(_setName).Resources.Single(rd => rd.Name == textureFieldSymbol.Name);
+                    referencedResource.IsTextureUsedAsDepthTexture = true;
+                    referencedResource.ParameterSymbols.AddRange(textureParameterSymbols);
                 }
             }
         }

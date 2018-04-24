@@ -24,6 +24,7 @@ namespace ShaderGen.Glsl
             sb.AppendLine($"#version {version}");
             sb.AppendLine();
             sb.AppendLine($"struct SamplerDummy {{ int _dummyValue; }};");
+            sb.AppendLine($"struct SamplerComparisonDummy {{ int _dummyValue; }};");
             sb.AppendLine();
         }
 
@@ -33,15 +34,35 @@ namespace ShaderGen.Glsl
             sb.AppendLine();
         }
 
+        protected override void WriteSamplerComparison(StringBuilder sb, ResourceDefinition rd)
+        {
+            sb.AppendLine($"const SamplerComparisonDummy {CorrectIdentifier(rd.Name)} = SamplerComparisonDummy(0);");
+            sb.AppendLine();
+        }
+
         protected override void WriteTexture2D(StringBuilder sb, ResourceDefinition rd)
         {
-            sb.AppendLine($"uniform sampler2D {CorrectIdentifier(rd.Name)};");
+            if (rd.IsTextureUsedAsDepthTexture)
+            {
+                sb.AppendLine($"uniform sampler2DShadow {CorrectIdentifier(rd.Name)};");
+            }
+            else
+            {
+                sb.AppendLine($"uniform sampler2D {CorrectIdentifier(rd.Name)};");
+            }
             sb.AppendLine();
         }
 
         protected override void WriteTexture2DArray(StringBuilder sb, ResourceDefinition rd)
         {
-            sb.AppendLine($"uniform sampler2DArray {CorrectIdentifier(rd.Name)};");
+            if (rd.IsTextureUsedAsDepthTexture)
+            {
+                sb.AppendLine($"uniform sampler2DArrayShadow {CorrectIdentifier(rd.Name)};");
+            }
+            else
+            {
+                sb.AppendLine($"uniform sampler2DArray {CorrectIdentifier(rd.Name)};");
+            }
             sb.AppendLine();
         }
 
@@ -113,6 +134,11 @@ namespace ShaderGen.Glsl
         protected override void EmitGlPositionCorrection(StringBuilder sb)
         {
             sb.AppendLine($"        gl_Position.z = gl_Position.z * 2.0 - gl_Position.w;");
+        }
+
+        protected override ShaderMethodVisitor VisitShaderMethod(string setName, ShaderFunction func)
+        {
+            return new GlslOpenGLMethodVisitor(Compilation, setName, func, this);
         }
     }
 }

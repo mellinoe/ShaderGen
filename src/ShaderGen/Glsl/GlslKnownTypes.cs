@@ -30,6 +30,7 @@ namespace ShaderGen.Glsl
             { "ShaderGen.Texture2DArrayResource", "sampler2DArray" },
             { "ShaderGen.TextureCubeResource", "samplerCube" },
             { "ShaderGen.SamplerResource", "SamplerDummy" },
+            { "ShaderGen.SamplerComparisonResource", "SamplerComparisonDummy" },
         };
 
         private static readonly Dictionary<string, string> s_knownTypesVulkan = new Dictionary<string, string>()
@@ -38,6 +39,7 @@ namespace ShaderGen.Glsl
             { "ShaderGen.Texture2DArrayResource", "texture2DArray" },
             { "ShaderGen.TextureCubeResource", "textureCube" },
             { "ShaderGen.SamplerResource", "sampler" },
+            { "ShaderGen.SamplerComparisonResource", "samplerShadow" },
         };
 
 

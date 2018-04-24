@@ -31,6 +31,7 @@ namespace ShaderGen.Glsl
                 { "Mul", MatrixMul },
                 { "Sample", Sample },
                 { "SampleGrad", SampleGrad },
+                { "SampleComparisonLevelZero", SampleComparisonLevelZero },
                 { "Load", Load },
                 { "Store", Store },
                 { "Discard", Discard },
@@ -251,6 +252,18 @@ namespace ShaderGen.Glsl
             else
             {
                 return $"textureGrad({parameters[0].Identifier}, {parameters[2].Identifier}, {parameters[3].Identifier}, {parameters[4].Identifier})";
+            }
+        }
+
+        private static string SampleComparisonLevelZero(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            if (parameters[0].FullTypeName == "ShaderGen.Texture2DArrayResource")
+            {
+                return $"textureGrad({parameters[0].Identifier}, vec4({parameters[2].Identifier}, {parameters[3].Identifier}, {parameters[4].Identifier}), vec2(0.0), vec2(0.0))";
+            }
+            else
+            {
+                return $"textureLod({parameters[0].Identifier}, vec3({parameters[2].Identifier}, {parameters[3].Identifier}), 0.0)";
             }
         }
 

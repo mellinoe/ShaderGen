@@ -267,7 +267,8 @@ namespace ShaderGen
                 && name != nameof(ShaderGen) + "." + nameof(Texture2DArrayResource)
                 && name != nameof(ShaderGen) + "." + nameof(TextureCubeResource)
                 && name != nameof(ShaderGen) + "." + nameof(Texture2DMSResource)
-                && name != nameof(ShaderGen) + "." + nameof(SamplerResource))
+                && name != nameof(ShaderGen) + "." + nameof(SamplerResource)
+                && name != nameof(ShaderGen) + "." + nameof(SamplerComparisonResource))
             {
                 if (typeInfo.Type.IsReferenceType)
                 {
@@ -297,6 +298,10 @@ namespace ShaderGen
             else if (fullTypeName == "ShaderGen.SamplerResource")
             {
                 return ShaderResourceKind.Sampler;
+            }
+            else if (fullTypeName == "ShaderGen.SamplerComparisonResource")
+            {
+                return ShaderResourceKind.SamplerComparison;
             }
             else if (fullTypeName.Contains("ShaderGen.RWStructuredBuffer"))
             {

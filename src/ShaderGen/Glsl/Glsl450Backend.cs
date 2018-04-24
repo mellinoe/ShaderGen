@@ -53,6 +53,15 @@ namespace ShaderGen.Glsl
             sb.AppendLine(";");
         }
 
+        protected override void WriteSamplerComparison(StringBuilder sb, ResourceDefinition rd)
+        {
+            sb.Append(FormatLayoutStr(rd));
+            sb.Append(' ');
+            sb.Append("uniform samplerShadow ");
+            sb.Append(CorrectIdentifier(rd.Name));
+            sb.AppendLine(";");
+        }
+
         protected override void WriteTexture2D(StringBuilder sb, ResourceDefinition rd)
         {
             sb.Append(FormatLayoutStr(rd));
