@@ -60,16 +60,15 @@ namespace ShaderGen
             else
             {
                 StructureDefinition sd = GetStructureDefinition(tr);
+                if (sd == null)
+                {
+                    throw new InvalidOperationException("Unable to determine the size for type: " + tr.Name);
+                }
                 int totalSize = 0;
                 foreach (FieldDefinition fd in sd.Fields)
                 {
                     int fieldTypeSize = GetTypeSize(fd.Type);
                     totalSize += fieldTypeSize * (Math.Max(1, fd.ArrayElementCount));
-                }
-
-                if (totalSize == 0)
-                {
-                    throw new InvalidOperationException("Unable to determine the size fo type: " + tr.Name);
                 }
 
                 return totalSize;
@@ -80,9 +79,11 @@ namespace ShaderGen
         {
             { "System.Single", 4 },
             { "System.Int32", 4 },
+            { "System.UInt32", 4 },
             { "System.Numerics.Vector2", 8 },
             { "System.Numerics.Vector3", 12 },
             { "System.Numerics.Vector4", 16 },
+            { "System.Numerics.Matrix4x4", 64 },
         };
     }
 }
