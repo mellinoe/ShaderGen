@@ -553,8 +553,9 @@ namespace ShaderGen
 
             StringBuilder sb = new StringBuilder();
 
-            string varType = _compilation.GetSemanticModel(node.Type.SyntaxTree).GetFullTypeName(node.Type);
-            string mappedType = _backend.CSharpToShaderType(varType);
+            SemanticModel semanticModel = _compilation.GetSemanticModel(node.Type.SyntaxTree);
+            string varType = semanticModel.GetFullTypeName(node.Type);
+            string mappedType = _backend.CSharpToShaderType(new TypeReference(varType, semanticModel.GetTypeInfo(node.Type)));
 
             sb.Append(mappedType);
             sb.Append(' ');
