@@ -27,7 +27,7 @@ namespace ShaderGen.Glsl
                         break;
 
                     default:
-                        throw new System.NotImplementedException();
+                        throw new ShaderGenerationException($"Unexpected texture parameter type: {pd.Type.Name}.");
                 }
             }
             else

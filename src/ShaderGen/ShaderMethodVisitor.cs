@@ -314,7 +314,7 @@ namespace ShaderGen
                     break;
 
                 default:
-                    throw new NotImplementedException();
+                    throw new ShaderGenerationException($"Unexpected symbol kind for texture object expression: {textureSymbol.Kind}.");
             }
         }
 
