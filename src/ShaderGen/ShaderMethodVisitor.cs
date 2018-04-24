@@ -70,6 +70,8 @@ namespace ShaderGen
 
             foreach (StatementSyntax ss in node.Statements)
             {
+                sb.Append(DeclareInlineOutVariables(ss));
+
                 string statementResult = Visit(ss);
                 if (string.IsNullOrEmpty(statementResult))
                 {
@@ -82,6 +84,44 @@ namespace ShaderGen
             }
 
             sb.AppendLine("}");
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Check for any inline "out" variable declarations in this statement - i.e. MyFunc(out var result) - 
+        /// and declare those variables now.
+        /// </summary>
+        private string DeclareInlineOutVariables(StatementSyntax statement)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            IEnumerable<SyntaxNode> declarationExpressionNodes = statement
+                .DescendantNodes(x => !x.IsKind(SyntaxKind.Block)) // Don't descend into child blocks
+                .Where(x => x.IsKind(SyntaxKind.DeclarationExpression));
+
+            foreach (DeclarationExpressionSyntax declarationExpressionNode in declarationExpressionNodes)
+            {
+                string varType = _compilation.GetSemanticModel(declarationExpressionNode.Type.SyntaxTree).GetFullTypeName(declarationExpressionNode.Type);
+                string mappedType = _backend.CSharpToShaderType(varType);
+
+                sb.Append("    ");
+                sb.Append(mappedType);
+                sb.Append(' ');
+
+                switch (declarationExpressionNode.Designation)
+                {
+                    case SingleVariableDesignationSyntax svds:
+                        string identifier = _backend.CorrectIdentifier(svds.Identifier.Text);
+                        sb.Append(identifier);
+                        sb.Append(';');
+                        sb.AppendLine();
+                        break;
+
+                    default:
+                        throw new NotImplementedException($"{declarationExpressionNode.Designation.GetType()} designations are not implemented.");
+                }
+            }
+
             return sb.ToString();
         }
 
@@ -537,6 +577,16 @@ namespace ShaderGen
             string mappedType = _backend.CSharpToShaderType(varType);
 
             return _backend.CorrectCastExpression(mappedType, Visit(node.Expression));
+        }
+
+        public override string VisitDeclarationExpression(DeclarationExpressionSyntax node)
+        {
+            return Visit(node.Designation);
+        }
+
+        public override string VisitSingleVariableDesignation(SingleVariableDesignationSyntax node)
+        {
+            return _backend.CorrectIdentifier(node.Identifier.Text);
         }
 
         protected string GetParameterDeclList()
