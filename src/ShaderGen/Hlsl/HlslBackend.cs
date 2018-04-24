@@ -186,14 +186,14 @@ namespace ShaderGen.Hlsl
                     switch (rd.ResourceKind)
                     {
                         case ShaderResourceKind.Uniform:
-                            if (!resourcesUsed.Contains(rd))
+                            if (resourcesUsed.Contains(rd))
                             {
                                 WriteUniform(sb, rd, uniformBinding);
                             }
                             uniformBinding++;
                             break;
                         case ShaderResourceKind.Texture2D:
-                            if (!resourcesUsed.Contains(rd))
+                            if (resourcesUsed.Contains(rd))
                             {
                                 WriteTexture2D(sb, rd, textureBinding);
                             }
@@ -207,42 +207,42 @@ namespace ShaderGen.Hlsl
                             textureBinding++;
                             break;
                         case ShaderResourceKind.TextureCube:
-                            if (!resourcesUsed.Contains(rd))
+                            if (resourcesUsed.Contains(rd))
                             {
                                 WriteTextureCube(sb, rd, textureBinding);
                             }
                             textureBinding++;
                             break;
                         case ShaderResourceKind.Texture2DMS:
-                            if (!resourcesUsed.Contains(rd))
+                            if (resourcesUsed.Contains(rd))
                             {
                                 WriteTexture2DMS(sb, rd, textureBinding);
                             }
                             textureBinding++;
                             break;
                         case ShaderResourceKind.Sampler:
-                            if (!resourcesUsed.Contains(rd))
+                            if (resourcesUsed.Contains(rd))
                             {
                                 WriteSampler(sb, rd, samplerBinding);
                             }
                             samplerBinding++;
                             break;
                         case ShaderResourceKind.StructuredBuffer:
-                            if (!resourcesUsed.Contains(rd))
+                            if (resourcesUsed.Contains(rd))
                             {
                                 WriteStructuredBuffer(sb, rd, textureBinding);
                             }
                             textureBinding++;
                             break;
                         case ShaderResourceKind.RWStructuredBuffer:
-                            if (!resourcesUsed.Contains(rd))
+                            if (resourcesUsed.Contains(rd))
                             {
                                 WriteRWStructuredBuffer(sb, rd, uavBinding);
                             }
                             uavBinding++;
                             break;
                         case ShaderResourceKind.RWTexture2D:
-                            if (!resourcesUsed.Contains(rd))
+                            if (resourcesUsed.Contains(rd))
                             {
                                 WriteRWTexture2D(sb, rd, uavBinding);
                             }
