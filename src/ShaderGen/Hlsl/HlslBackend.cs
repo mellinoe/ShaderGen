@@ -185,6 +185,27 @@ namespace ShaderGen.Hlsl
                 {
                     if (!resourcesUsed.Contains(rd))
                     {
+                        switch (rd.ResourceKind)
+                        {
+                            case ShaderResourceKind.Uniform:
+                                uniformBinding++;
+                                break;
+                            case ShaderResourceKind.Texture2D:
+                            case ShaderResourceKind.Texture2DArray:
+                            case ShaderResourceKind.TextureCube:
+                            case ShaderResourceKind.Texture2DMS:
+                            case ShaderResourceKind.StructuredBuffer:
+                                textureBinding++;
+                                break;
+                            case ShaderResourceKind.Sampler:
+                                samplerBinding++;
+                                break;
+                            case ShaderResourceKind.RWStructuredBuffer:
+                            case ShaderResourceKind.RWTexture2D:
+                                uavBinding++;
+                                break;
+                            default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
+                        }
                         continue;
                     }
 
