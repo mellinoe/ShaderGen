@@ -271,11 +271,11 @@ namespace ShaderGen.Glsl
         {
             if (parameters[0].FullTypeName == "ShaderGen.Texture2DArrayResource")
             {
-                return $"texture({parameters[0].Identifier}, vec4({parameters[2].Identifier}, {parameters[3].Identifier}, {parameters[4].Identifier}))";
+                return $"textureGrad({parameters[0].Identifier}, vec4({parameters[2].Identifier}, {parameters[3].Identifier}, {parameters[4].Identifier}), vec2(0.0), vec2(0.0))";
             }
             else
             {
-                return $"texture({parameters[0].Identifier}, vec3({parameters[2].Identifier}, {parameters[3].Identifier}))";
+                return $"textureLod({parameters[0].Identifier}, vec3({parameters[2].Identifier}, {parameters[3].Identifier}), 0.0)";
             }
         }
 
