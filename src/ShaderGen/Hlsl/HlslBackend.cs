@@ -183,68 +183,69 @@ namespace ShaderGen.Hlsl
 
                 foreach (ResourceDefinition rd in set)
                 {
-                    if (!resourcesUsed.Contains(rd))
-                    {
-                        switch (rd.ResourceKind)
-                        {
-                            case ShaderResourceKind.Uniform:
-                                uniformBinding++;
-                                break;
-                            case ShaderResourceKind.Texture2D:
-                            case ShaderResourceKind.Texture2DArray:
-                            case ShaderResourceKind.TextureCube:
-                            case ShaderResourceKind.Texture2DMS:
-                            case ShaderResourceKind.StructuredBuffer:
-                                textureBinding++;
-                                break;
-                            case ShaderResourceKind.Sampler:
-                                samplerBinding++;
-                                break;
-                            case ShaderResourceKind.RWStructuredBuffer:
-                            case ShaderResourceKind.RWTexture2D:
-                                uavBinding++;
-                                break;
-                            default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
-                        }
-                        continue;
-                    }
-
                     switch (rd.ResourceKind)
                     {
                         case ShaderResourceKind.Uniform:
-                            WriteUniform(sb, rd, uniformBinding);
+                            if (!resourcesUsed.Contains(rd))
+                            {
+                                WriteUniform(sb, rd, uniformBinding);
+                            }
                             uniformBinding++;
                             break;
                         case ShaderResourceKind.Texture2D:
-                            WriteTexture2D(sb, rd, textureBinding);
+                            if (!resourcesUsed.Contains(rd))
+                            {
+                                WriteTexture2D(sb, rd, textureBinding);
+                            }
                             textureBinding++;
                             break;
                         case ShaderResourceKind.Texture2DArray:
-                            WriteTexture2DArray(sb, rd, textureBinding);
+                            if (!resourcesUsed.Contains(rd))
+                            {
+                                WriteTexture2DArray(sb, rd, textureBinding);
+                            }
                             textureBinding++;
                             break;
                         case ShaderResourceKind.TextureCube:
-                            WriteTextureCube(sb, rd, textureBinding);
+                            if (!resourcesUsed.Contains(rd))
+                            {
+                                WriteTextureCube(sb, rd, textureBinding);
+                            }
                             textureBinding++;
                             break;
                         case ShaderResourceKind.Texture2DMS:
-                            WriteTexture2DMS(sb, rd, textureBinding);
+                            if (!resourcesUsed.Contains(rd))
+                            {
+                                WriteTexture2DMS(sb, rd, textureBinding);
+                            }
                             textureBinding++;
                             break;
                         case ShaderResourceKind.Sampler:
-                            WriteSampler(sb, rd, samplerBinding);
+                            if (!resourcesUsed.Contains(rd))
+                            {
+                                WriteSampler(sb, rd, samplerBinding);
+                            }
                             samplerBinding++;
                             break;
                         case ShaderResourceKind.StructuredBuffer:
-                            WriteStructuredBuffer(sb, rd, textureBinding);
+                            if (!resourcesUsed.Contains(rd))
+                            {
+                                WriteStructuredBuffer(sb, rd, textureBinding);
+                            }
                             textureBinding++;
                             break;
                         case ShaderResourceKind.RWStructuredBuffer:
-                            WriteRWStructuredBuffer(sb, rd, uavBinding);
+                            if (!resourcesUsed.Contains(rd))
+                            {
+                                WriteRWStructuredBuffer(sb, rd, uavBinding);
+                            }
                             uavBinding++;
                             break;
                         case ShaderResourceKind.RWTexture2D:
-                            WriteRWTexture2D(sb, rd, uavBinding);
+                            if (!resourcesUsed.Contains(rd))
+                            {
+                                WriteRWTexture2D(sb, rd, uavBinding);
+                            }
                             uavBinding++;
                             break;
                         default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
