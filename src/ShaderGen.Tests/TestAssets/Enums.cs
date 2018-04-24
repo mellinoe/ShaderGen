@@ -19,6 +19,10 @@ namespace TestShaders
             var result = DoMaterialStuff(MaterialConstants.Material);
             var result2 = DoMaterialStuff(MaterialType.Metal);
 
+            var materialType = MaterialType.Plastic;
+            materialType = MaterialType.Plastic;
+            DoMaterialStuff(materialType);
+
             switch (MaterialConstants.Lighting)
             {
                 case LightingType.Lambert:
