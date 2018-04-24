@@ -200,7 +200,7 @@ namespace ShaderGen.Hlsl
                             textureBinding++;
                             break;
                         case ShaderResourceKind.Texture2DArray:
-                            if (!resourcesUsed.Contains(rd))
+                            if (resourcesUsed.Contains(rd))
                             {
                                 WriteTexture2DArray(sb, rd, textureBinding);
                             }
