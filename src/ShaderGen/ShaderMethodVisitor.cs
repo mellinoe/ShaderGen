@@ -208,20 +208,7 @@ namespace ShaderGen
 
                 if (type == "ShaderGen.ShaderBuiltins")
                 {
-                    ValidateBuiltInMethod(method);
-                }
-
-                if (type == "ShaderGen.ShaderBuiltins" && method == "SampleComparisonLevelZero")
-                {
-                    List<IFieldSymbol> textureFieldSymbols = new List<IFieldSymbol>();
-                    List<IParameterSymbol> textureParameterSymbols = new List<IParameterSymbol>();
-                    FindTextureFieldsRecursive(node.ArgumentList.Arguments[0].Expression, textureFieldSymbols, textureParameterSymbols);
-                    foreach (ISymbol textureFieldSymbol in textureFieldSymbols)
-                    {
-                        ResourceDefinition referencedResource = _backend.GetContext(_setName).Resources.Single(rd => rd.Name == textureFieldSymbol.Name);
-                        referencedResource.IsTextureUsedAsDepthTexture = true;
-                        referencedResource.ParameterSymbols.AddRange(textureParameterSymbols);
-                    }
+                    ProcessBuiltInMethodInvocation(method, node);
                 }
 
                 return _backend.FormatInvocation(_setName, type, method, parameterInfos);
@@ -331,13 +318,30 @@ namespace ShaderGen
             }
         }
 
-        private void ValidateBuiltInMethod(string name)
+        private void ProcessBuiltInMethodInvocation(string name, InvocationExpressionSyntax node)
         {
-            if (name == nameof(ShaderBuiltins.Ddx) || name == nameof(ShaderBuiltins.Ddy))
+            switch (name)
             {
-                if (_shaderFunction.Type == ShaderFunctionType.VertexEntryPoint || _shaderFunction.Type == ShaderFunctionType.ComputeEntryPoint)
+                case nameof(ShaderBuiltins.Ddx):
+                case nameof(ShaderBuiltins.Ddy):
+                case nameof(ShaderBuiltins.SampleComparisonLevelZero):
+                    if (_shaderFunction.Type == ShaderFunctionType.VertexEntryPoint || _shaderFunction.Type == ShaderFunctionType.ComputeEntryPoint)
+                    {
+                        throw new ShaderGenerationException($"{name} can only be used within Fragment shaders.");
+                    }
+                    break;
+            }
+
+            if (name == nameof(ShaderBuiltins.SampleComparisonLevelZero))
+            {
+                List<IFieldSymbol> textureFieldSymbols = new List<IFieldSymbol>();
+                List<IParameterSymbol> textureParameterSymbols = new List<IParameterSymbol>();
+                FindTextureFieldsRecursive(node.ArgumentList.Arguments[0].Expression, textureFieldSymbols, textureParameterSymbols);
+                foreach (ISymbol textureFieldSymbol in textureFieldSymbols)
                 {
-                    throw new ShaderGenerationException("Ddx and Ddy can only be used within Fragment shaders.");
+                    ResourceDefinition referencedResource = _backend.GetContext(_setName).Resources.Single(rd => rd.Name == textureFieldSymbol.Name);
+                    referencedResource.IsTextureUsedAsDepthTexture = true;
+                    referencedResource.ParameterSymbols.AddRange(textureParameterSymbols);
                 }
             }
         }
