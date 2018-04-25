@@ -29,6 +29,8 @@ namespace ShaderGen.Glsl
             { "ShaderGen.Texture2DResource", "sampler2D" },
             { "ShaderGen.Texture2DArrayResource", "sampler2DArray" },
             { "ShaderGen.TextureCubeResource", "samplerCube" },
+            { "ShaderGen.DepthTexture2DResource", "sampler2DShadow" },
+            { "ShaderGen.DepthTexture2DArrayResource", "sampler2DArrayShadow" },
             { "ShaderGen.SamplerResource", "SamplerDummy" },
             { "ShaderGen.SamplerComparisonResource", "SamplerComparisonDummy" },
         };
@@ -38,6 +40,8 @@ namespace ShaderGen.Glsl
             { "ShaderGen.Texture2DResource", "texture2D" },
             { "ShaderGen.Texture2DArrayResource", "texture2DArray" },
             { "ShaderGen.TextureCubeResource", "textureCube" },
+            { "ShaderGen.DepthTexture2DResource", "texture2D" },
+            { "ShaderGen.DepthTexture2DArrayResource", "texture2DArray" },
             { "ShaderGen.SamplerResource", "sampler" },
             { "ShaderGen.SamplerComparisonResource", "samplerShadow" },
         };

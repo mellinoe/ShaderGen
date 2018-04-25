@@ -14,8 +14,8 @@ namespace TestShaders
             public Vector2 TextureCoordinate;
         }
 
-        public Texture2DResource Tex2D;
-        public Texture2DArrayResource TexArray;
+        public DepthTexture2DResource Tex2D;
+        public DepthTexture2DArrayResource TexArray;
         public SamplerComparisonResource Sampler;
 
         [FragmentShader]
@@ -29,13 +29,13 @@ namespace TestShaders
                 1);
         }
 
-        private float SampleMethod(Texture2DResource depthTexture, SamplerComparisonResource mySampler)
+        private float SampleMethod(DepthTexture2DResource depthTexture, SamplerComparisonResource mySampler)
         {
             return SampleComparisonLevelZero(depthTexture, mySampler, Vector2.Zero, 0.2f)
                 + SampleMethodInner(depthTexture, mySampler);
         }
 
-        private float SampleMethodInner(Texture2DResource depthTexture2, SamplerComparisonResource mySampler)
+        private float SampleMethodInner(DepthTexture2DResource depthTexture2, SamplerComparisonResource mySampler)
         {
             return SampleComparisonLevelZero(depthTexture2, mySampler, Vector2.Zero, 0.2f);
         }

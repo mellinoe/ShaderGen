@@ -153,6 +153,20 @@ namespace ShaderGen.Metal
                             }
                             textureBinding++;
                             break;
+                        case ShaderResourceKind.DepthTexture2D:
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                resourceArgList.Add(WriteDepthTexture2D(rd, textureBinding));
+                            }
+                            textureBinding++;
+                            break;
+                        case ShaderResourceKind.DepthTexture2DArray:
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                resourceArgList.Add(WriteDepthTexture2DArray(rd, textureBinding));
+                            }
+                            textureBinding++;
+                            break;
                         default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
                     }
                 }
@@ -204,6 +218,16 @@ namespace ShaderGen.Metal
         private string WriteRWTexture2D(ResourceDefinition rd, int binding)
         {
             return $"texture2d<float, access::read_write> {rd.Name} [[ texture({binding}) ]]";
+        }
+
+        private string WriteDepthTexture2D(ResourceDefinition rd, int binding)
+        {
+            return $"depth2d<float> {rd.Name} [[ texture({binding}) ]]";
+        }
+
+        private string WriteDepthTexture2DArray(ResourceDefinition rd, int binding)
+        {
+            return $"depth2d_array<float> {rd.Name} [[ texture({binding}) ]]";
         }
 
         protected override MethodProcessResult GenerateFullTextCore(string setName, ShaderFunction function)
@@ -378,6 +402,10 @@ namespace ShaderGen.Metal
                     return $"device {CSharpToShaderType(rd.ValueType.Name)}* {rd.Name};";
                 case ShaderResourceKind.RWTexture2D:
                     return $"texture2d<float, access::read_write> {rd.Name};";
+                case ShaderResourceKind.DepthTexture2D:
+                    return $"thread depth2d<float> {rd.Name};";
+                case ShaderResourceKind.DepthTexture2DArray:
+                    return $"thread depth2d_array<float> {rd.Name};";
                 default:
                     Debug.Fail("Invalid ResourceKind: " + rd.ResourceKind);
                     throw new InvalidOperationException();
@@ -407,6 +435,10 @@ namespace ShaderGen.Metal
                     return $"device {CSharpToShaderType(rd.ValueType.Name)}* {rd.Name}_param";
                 case ShaderResourceKind.RWTexture2D:
                     return $"texture2d<float, access::read_write> {rd.Name}_param";
+                case ShaderResourceKind.DepthTexture2D:
+                    return $"thread depth2d<float> {rd.Name}_param";
+                case ShaderResourceKind.DepthTexture2DArray:
+                    return $"thread depth2d_array<float> {rd.Name}_param";
                 default:
                     throw new InvalidOperationException("Invalid ResourceKind: " + rd.ResourceKind);
             }

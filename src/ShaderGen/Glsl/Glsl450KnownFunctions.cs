@@ -270,11 +270,11 @@ namespace ShaderGen.Glsl
 
         private static string SampleComparisonLevelZero(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            if (parameters[0].FullTypeName == "ShaderGen.Texture2DResource")
+            if (parameters[0].FullTypeName == "ShaderGen.DepthTexture2DResource")
             {
                 return $"textureLod(sampler2DShadow({parameters[0].Identifier}, {parameters[1].Identifier}), vec3({parameters[2].Identifier}, {parameters[3].Identifier}), 0.0)";
             }
-            else if (parameters[0].FullTypeName == "ShaderGen.Texture2DArrayResource")
+            else if (parameters[0].FullTypeName == "ShaderGen.DepthTexture2DArrayResource")
             {
                 // See https://github.com/KhronosGroup/SPIRV-Cross/issues/207 for why we need to use textureGrad here instead of textureLod.
                 return $"textureGrad(sampler2DArrayShadow({parameters[0].Identifier}, {parameters[1].Identifier}), vec4({parameters[2].Identifier}, {parameters[3].Identifier}, {parameters[4].Identifier}), vec2(0.0), vec2(0.0))";

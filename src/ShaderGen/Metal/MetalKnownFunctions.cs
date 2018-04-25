@@ -283,7 +283,7 @@ namespace ShaderGen.Metal
 
         private static string SampleComparisonLevelZero(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            if (parameters[0].FullTypeName == "ShaderGen.Texture2DArrayResource")
+            if (parameters[0].FullTypeName == "ShaderGen.DepthTexture2DArrayResource")
             {
                 // Metal texture array sample_compare function:
                 // sample_compare(sampler s, float2 coord, uint array, float compare_value)

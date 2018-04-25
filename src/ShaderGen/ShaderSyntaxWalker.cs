@@ -315,6 +315,14 @@ namespace ShaderGen
             {
                 return ShaderResourceKind.RWTexture2D;
             }
+            else if (fullTypeName.Contains("ShaderGen.DepthTexture2DResource"))
+            {
+                return ShaderResourceKind.DepthTexture2D;
+            }
+            else if (fullTypeName.Contains("ShaderGen.DepthTexture2DArrayResource"))
+            {
+                return ShaderResourceKind.DepthTexture2DArray;
+            }
             else
             {
                 return ShaderResourceKind.Uniform;

@@ -17,6 +17,8 @@ namespace ShaderGen.Metal
             { "ShaderGen.Texture2DResource", "texture2d<float>" },
             { "ShaderGen.Texture2DArrayResource", "texture2d_array<float>" },
             { "ShaderGen.TextureCubeResource", "texturecube<float>" },
+            { "ShaderGen.DepthTexture2DResource", "depth2d<float>" },
+            { "ShaderGen.DepthTexture2DArrayResource", "depth2d_array<float>" },
             { "ShaderGen.SamplerResource", "sampler" },
             { "ShaderGen.SamplerComparisonResource", "sampler" },
             { "System.Boolean", "bool" },
