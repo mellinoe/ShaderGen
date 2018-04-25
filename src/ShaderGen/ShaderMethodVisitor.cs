@@ -655,6 +655,15 @@ namespace ShaderGen
             return _backend.CorrectIdentifier(node.Identifier.Text);
         }
 
+        public override string VisitConditionalExpression(ConditionalExpressionSyntax node)
+        {
+            return Visit(node.Condition)
+                + node.QuestionToken.ToFullString()
+                + Visit(node.WhenTrue)
+                + node.ColonToken.ToFullString()
+                + Visit(node.WhenFalse);
+        }
+
         protected string GetParameterDeclList()
         {
             return string.Join(", ", _shaderFunction.Parameters.Select(FormatParameter));
