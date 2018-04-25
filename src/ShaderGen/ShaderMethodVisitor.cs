@@ -161,6 +161,11 @@ namespace ShaderGen
 
         public override string VisitLocalDeclarationStatement(LocalDeclarationStatementSyntax node)
         {
+            if (node.Modifiers.Any(x => x.IsKind(SyntaxKind.ConstKeyword)))
+            {
+                return " "; // TODO: Can't return empty string here because of validation check in VisitBlock
+            }
+
             return Visit(node.Declaration);
         }
 
@@ -211,7 +216,7 @@ namespace ShaderGen
                 }
 
                 // Static member access
-                if (symbol.Kind == SymbolKind.Property)
+                if (symbol.Kind == SymbolKind.Property || symbol.Kind == SymbolKind.Field)
                 {
                     return Visit(node.Name);
                 }
@@ -414,6 +419,16 @@ namespace ShaderGen
             else if (symbol.Kind == SymbolKind.Property)
             {
                 return _backend.FormatInvocation(_setName, containingTypeName, symbol.Name, Array.Empty<InvocationParameterInfo>());
+            }
+            else if (symbol is IFieldSymbol fs && fs.HasConstantValue)
+            {
+                // TODO: Share code to format constant values.
+                return fs.ConstantValue.ToString();
+            }
+            else if (symbol is ILocalSymbol ls && ls.HasConstantValue)
+            {
+                // TODO: Share code to format constant values.
+                return ls.ConstantValue.ToString();
             }
 
             string mapped = _backend.CSharpToShaderIdentifierName(symbolInfo);
