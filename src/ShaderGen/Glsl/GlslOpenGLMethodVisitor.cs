@@ -32,7 +32,7 @@ namespace ShaderGen.Glsl
             }
             else
             {
-                parameterType = _backend.CSharpToShaderType(pd.Type.Name);
+                parameterType = _backend.CSharpToShaderType(pd.Type);
             }
 
             return $"{_backend.ParameterDirection(pd.Direction)} {parameterType} {_backend.CorrectIdentifier(pd.Name)}";
