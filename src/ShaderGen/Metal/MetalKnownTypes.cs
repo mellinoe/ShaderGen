@@ -68,9 +68,8 @@ namespace ShaderGen.Metal
             }
         }
 
-        public static string GetPackedName(string name)
+        public static string GetPackedName(string mappedName)
         {
-            string mappedName = GetMappedName(name);
             if (s_mappedToPackedTypes.TryGetValue(mappedName, out string packed))
             {
                 return packed;

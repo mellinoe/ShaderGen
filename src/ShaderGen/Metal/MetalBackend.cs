@@ -13,19 +13,11 @@ namespace ShaderGen.Metal
         {
         }
 
-        private string CSharpToShaderTypeCore(string fullType, bool packed)
-        {
-            string mapped = packed
-                ? MetalKnownTypes.GetPackedName(fullType)
-                : MetalKnownTypes.GetMappedName(fullType);
-            return mapped
-                .Replace(".", "_")
-                .Replace("+", "_");
-        }
-
         protected override string CSharpToShaderTypeCore(string fullType)
         {
-            return CSharpToShaderTypeCore(fullType, false);
+            return MetalKnownTypes.GetMappedName(fullType)
+                .Replace(".", "_")
+                .Replace("+", "_");
         }
 
         protected void WriteStructure(StringBuilder sb, StructureDefinition sd)
@@ -38,6 +30,11 @@ namespace ShaderGen.Metal
             foreach (FieldDefinition field in sd.Fields)
             {
                 string typeName = CSharpToShaderType(field.Type);
+                if (field.SemanticType == SemanticType.None)
+                {
+                    typeName = MetalKnownTypes.GetPackedName(typeName);
+                }
+
                 fb.Append(typeName);
                 fb.Append(' ');
                 fb.Append(CorrectIdentifier(field.Name.Trim()));
