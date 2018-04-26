@@ -27,7 +27,11 @@ namespace TestShaders
         [FragmentShader]
         public Vector4 FS(FragmentInput input)
         {
-            Vector4 tintValue = new Vector4(Tint.Color, 1);
+            float tintAlpha = (1 == 1)
+                ? 1.0f
+                : 0.0f;
+
+            Vector4 tintValue = new Vector4(Tint.Color, tintAlpha);
             Vector4 textureValue = Sample(Texture, Sampler, input.TextureCoordinate);
             return (tintValue * Tint.Factor) + (textureValue * (1 - Tint.Factor));
         }
