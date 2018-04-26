@@ -37,7 +37,7 @@ namespace ShaderGen.Metal
             uint colorTarget = 0;
             foreach (FieldDefinition field in sd.Fields)
             {
-                string typeName = CSharpToShaderTypeCore(field.Type.Name, field.SemanticType == SemanticType.None);
+                string typeName = CSharpToShaderType(field.Type);
                 fb.Append(typeName);
                 fb.Append(' ');
                 fb.Append(CorrectIdentifier(field.Name.Trim()));
