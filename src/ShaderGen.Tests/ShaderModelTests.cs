@@ -97,7 +97,7 @@ namespace ShaderGen.Tests
             ShaderModel shaderModel = set.Model;
 
             Assert.Single(shaderModel.AllResources);
-            Assert.Equal(144, shaderModel.GetTypeSize(shaderModel.AllResources[0].ValueType));
+            Assert.Equal(208, shaderModel.GetTypeSize(shaderModel.AllResources[0].ValueType));
         }
 
         [Fact]

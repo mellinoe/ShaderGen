@@ -60,7 +60,7 @@ namespace ShaderGen
             List<FieldDefinition> fields = new List<FieldDefinition>();
             foreach (MemberDeclarationSyntax member in node.Members)
             {
-                if (member is FieldDeclarationSyntax fds)
+                if (member is FieldDeclarationSyntax fds && !fds.Modifiers.Any(x => x.IsKind(SyntaxKind.ConstKeyword)))
                 {
                     VariableDeclarationSyntax varDecl = fds.Declaration;
                     foreach (VariableDeclaratorSyntax vds in varDecl.Variables)
@@ -70,7 +70,7 @@ namespace ShaderGen
                         int arrayElementCount = 0;
                         if (isArray)
                         {
-                            arrayElementCount = GetArrayCountValue(vds);
+                            arrayElementCount = GetArrayCountValue(vds, model);
                         }
 
                         TypeReference tr = new TypeReference(typeName, model.GetTypeInfo(varDecl.Type));
@@ -85,7 +85,7 @@ namespace ShaderGen
             return true;
         }
 
-        private static int GetArrayCountValue(VariableDeclaratorSyntax vds)
+        private static int GetArrayCountValue(VariableDeclaratorSyntax vds, SemanticModel semanticModel)
         {
             AttributeSyntax[] arraySizeAttrs = Utilities.GetMemberAttributes(vds, "ArraySize");
             if (arraySizeAttrs.Length != 1)
@@ -94,43 +94,27 @@ namespace ShaderGen
                     "Array fields in structs must have a constant size specified by an ArraySizeAttribute.");
             }
             AttributeSyntax arraySizeAttr = arraySizeAttrs[0];
-            return GetAttributeArgumentIntValue(arraySizeAttr, 0);
+            return GetAttributeArgumentIntValue(arraySizeAttr, 0, semanticModel);
         }
 
-        private static int GetAttributeArgumentIntValue(AttributeSyntax attr, int index)
+        private static int GetAttributeArgumentIntValue(AttributeSyntax attr, int index, SemanticModel semanticModel)
         {
             if (attr.ArgumentList.Arguments.Count < index + 1)
             {
                 throw new ShaderGenerationException(
                     "Too few arguments in attribute " + attr.ToFullString() + ". Required + " + (index + 1));
             }
-            string fullArg0 = attr.ArgumentList.Arguments[index].ToFullString();
-            if (int.TryParse(fullArg0, out int ret))
-            {
-                return ret;
-            }
-            else
-            {
-                throw new ShaderGenerationException("Incorrectly formatted attribute: " + attr.ToFullString());
-            }
+            return GetConstantIntFromExpression(attr.ArgumentList.Arguments[index].Expression, semanticModel);
         }
 
-        private static uint GetAttributeArgumentUIntValue(AttributeSyntax attr, int index)
+        private static int GetConstantIntFromExpression(ExpressionSyntax expression, SemanticModel semanticModel)
         {
-            if (attr.ArgumentList.Arguments.Count < index + 1)
+            var constantValue = semanticModel.GetConstantValue(expression);
+            if (!constantValue.HasValue)
             {
-                throw new ShaderGenerationException(
-                    "Too few arguments in attribute " + attr.ToFullString() + ". Required + " + (index + 1));
+                throw new ShaderGenerationException("Expression did not contain a constant value: " + expression.ToFullString());
             }
-            string fullArg0 = attr.ArgumentList.Arguments[index].ToFullString();
-            if (uint.TryParse(fullArg0, out uint ret))
-            {
-                return ret;
-            }
-            else
-            {
-                throw new ShaderGenerationException("Incorrectly formatted attribute: " + attr.ToFullString());
-            }
+            return (int) constantValue.Value;
         }
 
         private static SemanticType GetSemanticType(VariableDeclaratorSyntax vds)
@@ -196,6 +180,16 @@ namespace ShaderGen
             return attrs.Length == 1;
         }
 
+        public override void VisitFieldDeclaration(FieldDeclarationSyntax node)
+        {
+            if (node.Modifiers.Any(x => x.IsKind(SyntaxKind.ConstKeyword)))
+            {
+                return;
+            }
+
+            base.VisitFieldDeclaration(node);
+        }
+
         public override void VisitVariableDeclaration(VariableDeclarationSyntax node)
         {
             if (node.Variables.Count != 1)
@@ -221,7 +215,7 @@ namespace ShaderGen
             int set = 0; // Default value if not otherwise specified.
             if (GetResourceDecl(node, out AttributeSyntax resourceSetDecl))
             {
-                set = GetAttributeArgumentIntValue(resourceSetDecl, 0);
+                set = GetAttributeArgumentIntValue(resourceSetDecl, 0, GetModel(node));
             }
 
             int resourceBinding = GetAndIncrementBinding(set);
