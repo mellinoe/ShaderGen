@@ -19,6 +19,8 @@ namespace ShaderGen.Hlsl
             { "ShaderGen.Texture2DResource", "Texture2D" },
             { "ShaderGen.Texture2DArrayResource", "Texture2DArray" },
             { "ShaderGen.TextureCubeResource", "TextureCube" },
+            { "ShaderGen.DepthTexture2DResource", "Texture2D" },
+            { "ShaderGen.DepthTexture2DArrayResource", "Texture2DArray" },
             { "System.Boolean", "bool" },
             { "ShaderGen.UInt2", "uint2" },
             { "ShaderGen.UInt3", "uint3" },

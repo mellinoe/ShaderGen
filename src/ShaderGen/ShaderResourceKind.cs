@@ -12,5 +12,7 @@
         RWStructuredBuffer,
         RWTexture2D,
         SamplerComparison,
+        DepthTexture2D,
+        DepthTexture2DArray,
     }
 }

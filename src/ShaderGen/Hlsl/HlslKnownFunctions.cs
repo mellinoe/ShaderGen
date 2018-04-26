@@ -251,7 +251,7 @@ namespace ShaderGen.Hlsl
 
         private static string SampleComparisonLevelZero(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            if (parameters[0].FullTypeName == "ShaderGen.Texture2DArrayResource")
+            if (parameters[0].FullTypeName == "ShaderGen.DepthTexture2DArrayResource")
             {
                 return $"{parameters[0].Identifier}.SampleCmpLevelZero({parameters[1].Identifier}, float3({parameters[2].Identifier}, {parameters[3].Identifier}), {parameters[4].Identifier})";
             }

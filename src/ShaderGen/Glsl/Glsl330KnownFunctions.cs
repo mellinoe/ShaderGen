@@ -257,7 +257,7 @@ namespace ShaderGen.Glsl
 
         private static string SampleComparisonLevelZero(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            if (parameters[0].FullTypeName == "ShaderGen.Texture2DArrayResource")
+            if (parameters[0].FullTypeName == "ShaderGen.DepthTexture2DArrayResource")
             {
                 return $"textureGrad({parameters[0].Identifier}, vec4({parameters[2].Identifier}, {parameters[3].Identifier}, {parameters[4].Identifier}), vec2(0.0), vec2(0.0))";
             }

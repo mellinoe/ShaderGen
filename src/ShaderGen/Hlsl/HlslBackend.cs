@@ -199,6 +199,7 @@ namespace ShaderGen.Hlsl
                             uniformBinding++;
                             break;
                         case ShaderResourceKind.Texture2D:
+                        case ShaderResourceKind.DepthTexture2D:
                             if (resourcesUsed.Contains(rd))
                             {
                                 WriteTexture2D(sb, rd, textureBinding);
@@ -206,6 +207,7 @@ namespace ShaderGen.Hlsl
                             textureBinding++;
                             break;
                         case ShaderResourceKind.Texture2DArray:
+                        case ShaderResourceKind.DepthTexture2DArray:
                             if (resourcesUsed.Contains(rd))
                             {
                                 WriteTexture2DArray(sb, rd, textureBinding);

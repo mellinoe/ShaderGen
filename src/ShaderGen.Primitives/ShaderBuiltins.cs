@@ -29,9 +29,9 @@ namespace ShaderGen
             uint sampleIndex) => throw new ShaderBuiltinException();
         public static T Load<T>(RWTexture2DResource<T> texture, UInt2 texCoords) where T : struct => throw new ShaderBuiltinException();
         public static T Store<T>(RWTexture2DResource<T> texture, UInt2 texCoords, T value) where T : struct => throw new ShaderBuiltinException();
-        public static float SampleComparisonLevelZero(Texture2DResource texture, SamplerComparisonResource sampler, Vector2 texCoords, float compareValue)
+        public static float SampleComparisonLevelZero(DepthTexture2DResource texture, SamplerComparisonResource sampler, Vector2 texCoords, float compareValue)
             => throw new ShaderBuiltinException();
-        public static float SampleComparisonLevelZero(Texture2DArrayResource texture, SamplerComparisonResource sampler, Vector2 texCoords, uint arrayLayer, float compareValue)
+        public static float SampleComparisonLevelZero(DepthTexture2DArrayResource texture, SamplerComparisonResource sampler, Vector2 texCoords, uint arrayLayer, float compareValue)
             => throw new ShaderBuiltinException();
         public static void Discard() => throw new ShaderBuiltinException();
         public static Vector2 ClipToTextureCoordinates(Vector4 clipCoordinates) => throw new ShaderBuiltinException();

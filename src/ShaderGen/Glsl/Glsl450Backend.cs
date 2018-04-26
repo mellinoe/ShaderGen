@@ -98,6 +98,16 @@ namespace ShaderGen.Glsl
             sb.AppendLine(";");
         }
 
+        protected override void WriteDepthTexture2D(StringBuilder sb, ResourceDefinition rd)
+        {
+            WriteTexture2D(sb, rd);
+        }
+
+        protected override void WriteDepthTexture2DArray(StringBuilder sb, ResourceDefinition rd)
+        {
+            WriteTexture2DArray(sb, rd);
+        }
+
         protected override void WriteInOutVariable(
             StringBuilder sb,
             bool isInVar,
