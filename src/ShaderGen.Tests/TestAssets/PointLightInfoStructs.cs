@@ -22,7 +22,13 @@ namespace TestShaders
         public Vector3 Position;
         public float Range;
         public Vector3 Color;
-        public float _padding;
+        public PointLightType LightType;
+    }
+
+    public enum PointLightType
+    {
+        Lambert,
+        Phong
     }
 
     public struct PointLightsInfo

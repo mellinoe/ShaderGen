@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.CodeAnalysis;
 
 namespace ShaderGen
 {
@@ -56,6 +57,18 @@ namespace ShaderGen
             if (s_knownTypeSizes.TryGetValue(tr.Name, out int ret))
             {
                 return ret;
+            }
+            else if (tr.TypeInfo.Type.TypeKind == TypeKind.Enum)
+            {
+                string enumBaseType = ((INamedTypeSymbol) tr.TypeInfo.Type).EnumUnderlyingType.GetFullMetadataName();
+                if (s_knownTypeSizes.TryGetValue(enumBaseType, out int enumRet))
+                {
+                    return enumRet;
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Unknown enum base type: {enumBaseType}");
+                }
             }
             else
             {
