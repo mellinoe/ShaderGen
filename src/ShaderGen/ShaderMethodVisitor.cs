@@ -68,6 +68,12 @@ namespace ShaderGen
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("{");
 
+            // Only declare discarded variables - i.e. MyFunc(out _) - for the top-level block in a function.
+            if (node.Parent.IsKind(SyntaxKind.MethodDeclaration))
+            {
+                sb.Append(DeclareDiscardedVariables(node));
+            }
+
             foreach (StatementSyntax ss in node.Statements)
             {
                 sb.Append(DeclareInlineOutVariables(ss));
@@ -84,6 +90,43 @@ namespace ShaderGen
             }
 
             sb.AppendLine("}");
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Declares any "discard"ed variables - i.e. MyFunc(out _) - for this block and all nested blocks.
+        /// </summary>
+        private string DeclareDiscardedVariables(BlockSyntax block)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            SemanticModel semanticModel = GetModel(block);
+
+            IEnumerable<ISymbol> discardedVariables = block
+                .DescendantNodes()
+                .Where(x => x.IsKind(SyntaxKind.IdentifierName))
+                .Select(x => semanticModel.GetSymbolInfo(x).Symbol)
+                .Where(x => x.Kind == SymbolKind.Discard)
+                .Cast<IDiscardSymbol>();
+
+            List<ISymbol> alreadyWrittenTypes = new List<ISymbol>();
+
+            foreach (IDiscardSymbol discardedVariable in discardedVariables)
+            {
+                if (alreadyWrittenTypes.Contains(discardedVariable.Type))
+                {
+                    continue;
+                }
+
+                sb.Append("    ");
+                sb.Append(GetDiscardedVariableType(discardedVariable));
+                sb.Append(' ');
+                sb.Append(GetDiscardedVariableName(discardedVariable));
+                sb.AppendLine(";");
+
+                alreadyWrittenTypes.Add(discardedVariable.Type);
+            }
+
             return sb.ToString();
         }
 
@@ -392,11 +435,29 @@ namespace ShaderGen
             return _backend.FormatInvocation(_setName, fullName, "ctor", parameters);
         }
 
+        private string GetDiscardedVariableType(ISymbol symbol)
+        {
+            Debug.Assert(symbol.Kind == SymbolKind.Discard);
+
+            string varType = Utilities.GetFullTypeName(((IDiscardSymbol) symbol).Type, out _);
+            return _backend.CSharpToShaderType(varType);
+        }
+
+        private string GetDiscardedVariableName(ISymbol symbol)
+        {
+            string mappedType = GetDiscardedVariableType(symbol);
+            return _backend.CorrectIdentifier($"_shadergen_discard_{mappedType}");
+        }
+
         public override string VisitIdentifierName(IdentifierNameSyntax node)
         {
             SymbolInfo symbolInfo = GetModel(node).GetSymbolInfo(node);
             ISymbol symbol = symbolInfo.Symbol;
-            string containingTypeName = Utilities.GetFullName(symbolInfo.Symbol.ContainingType);
+            if (symbol.Kind == SymbolKind.Discard)
+            {
+                return GetDiscardedVariableName(symbol);
+            }
+            string containingTypeName = Utilities.GetFullName(symbol.ContainingType);
             if (containingTypeName == "ShaderGen.ShaderBuiltins")
             {
                 TryRecognizeBuiltInVariable(symbolInfo);
