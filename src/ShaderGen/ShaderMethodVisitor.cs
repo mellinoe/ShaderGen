@@ -467,7 +467,12 @@ namespace ShaderGen
             {
                 TryRecognizeBuiltInVariable(symbolInfo);
             }
-            if (symbol.Kind == SymbolKind.Field && containingTypeName == _containingTypeName)
+            if (symbol is IFieldSymbol fs && fs.HasConstantValue)
+            {
+                // TODO: Share code to format constant values.
+                return fs.ConstantValue.ToString();
+            }
+            else if (symbol.Kind == SymbolKind.Field && containingTypeName == _containingTypeName)
             {
                 string symbolName = symbol.Name;
                 ResourceDefinition referencedResource = _backend.GetContext(_setName).Resources.Single(rd => rd.Name == symbolName);
@@ -480,11 +485,6 @@ namespace ShaderGen
             else if (symbol.Kind == SymbolKind.Property)
             {
                 return _backend.FormatInvocation(_setName, containingTypeName, symbol.Name, Array.Empty<InvocationParameterInfo>());
-            }
-            else if (symbol is IFieldSymbol fs && fs.HasConstantValue)
-            {
-                // TODO: Share code to format constant values.
-                return fs.ConstantValue.ToString();
             }
             else if (symbol is ILocalSymbol ls && ls.HasConstantValue)
             {

@@ -12,6 +12,9 @@ namespace TestShaders
         {
             const int MyConst = 10;
 
+            for (int i = 0; i < MyConst; i++) { }
+            for (int i = 0; i < MyOtherConst; i++) { }
+
             SystemPosition4 output;
             Vector4 color = Vector4.Zero;
             for (int i = 0; i < PointLightsInfo.MaxLights; i++)
