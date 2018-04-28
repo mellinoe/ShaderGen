@@ -6,6 +6,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace ShaderGen
 {
@@ -470,7 +471,7 @@ namespace ShaderGen
             if (symbol is IFieldSymbol fs && fs.HasConstantValue)
             {
                 // TODO: Share code to format constant values.
-                return fs.ConstantValue.ToString();
+                return string.Format(CultureInfo.InvariantCulture,"{0}", fs.ConstantValue);
             }
             else if (symbol.Kind == SymbolKind.Field && containingTypeName == _containingTypeName)
             {
@@ -489,7 +490,7 @@ namespace ShaderGen
             else if (symbol is ILocalSymbol ls && ls.HasConstantValue)
             {
                 // TODO: Share code to format constant values.
-                return ls.ConstantValue.ToString();
+                return string.Format(CultureInfo.InvariantCulture, "{0}", ls.ConstantValue);
             }
 
             string mapped = _backend.CSharpToShaderIdentifierName(symbolInfo);
