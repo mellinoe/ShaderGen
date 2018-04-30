@@ -26,6 +26,7 @@ namespace ShaderGen.Glsl
                 { "Frac", SimpleNameTranslator("fract") },
                 { "Lerp", SimpleNameTranslator("mix") },
                 { "Sin", SimpleNameTranslator("sin") },
+                { "SmoothStep", SimpleNameTranslator("smoothstep") },
                 { "Tan", SimpleNameTranslator("tan") },
                 { "Clamp", SimpleNameFloatParameterTranslator("clamp") },
                 { "Mod", SimpleNameFloatParameterTranslator("mod") },

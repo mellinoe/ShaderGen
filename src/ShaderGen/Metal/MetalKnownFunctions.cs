@@ -28,6 +28,7 @@ namespace ShaderGen.Metal
                 { "Frac", SimpleNameTranslator("fract") },
                 { "Lerp", SimpleNameTranslator("mix") },
                 { "Sin", SimpleNameTranslator("sin") },
+                { "SmoothStep", SimpleNameTranslator("smoothstep") },
                 { "Tan", SimpleNameTranslator("tan") },
                 { "Clamp", Clamp },
                 { "Mod", SimpleNameTranslator("fmod") },

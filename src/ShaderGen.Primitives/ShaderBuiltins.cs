@@ -114,6 +114,12 @@ namespace ShaderGen
         public static Vector3 Sin(Vector3 value) => throw new ShaderBuiltinException();
         public static Vector4 Sin(Vector4 value) => throw new ShaderBuiltinException();
 
+        // SmoothStep
+        public static float SmoothStep(float min, float max, float x) => throw new ShaderBuiltinException();
+        public static Vector2 SmoothStep(Vector2 min, Vector2 max, Vector2 x) => throw new ShaderBuiltinException();
+        public static Vector3 SmoothStep(Vector3 min, Vector3 max, Vector3 x) => throw new ShaderBuiltinException();
+        public static Vector4 SmoothStep(Vector4 min, Vector4 max, Vector4 x) => throw new ShaderBuiltinException();
+
         // Tan
         public static float Tan(float value) => throw new ShaderBuiltinException();
         public static Vector2 Tan(Vector2 value) => throw new ShaderBuiltinException();

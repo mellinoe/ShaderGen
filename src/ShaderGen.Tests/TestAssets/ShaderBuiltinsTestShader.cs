@@ -86,6 +86,12 @@ namespace TestShaders
             r3 = Sin(VH.V3);
             r4 = Sin(VH.V4);
 
+            // SmoothStep
+            r = SmoothStep(1f, 2f, f);
+            r2 = SmoothStep(new Vector2(1f, 1f), new Vector2(2f, 2f), VH.V2);
+            r3 = SmoothStep(new Vector3(1f, 1f, 1f), new Vector3(2f, 2f, 2f), VH.V3);
+            r4 = SmoothStep(new Vector4(1f, 1f, 1f, 1f), new Vector4(2f, 2f, 2f, 2f), VH.V4);
+
             // Tan
             r = Tan(f);
             r2 = Tan(VH.V2);
