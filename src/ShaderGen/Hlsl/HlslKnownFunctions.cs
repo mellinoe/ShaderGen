@@ -26,6 +26,7 @@ namespace ShaderGen.Hlsl
                 { "Pow", SimpleNameTranslator("pow") },
                 { "Acos", SimpleNameTranslator("acos") },
                 { "Sin", SimpleNameTranslator("sin") },
+                { "SmoothStep", SimpleNameTranslator("smoothstep") },
                 { "Tan", SimpleNameTranslator("tan") },
                 { "Clamp", SimpleNameTranslator("clamp") },
                 { "Mod", SimpleNameTranslator("fmod") },
