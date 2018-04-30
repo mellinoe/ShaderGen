@@ -50,6 +50,12 @@ namespace TestShaders
             r3 = Cos(VH.V3);
             r4 = Cos(VH.V4);
 
+            // Floor
+            r = Floor(f);
+            r2 = Floor(VH.V2);
+            r3 = Floor(VH.V3);
+            r4 = Floor(VH.V4);
+
             // Frac
             r = Frac(f);
             r2 = Frac(VH.V2);

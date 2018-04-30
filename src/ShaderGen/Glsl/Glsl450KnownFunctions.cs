@@ -23,6 +23,7 @@ namespace ShaderGen.Glsl
                 { "Cos", SimpleNameTranslator("cos") },
                 { "Ddx", SimpleNameTranslator("dFdx") },
                 { "Ddy", SimpleNameTranslator("dFdy") },
+                { "Floor", SimpleNameTranslator("floor") },
                 { "Frac", SimpleNameTranslator("fract") },
                 { "Lerp", SimpleNameTranslator("mix") },
                 { "Sin", SimpleNameTranslator("sin") },

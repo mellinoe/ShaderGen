@@ -24,6 +24,7 @@ namespace ShaderGen.Metal
                 { "Cos", SimpleNameTranslator("cos") },
                 { "Ddx", SimpleNameTranslator("dfdx") },
                 { "Ddy", SimpleNameTranslator("dfdy") },
+                { "Floor", SimpleNameTranslator("floor") },
                 { "Frac", SimpleNameTranslator("fract") },
                 { "Lerp", SimpleNameTranslator("mix") },
                 { "Sin", SimpleNameTranslator("sin") },

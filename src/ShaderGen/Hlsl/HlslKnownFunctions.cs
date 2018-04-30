@@ -21,6 +21,7 @@ namespace ShaderGen.Hlsl
                 { "Cos", SimpleNameTranslator("cos") },
                 { "Ddx", SimpleNameTranslator("ddx") },
                 { "Ddy", SimpleNameTranslator("ddy") },
+                { "Floor", SimpleNameTranslator("floor") },
                 { "Frac", SimpleNameTranslator("frac") },
                 { "Lerp", SimpleNameTranslator("lerp") },
                 { "Pow", SimpleNameTranslator("pow") },

@@ -72,6 +72,12 @@ namespace ShaderGen
         public static Vector3 Ddy(Vector3 value) => throw new ShaderBuiltinException();
         public static Vector4 Ddy(Vector4 value) => throw new ShaderBuiltinException();
 
+        // Floor
+        public static float Floor(float value) => throw new ShaderBuiltinException();
+        public static Vector2 Floor(Vector2 value) => throw new ShaderBuiltinException();
+        public static Vector3 Floor(Vector3 value) => throw new ShaderBuiltinException();
+        public static Vector4 Floor(Vector4 value) => throw new ShaderBuiltinException();
+
         // Frac
         public static float Frac(float value) => throw new ShaderBuiltinException();
         public static Vector2 Frac(Vector2 value) => throw new ShaderBuiltinException();
