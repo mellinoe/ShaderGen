@@ -170,6 +170,12 @@ namespace ShaderGen.Metal
 
             ret.Add("ShaderGen.ShaderSwizzle", new MetalSwizzleTranslator());
 
+            Dictionary<string, InvocationTranslator> vectorExtensionMappings = new Dictionary<string, InvocationTranslator>()
+            {
+                { "Item", VectorItem }
+            };
+            ret.Add("ShaderGen.VectorExtensions", new DictionaryTypeInvocationTranslator(vectorExtensionMappings));
+
             return ret;
         }
 
@@ -226,6 +232,11 @@ namespace ShaderGen.Metal
                 $"float4({p[12].Identifier}, {p[13].Identifier}, {p[14].Identifier}, {p[15].Identifier})");
 
             return $"{{ {paramList} }}";
+        }
+
+        private static string VectorItem(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return $"{parameters[0].Identifier}[{parameters[1].Identifier}]";
         }
 
         public static string TranslateInvocation(string type, string method, InvocationParameterInfo[] parameters)
