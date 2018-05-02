@@ -130,11 +130,23 @@ namespace TestShaders
             Vector3 r3 = Ddx(ret.XYZ());
             Vector4 r4 = Ddx(ret);
 
+            // DdxFine
+            r = DdxFine(ret.X);
+            r2 = DdxFine(ret.XY());
+            r3 = DdxFine(ret.XYZ());
+            r4 = DdxFine(ret);
+
             // Ddy
             r = Ddy(ret.X);
             r2 = Ddy(ret.XY());
             r3 = Ddy(ret.XYZ());
             r4 = Ddy(ret);
+
+            // DdyFine
+            r = DdyFine(ret.X);
+            r2 = DdyFine(ret.XY());
+            r3 = DdyFine(ret.XYZ());
+            r4 = DdyFine(ret);
 
             return ret;
         }

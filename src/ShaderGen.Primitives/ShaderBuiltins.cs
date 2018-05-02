@@ -66,11 +66,23 @@ namespace ShaderGen
         public static Vector3 Ddx(Vector3 value) => throw new ShaderBuiltinException();
         public static Vector4 Ddx(Vector4 value) => throw new ShaderBuiltinException();
 
+        // DdxFine
+        public static float DdxFine(float value) => throw new ShaderBuiltinException();
+        public static Vector2 DdxFine(Vector2 value) => throw new ShaderBuiltinException();
+        public static Vector3 DdxFine(Vector3 value) => throw new ShaderBuiltinException();
+        public static Vector4 DdxFine(Vector4 value) => throw new ShaderBuiltinException();
+
         // Ddy
         public static float Ddy(float value) => throw new ShaderBuiltinException();
         public static Vector2 Ddy(Vector2 value) => throw new ShaderBuiltinException();
         public static Vector3 Ddy(Vector3 value) => throw new ShaderBuiltinException();
         public static Vector4 Ddy(Vector4 value) => throw new ShaderBuiltinException();
+
+        // DdyFine
+        public static float DdyFine(float value) => throw new ShaderBuiltinException();
+        public static Vector2 DdyFine(Vector2 value) => throw new ShaderBuiltinException();
+        public static Vector3 DdyFine(Vector3 value) => throw new ShaderBuiltinException();
+        public static Vector4 DdyFine(Vector4 value) => throw new ShaderBuiltinException();
 
         // Floor
         public static float Floor(float value) => throw new ShaderBuiltinException();
