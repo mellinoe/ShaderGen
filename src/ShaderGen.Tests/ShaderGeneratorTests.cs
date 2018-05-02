@@ -29,6 +29,7 @@ namespace ShaderGen.Tests
             yield return new object[] { "TestShaders.ShaderBuiltinsTestShader.VS", null };
             yield return new object[] { null, "TestShaders.ShaderBuiltinsTestShader.FS" };
             yield return new object[] { "TestShaders.VectorConstructors.VS", null };
+            yield return new object[] { "TestShaders.VectorIndexers.VS", null };
             yield return new object[] { "TestShaders.VectorStaticProperties.VS", null };
             yield return new object[] { "TestShaders.VectorStaticFunctions.VS", null };
             yield return new object[] { "TestShaders.MultipleResourceSets.VS", null };

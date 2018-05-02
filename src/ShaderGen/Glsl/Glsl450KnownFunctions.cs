@@ -173,6 +173,13 @@ namespace ShaderGen.Glsl
 
             ret.Add("ShaderGen.ShaderSwizzle", new SwizzleTranslator());
 
+            Dictionary<string, InvocationTranslator> vectorExtensionMappings = new Dictionary<string, InvocationTranslator>()
+            {
+                { nameof(VectorExtensions.GetComponent), VectorGetComponent },
+                { nameof(VectorExtensions.SetComponent), VectorSetComponent },
+            };
+            ret.Add("ShaderGen.VectorExtensions", new DictionaryTypeInvocationTranslator(vectorExtensionMappings));
+
             return ret;
         }
 
@@ -185,6 +192,16 @@ namespace ShaderGen.Glsl
                 p[3].Identifier, p[7].Identifier, p[11].Identifier, p[15].Identifier);
 
             return $"mat4({paramList})";
+        }
+
+        private static string VectorGetComponent(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return $"{parameters[0].Identifier}[{parameters[1].Identifier}]";
+        }
+
+        private static string VectorSetComponent(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return $"{parameters[0].Identifier}[{parameters[1].Identifier}] = {parameters[2].Identifier}";
         }
 
         public static string TranslateInvocation(string type, string method, InvocationParameterInfo[] parameters)
