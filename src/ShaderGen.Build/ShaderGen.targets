@@ -32,7 +32,7 @@
       <_SGContinueOnError Condition="'$(DesignTimeBuild)' == 'true'">true</_SGContinueOnError>
     </PropertyGroup>
 
-    <Exec Command="dotnet $(_SGExePath) $(_SGArgs)"
+    <Exec Command="dotnet $quot;$(_SGExePath)$quot; $(_SGArgs)"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           StandardOutputImportance="high"
           ContinueOnError="$(_SGContinueOnError)" />
