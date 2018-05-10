@@ -30,13 +30,13 @@ namespace ShaderGen.Glsl
 
         protected override void WriteSampler(StringBuilder sb, ResourceDefinition rd)
         {
-            sb.AppendLine($"const SamplerDummy {CorrectIdentifier(rd.Name)} = SamplerDummy(0);");
+            sb.AppendLine($"SamplerDummy {CorrectIdentifier(rd.Name)} = SamplerDummy(0);");
             sb.AppendLine();
         }
 
         protected override void WriteSamplerComparison(StringBuilder sb, ResourceDefinition rd)
         {
-            sb.AppendLine($"const SamplerComparisonDummy {CorrectIdentifier(rd.Name)} = SamplerComparisonDummy(0);");
+            sb.AppendLine($"SamplerComparisonDummy {CorrectIdentifier(rd.Name)} = SamplerComparisonDummy(0);");
             sb.AppendLine();
         }
 
