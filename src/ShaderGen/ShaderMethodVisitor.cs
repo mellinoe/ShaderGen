@@ -480,6 +480,7 @@ namespace ShaderGen
                 _resourcesUsed.Add(referencedResource);
                 _shaderFunction.UsesTexture2DMS |= referencedResource.ResourceKind == ShaderResourceKind.Texture2DMS;
                 _shaderFunction.UsesStructuredBuffer |= referencedResource.ResourceKind == ShaderResourceKind.StructuredBuffer;
+                _shaderFunction.UsesRWTexture2D |= referencedResource.ResourceKind == ShaderResourceKind.RWTexture2D;
 
                 return _backend.CorrectFieldAccess(symbolInfo);
             }

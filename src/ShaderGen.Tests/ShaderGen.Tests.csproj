@@ -23,6 +23,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="TestAssets\ComplexCompute.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="xunit.runner.json" />
   </ItemGroup>
 

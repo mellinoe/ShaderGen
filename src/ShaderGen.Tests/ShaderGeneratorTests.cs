@@ -55,7 +55,13 @@ namespace ShaderGen.Tests
         public static IEnumerable<object[]> ComputeShaders()
         {
             yield return new object[] { "TestShaders.SimpleCompute.CS" };
+            yield return new object[] { "TestShaders.ComplexCompute.CS" };
         }
+
+        private static readonly HashSet<string> s_glslesSkippedShaders = new HashSet<string>()
+        {
+            "TestShaders.ComplexCompute.CS"
+        };
 
         [Theory]
         [MemberData(nameof(ShaderSets))]
@@ -224,6 +230,7 @@ namespace ShaderGen.Tests
             LanguageBackend[] backends = new LanguageBackend[]
             {
                 new HlslBackend(compilation),
+                new GlslEs300Backend(compilation),
                 new Glsl330Backend(compilation),
                 new Glsl450Backend(compilation),
                 new MetalBackend(compilation),
@@ -281,6 +288,15 @@ namespace ShaderGen.Tests
                         }
                         else
                         {
+                            if (backend is GlslEs300Backend)
+                            {
+                                string fullname = set.ComputeFunction.DeclaringType + "." + set.ComputeFunction.Name;
+                                if (s_glslesSkippedShaders.Contains(fullname))
+                                {
+                                    continue;
+                                }
+                            }
+
                             bool is450 = backend is Glsl450Backend;
                             GlsLangValidatorTool.AssertCompilesCode(set.ComputeShaderCode, "comp", is450);
                         }

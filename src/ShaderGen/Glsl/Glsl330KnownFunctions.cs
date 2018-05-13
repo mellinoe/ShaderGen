@@ -292,7 +292,14 @@ namespace ShaderGen.Glsl
         {
             if (parameters[0].FullTypeName.Contains("RWTexture2D"))
             {
-                return $"imageLoad({parameters[0].Identifier}, ivec2({parameters[1].Identifier}))";
+                if (parameters[0].FullTypeName.Contains("<float>"))
+                {
+                    return $"imageLoad({parameters[0].Identifier}, ivec2({parameters[1].Identifier})).r";
+                }
+                else
+                {
+                    return $"imageLoad({parameters[0].Identifier}, ivec2({parameters[1].Identifier}))";
+                }
             }
             else
             {
@@ -302,7 +309,14 @@ namespace ShaderGen.Glsl
 
         private static string Store(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"imageStore({parameters[0].Identifier}, ivec2({parameters[1].Identifier}), {parameters[2].Identifier})";
+            if (parameters[0].FullTypeName.Contains("<float>"))
+            {
+                return $"imageStore({parameters[0].Identifier}, ivec2({parameters[1].Identifier}), vec4({parameters[2].Identifier}))";
+            }
+            else
+            {
+                return $"imageStore({parameters[0].Identifier}, ivec2({parameters[1].Identifier}), {parameters[2].Identifier})";
+            }
         }
 
         private static string Discard(string typeName, string methodName, InvocationParameterInfo[] parameters)

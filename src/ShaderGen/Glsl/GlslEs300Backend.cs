@@ -35,6 +35,10 @@ namespace ShaderGen.Glsl
             {
                 sb.AppendLine($"precision mediump sampler2DMS;");
             }
+            if (function.UsesRWTexture2D)
+            {
+                sb.AppendLine($"precision mediump image2D;");
+            }
             sb.AppendLine();
 
             sb.AppendLine($"struct SamplerDummy {{ int _dummyValue; }};");
@@ -102,7 +106,7 @@ namespace ShaderGen.Glsl
         protected override void WriteStructuredBuffer(StringBuilder sb, ResourceDefinition rd, bool isReadOnly)
         {
             string readOnlyStr = isReadOnly ? " readonly" : " ";
-            sb.AppendLine($"layout(std140){readOnlyStr} buffer {rd.Name}");
+            sb.AppendLine($"layout(std430){readOnlyStr} buffer {rd.Name}");
             sb.AppendLine("{");
             sb.AppendLine($"    {CSharpToShaderType(rd.ValueType.Name)} field_{CorrectIdentifier(rd.Name.Trim())}[];");
             sb.AppendLine("};");
@@ -110,7 +114,17 @@ namespace ShaderGen.Glsl
 
         protected override void WriteRWTexture2D(StringBuilder sb, ResourceDefinition rd)
         {
-            string layoutType = "rgba32f"; // TODO: Support other types ?
+            string layoutType;
+            switch (rd.ValueType.Name)
+            {
+                case "System.Numerics.Vector4":
+                    layoutType = "rgba32f";
+                    break;
+                case "System.Single":
+                    layoutType = "r32f";
+                    break;
+                default: throw new ShaderGenerationException($"Invalid RWTexture2D type. T must be Vector4 or float.");
+            }
             sb.AppendLine($"layout({layoutType}) uniform image2D {CorrectIdentifier(rd.Name)};");
             sb.AppendLine();
         }

@@ -36,7 +36,7 @@ namespace ShaderGen.Glsl
 
         protected override void WriteStructuredBuffer(StringBuilder sb, ResourceDefinition rd, bool isReadOnly)
         {
-            string layout = FormatLayoutStr(rd, "std140");
+            string layout = FormatLayoutStr(rd, "std430");
             string readOnlyStr = isReadOnly ? " readonly" : " ";
             sb.AppendLine($"{layout}{readOnlyStr} buffer {rd.Name}");
             sb.AppendLine("{");
@@ -133,7 +133,17 @@ namespace ShaderGen.Glsl
 
         protected override void WriteRWTexture2D(StringBuilder sb, ResourceDefinition rd)
         {
-            string layoutType = "rgba32f"; // TODO: Support other types ?
+            string layoutType;
+            switch (rd.ValueType.Name)
+            {
+                case "System.Numerics.Vector4":
+                    layoutType = "rgba32f";
+                    break;
+                case "System.Single":
+                    layoutType = "r32f";
+                    break;
+                default: throw new ShaderGenerationException($"Invalid RWTexture2D type. T must be Vector4 or float.");
+            }
             sb.Append(FormatLayoutStr(rd, layoutType));
             sb.Append(' ');
             sb.Append("uniform image2D ");

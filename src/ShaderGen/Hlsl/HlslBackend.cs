@@ -158,7 +158,7 @@ namespace ShaderGen.Hlsl
 
             BackendContext setContext = GetContext(setName);
             ShaderFunctionAndMethodDeclarationSyntax entryPoint = setContext.Functions.SingleOrDefault(
-                sfabs => sfabs.Function.Name == function.Name);
+                sfabs => sfabs.Function.DeclaringType == function.DeclaringType && sfabs.Function.Name == function.Name);
             if (entryPoint == null)
             {
                 throw new ShaderGenerationException("Couldn't find given function: " + function.Name);
