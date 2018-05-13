@@ -305,7 +305,7 @@ namespace ShaderGen.App
                     : type == ShaderFunctionType.FragmentEntryPoint ? "ps_5_0"
                     : "cs_5_0";
                 string outputPath = shaderPath + ".bytes";
-                string args = $"/T {profile} /E {entryPoint} {shaderPath} /Fo {outputPath}";
+                string args = $"/T \"{profile}\" /E \"{entryPoint}\" \"{shaderPath}\" /Fo \"{outputPath}\"";
                 string fxcPath = FindFxcExe();
                 ProcessStartInfo psi = new ProcessStartInfo(fxcPath, args);
                 psi.RedirectStandardOutput = true;
