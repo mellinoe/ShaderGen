@@ -320,7 +320,14 @@ namespace ShaderGen.Metal
         {
             if (parameters[0].FullTypeName.Contains("RWTexture2D"))
             {
-                return $"{parameters[0].Identifier}.read({parameters[1].Identifier})";
+                if (parameters[0].FullTypeName.Contains("<float>"))
+                {
+                    return $"{parameters[0].Identifier}.read({parameters[1].Identifier}).r";
+                }
+                else
+                {
+                    return $"{parameters[0].Identifier}.read({parameters[1].Identifier})";
+                }
             }
             else
             {
@@ -330,7 +337,14 @@ namespace ShaderGen.Metal
 
         private static string Store(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"{parameters[0].Identifier}.write({parameters[2].Identifier}, {parameters[1].Identifier})";
+            if (parameters[0].FullTypeName.Contains("<float>"))
+            {
+                return $"{parameters[0].Identifier}.write(float4({parameters[2].Identifier}), {parameters[1].Identifier})";
+            }
+            else
+            {
+                return $"{parameters[0].Identifier}.write({parameters[2].Identifier}, {parameters[1].Identifier})";
+            }
         }
 
         private static string Discard(string typeName, string methodName, InvocationParameterInfo[] parameters)
