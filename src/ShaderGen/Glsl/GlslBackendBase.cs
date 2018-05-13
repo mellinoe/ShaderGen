@@ -71,6 +71,8 @@ namespace ShaderGen.Glsl
             HashSet<ResourceDefinition> resourcesUsed
                 = ProcessFunctions(setName, entryPoint, out string funcStr, out string entryStr);
 
+            int structuredBufferIndex = 0;
+            int rwTextureIndex = 0;
             foreach (ResourceDefinition rd in context.Resources)
             {
                 if (!resourcesUsed.Contains(rd))
@@ -104,11 +106,13 @@ namespace ShaderGen.Glsl
                         break;
                     case ShaderResourceKind.StructuredBuffer:
                     case ShaderResourceKind.RWStructuredBuffer:
-                        WriteStructuredBuffer(sb, rd, rd.ResourceKind == ShaderResourceKind.StructuredBuffer);
+                        WriteStructuredBuffer(sb, rd, rd.ResourceKind == ShaderResourceKind.StructuredBuffer, structuredBufferIndex);
                         function.UsesStructuredBuffer = true;
+                        structuredBufferIndex++;
                         break;
                     case ShaderResourceKind.RWTexture2D:
-                        WriteRWTexture2D(sb, rd);
+                        WriteRWTexture2D(sb, rd, rwTextureIndex);
+                        rwTextureIndex++;
                         break;
                     case ShaderResourceKind.DepthTexture2D:
                         WriteDepthTexture2D(sb, rd);
@@ -394,8 +398,8 @@ namespace ShaderGen.Glsl
         protected abstract void WriteTexture2DArray(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteTextureCube(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteTexture2DMS(StringBuilder sb, ResourceDefinition rd);
-        protected abstract void WriteStructuredBuffer(StringBuilder sb, ResourceDefinition rd, bool isReadOnly);
-        protected abstract void WriteRWTexture2D(StringBuilder sb, ResourceDefinition rd);
+        protected abstract void WriteStructuredBuffer(StringBuilder sb, ResourceDefinition rd, bool isReadOnly, int index);
+        protected abstract void WriteRWTexture2D(StringBuilder sb, ResourceDefinition rd, int index);
         protected abstract void WriteDepthTexture2D(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteDepthTexture2DArray(StringBuilder sb, ResourceDefinition rd);
 

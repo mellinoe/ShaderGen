@@ -85,7 +85,7 @@ namespace ShaderGen.Glsl
             sb.AppendLine();
         }
 
-        protected override void WriteStructuredBuffer(StringBuilder sb, ResourceDefinition rd, bool isReadOnly)
+        protected override void WriteStructuredBuffer(StringBuilder sb, ResourceDefinition rd, bool isReadOnly, int index)
         {
             string readOnlyStr = isReadOnly ? " readonly" : " ";
             sb.AppendLine($"layout(std430){readOnlyStr} buffer {rd.Name}");
@@ -94,7 +94,7 @@ namespace ShaderGen.Glsl
             sb.AppendLine("};");
         }
 
-        protected override void WriteRWTexture2D(StringBuilder sb, ResourceDefinition rd)
+        protected override void WriteRWTexture2D(StringBuilder sb, ResourceDefinition rd, int index)
         {
             string layoutType;
             switch (rd.ValueType.Name)

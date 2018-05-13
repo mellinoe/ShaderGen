@@ -103,16 +103,16 @@ namespace ShaderGen.Glsl
             sb.AppendLine();
         }
 
-        protected override void WriteStructuredBuffer(StringBuilder sb, ResourceDefinition rd, bool isReadOnly)
+        protected override void WriteStructuredBuffer(StringBuilder sb, ResourceDefinition rd, bool isReadOnly, int index)
         {
             string readOnlyStr = isReadOnly ? " readonly" : " ";
-            sb.AppendLine($"layout(std430){readOnlyStr} buffer {rd.Name}");
+            sb.AppendLine($"layout(std430, binding = {index}){readOnlyStr} buffer {rd.Name}");
             sb.AppendLine("{");
             sb.AppendLine($"    {CSharpToShaderType(rd.ValueType.Name)} field_{CorrectIdentifier(rd.Name.Trim())}[];");
             sb.AppendLine("};");
         }
 
-        protected override void WriteRWTexture2D(StringBuilder sb, ResourceDefinition rd)
+        protected override void WriteRWTexture2D(StringBuilder sb, ResourceDefinition rd, int index)
         {
             string layoutType;
             switch (rd.ValueType.Name)
@@ -125,7 +125,7 @@ namespace ShaderGen.Glsl
                     break;
                 default: throw new ShaderGenerationException($"Invalid RWTexture2D type. T must be Vector4 or float.");
             }
-            sb.AppendLine($"layout({layoutType}) uniform image2D {CorrectIdentifier(rd.Name)};");
+            sb.AppendLine($"layout({layoutType}, binding = {index}) uniform image2D {CorrectIdentifier(rd.Name)};");
             sb.AppendLine();
         }
 
