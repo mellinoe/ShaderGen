@@ -107,7 +107,6 @@ namespace ShaderGen.Glsl
                     case ShaderResourceKind.StructuredBuffer:
                     case ShaderResourceKind.RWStructuredBuffer:
                         WriteStructuredBuffer(sb, rd, rd.ResourceKind == ShaderResourceKind.StructuredBuffer, structuredBufferIndex);
-                        function.UsesStructuredBuffer = true;
                         structuredBufferIndex++;
                         break;
                     case ShaderResourceKind.RWTexture2D:
