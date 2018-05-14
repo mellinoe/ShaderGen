@@ -313,7 +313,7 @@ namespace ShaderGen.App
                 string args = $"/T \"{profile}\" /E \"{entryPoint}\" \"{shaderPath}\" /Fo \"{outputPath}\"";
                 if (debug)
                 {
-                    args += "/Od /Zi";
+                    args += " /Od /Zi";
                 }
                 string fxcPath = FindFxcExe();
                 ProcessStartInfo psi = new ProcessStartInfo(fxcPath, args);
