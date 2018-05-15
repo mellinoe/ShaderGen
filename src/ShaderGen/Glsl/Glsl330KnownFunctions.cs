@@ -161,7 +161,43 @@ namespace ShaderGen.Glsl
 
             Dictionary<string, InvocationTranslator> mathfMappings = new Dictionary<string, InvocationTranslator>()
             {
+                { "E", E },
+                { "PI", Pi },
+                { "Abs", SimpleNameTranslator("abs") },
+                { "Acos", SimpleNameTranslator("acos") },
+                { "Acosh", SimpleNameTranslator("acosh") },
+                { "Asin", SimpleNameTranslator("asin") },
+                { "Asinh", SimpleNameTranslator("asinh") },
+                { "Atan", SimpleNameTranslator("atan") },
+                { "Atan2", SimpleNameTranslator("atan") }, // Note atan supports both (x) and (y,x)
+                { "Atanh", SimpleNameTranslator("atanh") },
+                // Cbrt(Single)
+                { "Ceiling", SimpleNameTranslator("ceil") },
                 { "Cos", SimpleNameTranslator("cos") },
+                // Cosh(Single)
+                // Exp(Single)
+                // Floor(Single)
+                // IEEERemainder(Single, Single)
+                // Log(Single)
+                // Log(Single, Single)
+                // Log10(Single)
+                // Max(Single, Single)
+                // Min(Single, Single)
+                // Pow(Single, Single)
+                // Round(Single)
+                // Round(Single, Int32)
+                // Round(Single, Int32, MidpointRounding)
+                // Round(Single, MidpointRounding)
+                // Sign(Single)
+                // Sin(Single)
+                // Sinh(Single)
+                // Sqrt(Single)
+                // Tan(Single)
+                // Tanh(Single)
+                // Truncate(Single)
+
+
+                
                 { "Max", SimpleNameTranslator("max") },
                 { "Min", SimpleNameTranslator("min") },
                 { "Pow", SimpleNameTranslator("pow") },
@@ -169,6 +205,7 @@ namespace ShaderGen.Glsl
                 { "Sqrt", SimpleNameTranslator("sqrt") },
             };
             ret.Add("System.MathF", new DictionaryTypeInvocationTranslator(mathfMappings));
+
 
             ret.Add("ShaderGen.ShaderSwizzle", new SwizzleTranslator());
 
@@ -180,6 +217,16 @@ namespace ShaderGen.Glsl
             ret.Add("ShaderGen.VectorExtensions", new DictionaryTypeInvocationTranslator(vectorExtensionMappings));
 
             return ret;
+        }
+
+        private static string E(string typeName, string methodName, InvocationParameterInfo[] p)
+        {
+            return "2.71828182845905";
+        }
+
+        private static string Pi(string typeName, string methodName, InvocationParameterInfo[] p)
+        {
+            return "3.14159265358979";
         }
 
         private static string MatrixCtor(string typeName, string methodName, InvocationParameterInfo[] p)
