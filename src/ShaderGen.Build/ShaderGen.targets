@@ -23,7 +23,7 @@
       <_SGArgs Condition="'$(ListAllShaderPaths)' == 'true'">$(_SGArgs) --listall</_SGArgs>
       <_SGArgs Condition="'$(ShaderProcessorAssembly)' != ''">$(_SGArgs) --processor "$(ShaderProcessorAssembly)"</_SGArgs>
       <_SGArgs Condition="'$(ShaderProcessorArgs)' != ''">$(_SGArgs) --processorargs "$(ShaderProcessorArgs)"</_SGArgs>
-      <_SGArgs Condition="'$(DebugShader)' == 'true' || '$(Configuration)' == 'Debug'">$(_SGArgs) --debug</_SGArgs>
+      <_SGArgs Condition="'$(DebugShader)' == 'true' or '$(Configuration)' == 'Debug'">$(_SGArgs) --debug</_SGArgs>
     </PropertyGroup>
 
     <Delete Files="$(_SGGeneratedFilesList)" Condition="Exists($(_SGGeneratedFilesList))" ContinueOnError="true" />
