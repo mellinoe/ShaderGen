@@ -257,6 +257,8 @@ namespace ShaderGen.Metal
             HashSet<ResourceDefinition> resourcesUsed
                 = ProcessFunctions(setName, entryPoint, out string funcsStr, out string entryStr);
 
+            ValidateResourcesUsed(setName, resourcesUsed);
+
             StringBuilder containerSB = new StringBuilder();
             containerSB.AppendLine("struct ShaderContainer {");
 

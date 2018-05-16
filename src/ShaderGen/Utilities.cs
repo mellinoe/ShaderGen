@@ -65,6 +65,11 @@ namespace ShaderGen
                 return string.Empty;
             }
 
+            if (s.Kind == SymbolKind.ArrayType)
+            {
+                return GetFullMetadataName(((IArrayTypeSymbol)s).ElementType) + "[]";
+            }
+
             StringBuilder sb = new StringBuilder(s.MetadataName);
             ISymbol last = s;
 

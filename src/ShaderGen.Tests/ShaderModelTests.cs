@@ -179,5 +179,43 @@ namespace ShaderGen.Tests
             Assert.Contains(shaderModel.FragmentResources, rd => rd.Name == "FS_S0");
             Assert.Contains(shaderModel.FragmentResources, rd => rd.Name == "FS_M2_Indirect");
         }
+
+        [Fact]
+        public void StructureSizes()
+        {
+            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            HlslBackend backend = new HlslBackend(compilation);
+            ShaderGenerator sg = new ShaderGenerator(
+                compilation,
+                "TestShaders.StructureSizeTests.VS",
+                null,
+                backend);
+
+            ShaderGenerationResult genResult = sg.GenerateShaders();
+            IReadOnlyList<GeneratedShaderSet> sets = genResult.GetOutput(backend);
+            Assert.Equal(1, sets.Count);
+            GeneratedShaderSet set = sets[0];
+            ShaderModel shaderModel = set.Model;
+
+            StructureDefinition test0 = shaderModel.GetStructureDefinition(
+                    nameof(TestShaders) + "." + nameof(StructureSizeTests) + "+" + nameof(StructureSizeTests.SizeTest_0));
+            Assert.Equal(48, test0.Alignment.CSharpSize);
+            Assert.True(test0.CSharpMatchesShaderAlignment);
+
+            StructureDefinition test1 = shaderModel.GetStructureDefinition(
+                    nameof(TestShaders) + "." + nameof(StructureSizeTests) + "+" + nameof(StructureSizeTests.SizeTest_1));
+            Assert.Equal(52, test1.Alignment.CSharpSize);
+            Assert.True(test1.CSharpMatchesShaderAlignment);
+
+            StructureDefinition test2 = shaderModel.GetStructureDefinition(
+                    nameof(TestShaders) + "." + nameof(StructureSizeTests) + "+" + nameof(StructureSizeTests.SizeTest_2));
+            Assert.Equal(48, test2.Alignment.CSharpSize);
+            Assert.False(test2.CSharpMatchesShaderAlignment);
+
+            StructureDefinition test3 = shaderModel.GetStructureDefinition(
+                    nameof(TestShaders) + "." + nameof(StructureSizeTests) + "+" + nameof(StructureSizeTests.SizeTest_3));
+            Assert.Equal(64, test3.Alignment.CSharpSize);
+            Assert.False(test3.CSharpMatchesShaderAlignment);
+        }
     }
 }

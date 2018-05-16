@@ -1,5 +1,6 @@
 ﻿using ShaderGen;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using static ShaderGen.ShaderBuiltins;
 
 namespace TestShaders.VeldridShaders
@@ -45,10 +46,13 @@ namespace TestShaders.VeldridShaders
             public float __padding;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
         public struct PointLightsBuffer
         {
             public int NumActiveLights;
-            public Vector3 __padding;
+            public float _padding0;
+            public float _padding1;
+            public float _padding2;
             [ArraySize(4)] public PointLightInfo[] PointLights;
         }
 

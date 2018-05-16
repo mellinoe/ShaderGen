@@ -71,6 +71,8 @@ namespace ShaderGen.Glsl
             HashSet<ResourceDefinition> resourcesUsed
                 = ProcessFunctions(setName, entryPoint, out string funcStr, out string entryStr);
 
+            ValidateResourcesUsed(setName, resourcesUsed);
+
             int structuredBufferIndex = 0;
             int rwTextureIndex = 0;
             foreach (ResourceDefinition rd in context.Resources)

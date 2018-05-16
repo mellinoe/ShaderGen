@@ -11,17 +11,20 @@
         /// </summary>
         public int ArrayElementCount { get; }
         public bool IsArray => ArrayElementCount > 0;
+        public AlignmentInfo Alignment { get; }
 
         public FieldDefinition(
             string name,
             TypeReference type,
             SemanticType semanticType,
-            int arrayElementCount)
+            int arrayElementCount,
+            AlignmentInfo size)
         {
             Name = name;
             Type = type;
             SemanticType = semanticType;
             ArrayElementCount = arrayElementCount;
+            Alignment = size;
         }
     }
 }

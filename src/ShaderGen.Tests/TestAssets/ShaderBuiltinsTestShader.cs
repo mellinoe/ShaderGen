@@ -1,17 +1,21 @@
 ﻿using ShaderGen;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using static ShaderGen.ShaderBuiltins;
 
 namespace TestShaders
 {
     public class ShaderBuiltinsTestShader
     {
+        [StructLayout(LayoutKind.Sequential)]
         public struct VectorHolder
         {
-            public Vector2 V2;
-            public Vector3 V3;
-            public Vector4 V4;
             public Matrix4x4 M4x4;
+            public Vector4 V4;
+            public Vector2 V2;
+            private float _padding0;
+            private float _padding1;
+            public Vector3 V3;
         }
 
         public VectorHolder VH;

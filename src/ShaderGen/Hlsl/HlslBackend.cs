@@ -179,6 +179,8 @@ namespace ShaderGen.Hlsl
             HashSet<ResourceDefinition> resourcesUsed
                 = ProcessFunctions(setName, entryPoint, out string funcStr, out string entryStr);
 
+            ValidateResourcesUsed(setName, resourcesUsed);
+
             // Emit all of the resources now, because we've learned which ones are actually used by this function.
             int uniformBinding = 0, textureBinding = 0, samplerBinding = 0, uavBinding = function.ColorOutputCount;
             int setIndex = 0;

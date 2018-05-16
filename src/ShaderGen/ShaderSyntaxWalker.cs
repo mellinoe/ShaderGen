@@ -5,6 +5,7 @@ using System.Linq;
 using System;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
+using System.Diagnostics;
 
 namespace ShaderGen
 {
@@ -57,6 +58,10 @@ namespace ShaderGen
                 structName = fullNestedTypePrefix + joiner + structName;
             }
 
+            int structCSharpSize = 0;
+            int structShaderSize = 0;
+            int structCSharpAlignment = 0;
+            int structShaderAlignment = 0;
             List<FieldDefinition> fields = new List<FieldDefinition>();
             foreach (MemberDeclarationSyntax member in node.Members)
             {
@@ -73,15 +78,44 @@ namespace ShaderGen
                             arrayElementCount = GetArrayCountValue(vds, model);
                         }
 
+                        TypeInfo typeInfo = model.GetTypeInfo(varDecl.Type);
+
+                        AlignmentInfo fieldSizeAndAlignment;
+
+                        if (typeInfo.Type.Kind == SymbolKind.ArrayType)
+                        {
+                            ITypeSymbol elementType = ((IArrayTypeSymbol)typeInfo.Type).ElementType;
+                            AlignmentInfo elementSizeAndAlignment = TypeSizeCache.Get(model, elementType);
+                            fieldSizeAndAlignment = new AlignmentInfo(
+                                elementSizeAndAlignment.CSharpSize * arrayElementCount,
+                                elementSizeAndAlignment.ShaderSize * arrayElementCount,
+                                elementSizeAndAlignment.CSharpAlignment,
+                                elementSizeAndAlignment.ShaderAlignment);
+                        }
+                        else
+                        {
+                            fieldSizeAndAlignment = TypeSizeCache.Get(model, typeInfo.Type);
+                        }
+
+                        structCSharpSize += structCSharpSize % fieldSizeAndAlignment.CSharpAlignment;
+                        structCSharpSize += fieldSizeAndAlignment.CSharpSize;
+                        structCSharpAlignment = Math.Max(structCSharpAlignment, fieldSizeAndAlignment.CSharpAlignment);
+
+                        structShaderSize += structShaderSize % fieldSizeAndAlignment.ShaderAlignment;
+                        structShaderSize += fieldSizeAndAlignment.ShaderSize;
+                        structShaderAlignment = Math.Max(structShaderAlignment, fieldSizeAndAlignment.ShaderAlignment);
+
                         TypeReference tr = new TypeReference(typeName, model.GetTypeInfo(varDecl.Type));
                         SemanticType semanticType = GetSemanticType(vds);
-
-                        fields.Add(new FieldDefinition(fieldName, tr, semanticType, arrayElementCount));
+                        fields.Add(new FieldDefinition(fieldName, tr, semanticType, arrayElementCount, fieldSizeAndAlignment));
                     }
                 }
             }
 
-            sd = new StructureDefinition(structName.Trim(), fields.ToArray());
+            sd = new StructureDefinition(
+                structName.Trim(),
+                fields.ToArray(),
+                new AlignmentInfo(structCSharpSize, structShaderSize, structCSharpAlignment, structShaderAlignment));
             return true;
         }
 
@@ -114,7 +148,7 @@ namespace ShaderGen
             {
                 throw new ShaderGenerationException("Expression did not contain a constant value: " + expression.ToFullString());
             }
-            return (int) constantValue.Value;
+            return (int)constantValue.Value;
         }
 
         private static SemanticType GetSemanticType(VariableDeclaratorSyntax vds)
@@ -223,7 +257,7 @@ namespace ShaderGen
             ResourceDefinition rd = new ResourceDefinition(resourceName, set, resourceBinding, valueType, kind);
             if (kind == ShaderResourceKind.Uniform)
             {
-                ValidateResourceType(typeInfo);
+                ValidateUniformType(typeInfo);
             }
 
             foreach (LanguageBackend b in _backends) { b.AddResource(_shaderSet.Name, rd); }
@@ -254,7 +288,7 @@ namespace ShaderGen
             return ret;
         }
 
-        private void ValidateResourceType(TypeInfo typeInfo)
+        private void ValidateUniformType(TypeInfo typeInfo)
         {
             string name = typeInfo.Type.ToDisplayString();
             if (name != nameof(ShaderGen) + "." + nameof(Texture2DResource)

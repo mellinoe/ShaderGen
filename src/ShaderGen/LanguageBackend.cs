@@ -123,7 +123,7 @@ namespace ShaderGen
             }
             if (fd.TypeInfo.Type.TypeKind == TypeKind.Enum)
             {
-                INamedTypeSymbol enumBaseType = ((INamedTypeSymbol) fd.TypeInfo.Type).EnumUnderlyingType;
+                INamedTypeSymbol enumBaseType = ((INamedTypeSymbol)fd.TypeInfo.Type).EnumUnderlyingType;
                 if (enumBaseType != null
                     && enumBaseType.SpecialType != SpecialType.System_Int32
                     && enumBaseType.SpecialType != SpecialType.System_UInt32)
@@ -174,7 +174,7 @@ namespace ShaderGen
             string typeNameString;
             if (typeReference.TypeInfo.Type.TypeKind == TypeKind.Enum)
             {
-                typeNameString = Utilities.GetFullName(((INamedTypeSymbol) typeReference.TypeInfo.Type).EnumUnderlyingType);
+                typeNameString = Utilities.GetFullName(((INamedTypeSymbol)typeReference.TypeInfo.Type).EnumUnderlyingType);
             }
             else
             {
@@ -348,7 +348,9 @@ namespace ShaderGen
             INamedTypeSymbol type = Compilation.GetTypeByMetadataName(name);
             if (type == null || type.OriginalDefinition.DeclaringSyntaxReferences.Length == 0)
             {
-                throw new ShaderGenerationException("Unable to obtain compilation type metadata for " + name);
+                sd = null;
+                return false;
+                // throw new ShaderGenerationException("Unable to obtain compilation type metadata for " + name);
             }
             SyntaxNode declaringSyntax = type.OriginalDefinition.DeclaringSyntaxReferences[0].GetSyntax();
             if (declaringSyntax is StructDeclarationSyntax sds)
@@ -425,6 +427,27 @@ namespace ShaderGen
             entry = result.FullText;
 
             return resourcesUsed;
+        }
+
+        protected void ValidateResourcesUsed(string setName, IEnumerable<ResourceDefinition> resources)
+        {
+            foreach (ResourceDefinition resource in resources)
+            {
+                if (resource.ResourceKind == ShaderResourceKind.Uniform
+                    || resource.ResourceKind == ShaderResourceKind.StructuredBuffer
+                    || resource.ResourceKind == ShaderResourceKind.RWStructuredBuffer)
+                {
+                    TypeReference type = resource.ValueType;
+                    if (TryDiscoverStructure(setName, type.Name, out StructureDefinition sd))
+                    {
+                        if (!sd.CSharpMatchesShaderAlignment)
+                        {
+                            throw new ShaderGenerationException(
+                                $"Structure type {type.Name} cannot be used as a resource because its alignment is not consistent between C# and shader languages.");
+                        }
+                    }
+                }
+            }
         }
     }
 }
