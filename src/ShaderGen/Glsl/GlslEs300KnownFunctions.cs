@@ -31,6 +31,7 @@ namespace ShaderGen.Glsl
                 { "SmoothStep", SimpleNameTranslator("smoothstep") },
                 { "Tan", SimpleNameTranslator("tan") },
                 { "Clamp", SimpleNameFloatParameterTranslator("clamp") },
+                // BUG: https://stackoverflow.com/questions/7610631/glsl-mod-vs-hlsl-fmod
                 { "Mod", SimpleNameFloatParameterTranslator("mod") },
                 { "Mul", MatrixMul },
                 { "Sample", Sample },

@@ -33,6 +33,7 @@ namespace ShaderGen.Metal
                 { "SmoothStep", SimpleNameTranslator("smoothstep") },
                 { "Tan", SimpleNameTranslator("tan") },
                 { "Clamp", Clamp },
+                // BUG: https://stackoverflow.com/questions/7610631/glsl-mod-vs-hlsl-fmod
                 { "Mod", SimpleNameTranslator("fmod") },
                 { "Sample", Sample },
                 { "SampleGrad", SampleGrad },

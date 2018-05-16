@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -31,6 +32,7 @@ namespace ShaderGen.Glsl
                 { "SmoothStep", SimpleNameTranslator("smoothstep") },
                 { "Tan", SimpleNameTranslator("tan") },
                 { "Clamp", SimpleNameTranslator("clamp") },
+                // BUG: https://stackoverflow.com/questions/7610631/glsl-mod-vs-hlsl-fmod
                 { "Mod", SimpleNameTranslator("mod") },
                 { "Mul", MatrixMul },
                 { "Sample", Sample },
@@ -161,8 +163,6 @@ namespace ShaderGen.Glsl
 
             Dictionary<string, InvocationTranslator> mathfMappings = new Dictionary<string, InvocationTranslator>()
             {
-                { "E", E },
-                { "PI", Pi },
                 { "Abs", SimpleNameTranslator("abs") },
                 { "Acos", SimpleNameTranslator("acos") },
                 { "Acosh", SimpleNameTranslator("acosh") },
@@ -171,38 +171,28 @@ namespace ShaderGen.Glsl
                 { "Atan", SimpleNameTranslator("atan") },
                 { "Atan2", SimpleNameTranslator("atan") }, // Note atan supports both (x) and (y,x)
                 { "Atanh", SimpleNameTranslator("atanh") },
-                // Cbrt(Single)
+                { "Cbrt", CubeRoot }, // We can calculate the 1/3rd power, which might not give exactly the same result?
                 { "Ceiling", SimpleNameTranslator("ceil") },
                 { "Cos", SimpleNameTranslator("cos") },
-                // Cosh(Single)
-                // Exp(Single)
-                // Floor(Single)
-                // IEEERemainder(Single, Single)
-                // Log(Single)
-                // Log(Single, Single)
-                // Log10(Single)
-                // Max(Single, Single)
-                // Min(Single, Single)
-                // Pow(Single, Single)
-                // Round(Single)
-                // Round(Single, Int32)
-                // Round(Single, Int32, MidpointRounding)
-                // Round(Single, MidpointRounding)
-                // Sign(Single)
-                // Sin(Single)
-                // Sinh(Single)
-                // Sqrt(Single)
-                // Tan(Single)
-                // Tanh(Single)
-                // Truncate(Single)
-
-
-                
+                { "Cosh", SimpleNameTranslator("cosh") },
+                { "Exp", SimpleNameTranslator("exp") },
+                { "Exp", SimpleNameTranslator("exp") },
+                { "Floor", SimpleNameTranslator("floor") },
+                // TODO IEEERemainder(Single, Single) - see https://stackoverflow.com/questions/1971645/is-math-ieeeremainderx-y-equivalent-to-xy
+                // How close is it to frac()?
+                { "Log", Log },
+                { "Log10", Log10 },
                 { "Max", SimpleNameTranslator("max") },
                 { "Min", SimpleNameTranslator("min") },
                 { "Pow", SimpleNameTranslator("pow") },
+                { "Log", Round },
+                { "Sign", SimpleNameTranslator("sign") },
                 { "Sin", SimpleNameTranslator("sin") },
+                { "Sinh", SimpleNameTranslator("sinh") },
                 { "Sqrt", SimpleNameTranslator("sqrt") },
+                { "Tan", SimpleNameTranslator("tan") },
+                { "Tanh", SimpleNameTranslator("tanh") },
+                { "Truncate", SimpleNameTranslator("trunc") }
             };
             ret.Add("System.MathF", new DictionaryTypeInvocationTranslator(mathfMappings));
 
@@ -218,17 +208,7 @@ namespace ShaderGen.Glsl
 
             return ret;
         }
-
-        private static string E(string typeName, string methodName, InvocationParameterInfo[] p)
-        {
-            return "2.71828182845905";
-        }
-
-        private static string Pi(string typeName, string methodName, InvocationParameterInfo[] p)
-        {
-            return "3.14159265358979";
-        }
-
+        
         private static string MatrixCtor(string typeName, string methodName, InvocationParameterInfo[] p)
         {
             string paramList = string.Join(", ",
@@ -529,6 +509,45 @@ namespace ShaderGen.Glsl
             else if (name == "ShaderGen.Int2") { shaderType = "ivec2"; elementCount = 2; }
             else if (name == "ShaderGen.UInt2") { shaderType = "uvec2"; elementCount = 2; }
             else { throw new ShaderGenerationException("VectorCtor translator was called on an invalid type: " + name); }
+        }
+
+        private static string CubeRoot(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return $"pow({parameters[0].Identifier}, 1/3.0)";
+        }
+
+        private static string Log(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            if (parameters.Length < 2)
+                return $"log({parameters[0].Identifier})";
+
+            // TODO Get computed constant value for parameter 2 rather than simple string
+            string param2 = parameters[1].Identifier;
+            if (float.TryParse(param2, out float @base))
+            {
+                if (Math.Abs(@base - 2f) < float.Epsilon) return $"log2({parameters[0].Identifier})";
+                if (Math.Abs(@base - Math.E) < float.Epsilon) return $"log({parameters[0].Identifier})";
+            }
+
+            return $"(log({parameters[0].Identifier})/log({parameters[1].Identifier}))";
+        }
+
+        private static string Log10(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            // Divide by Log(10) = 2.30258509299405 as OpenGL doesn't suppport log10 natively
+            return $"(log({parameters[0].Identifier})/2.30258509299405)";
+        }
+        private static string Round(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            // TODO Should we use RoundEven here for safety??
+            if (parameters.Length < 2)
+                return $"round({parameters[0].Identifier})";
+
+            // TODO Implement
+            // Round(Single, Int32)
+            // Round(Single, Int32, MidpointRounding)
+            // Round(Single, MidpointRounding)
+            throw new NotImplementedException();
         }
     }
 }

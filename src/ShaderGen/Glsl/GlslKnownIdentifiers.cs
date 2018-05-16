@@ -99,9 +99,16 @@ namespace ShaderGen.Glsl
                 { "X", "x" },
                 { "Y", "y" },
                 { "Z", "z" },
-                { "W", "w" },
+                { "W", "w" }
             };
             ret.Add("ShaderGen.Int4", int4Mappings);
+
+            Dictionary<string, string> mathfMappings = new Dictionary<string, string>()
+            {
+                { "E", "2.71828182845905" },
+                { "PI", "3.14159265358979" }
+            };
+            ret.Add("System.MathF", mathfMappings);
 
             return ret;
         }
