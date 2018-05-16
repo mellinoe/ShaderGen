@@ -40,6 +40,7 @@ namespace ShaderGen.App
             bool listAllFiles = false;
             string processorPath = null;
             string processorArgs = null;
+            bool debug = false;
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -55,6 +56,7 @@ namespace ShaderGen.App
                 syntax.DefineOption("listall", ref listAllFiles, false, "Forces all generated files to be listed in the list file. By default, only bytecode files will be listed and not the original shader code.");
                 syntax.DefineOption("processor", ref processorPath, false, "The path of an assembly containing IShaderSetProcessor types to be used to post-process GeneratedShaderSet objects.");
                 syntax.DefineOption("processorargs", ref processorArgs, false, "Custom information passed to IShaderSetProcessor.");
+                syntax.DefineOption("debug", ref debug, false, "Compiles the shader with debug information when supported.");
             });
 
             referenceItemsResponsePath = NormalizePath(referenceItemsResponsePath);
@@ -198,7 +200,8 @@ namespace ShaderGen.App
                             vsOutPath,
                             set.VertexFunction.Name,
                             ShaderFunctionType.VertexEntryPoint,
-                            out string[] genPaths);
+                            out string[] genPaths,
+                            debug);
                         if (succeeded)
                         {
                             generatedFilePaths.AddRange(genPaths);
@@ -218,7 +221,8 @@ namespace ShaderGen.App
                             fsOutPath,
                             set.FragmentFunction.Name,
                             ShaderFunctionType.FragmentEntryPoint,
-                            out string[] genPaths);
+                            out string[] genPaths,
+                            debug);
                         if (succeeded)
                         {
                             generatedFilePaths.AddRange(genPaths);
@@ -238,7 +242,8 @@ namespace ShaderGen.App
                             csOutPath,
                             set.ComputeFunction.Name,
                             ShaderFunctionType.ComputeEntryPoint,
-                            out string[] genPaths);
+                            out string[] genPaths,
+                            debug);
                         if (succeeded)
                         {
                             generatedFilePaths.AddRange(genPaths);
@@ -268,12 +273,12 @@ namespace ShaderGen.App
             }
         }
 
-        private static bool CompileCode(LanguageBackend lang, string shaderPath, string entryPoint, ShaderFunctionType type, out string[] paths)
+        private static bool CompileCode(LanguageBackend lang, string shaderPath, string entryPoint, ShaderFunctionType type, out string[] paths, bool debug)
         {
             Type langType = lang.GetType();
             if (langType == typeof(HlslBackend) && IsFxcAvailable())
             {
-                bool result = CompileHlsl(shaderPath, entryPoint, type, out string path);
+                bool result = CompileHlsl(shaderPath, entryPoint, type, out string path, debug);
                 paths = new[] { path };
                 return result;
             }
@@ -297,7 +302,7 @@ namespace ShaderGen.App
             }
         }
 
-        private static bool CompileHlsl(string shaderPath, string entryPoint, ShaderFunctionType type, out string path)
+        private static bool CompileHlsl(string shaderPath, string entryPoint, ShaderFunctionType type, out string path, bool debug)
         {
             try
             {
@@ -306,6 +311,10 @@ namespace ShaderGen.App
                     : "cs_5_0";
                 string outputPath = shaderPath + ".bytes";
                 string args = $"/T \"{profile}\" /E \"{entryPoint}\" \"{shaderPath}\" /Fo \"{outputPath}\"";
+                if (debug)
+                {
+                    args += " /Od /Zi";
+                }
                 string fxcPath = FindFxcExe();
                 ProcessStartInfo psi = new ProcessStartInfo(fxcPath, args);
                 psi.RedirectStandardOutput = true;
