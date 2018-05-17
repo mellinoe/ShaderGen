@@ -25,7 +25,7 @@ namespace ShaderGen
                     return false;
                 }
 
-                if (syntaxNode.GetType() == typeof(T))
+                if (typeof(T).IsAssignableFrom(syntaxNode.GetType()))
                 {
                     result = syntaxNode as T;
                     return true;
