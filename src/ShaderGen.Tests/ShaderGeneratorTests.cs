@@ -1,10 +1,12 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System;
+using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.IO;
 using ShaderGen.Glsl;
 using ShaderGen.Hlsl;
 using ShaderGen.Metal;
 using ShaderGen.Tests.Attributes;
+using ShaderGen.Tests.Tools;
 using Xunit;
 
 namespace ShaderGen.Tests
@@ -65,7 +67,44 @@ namespace ShaderGen.Tests
             "TestShaders.ComplexCompute.CS"
         };
 
-        [FxcToolTheory]
+        private void TestEndToEnd(Type backendType, string vsName, string fsName, string csName = null)
+        {
+            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            ToolChain toolChain = ToolChain.Get(backendType);
+            LanguageBackend backend = toolChain.GetBackend(compilation);
+            ShaderGenerator sg = new ShaderGenerator(
+                compilation,
+                vsName,
+                fsName,
+                backend);
+
+            ShaderGenerationResult result = sg.GenerateShaders();
+            IReadOnlyList<GeneratedShaderSet> sets = result.GetOutput(backend);
+            Assert.Equal(1, sets.Count);
+            GeneratedShaderSet set = sets[0];
+            ShaderModel shaderModel = set.Model;
+
+            if (!string.IsNullOrWhiteSpace(vsName))
+            {
+                ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
+                string vsCode = set.VertexShaderCode;
+                toolChain.AssertCompilesCode(vsCode, Stage.Vertex, vsFunction.Name);
+            }
+            if (!string.IsNullOrWhiteSpace(fsName))
+            {
+                ShaderFunction fsFunction = shaderModel.GetFunction(fsName);
+                string fsCode = set.FragmentShaderCode;
+                toolChain.AssertCompilesCode(fsCode, Stage.Fragment, fsFunction.Name);
+            }
+            if (!string.IsNullOrWhiteSpace(csName))
+            {
+                ShaderFunction csFunction = shaderModel.GetFunction(csName);
+                string fsCode = set.ComputeShaderCode;
+                toolChain.AssertCompilesCode(fsCode, Stage.Compute, csFunction.Name);
+            }
+        }
+
+        [HlslTheory]
         [MemberData(nameof(ShaderSets))]
         public void HlslEndToEnd(string vsName, string fsName)
         {
@@ -87,17 +126,17 @@ namespace ShaderGen.Tests
             {
                 ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
                 string vsCode = set.VertexShaderCode;
-                FxcTool.AssertCompilesCode(vsCode, "vs_5_0", vsFunction.Name);
+                ToolChain.Hlsl.AssertCompilesCode(vsCode, Stage.Vertex, vsFunction.Name);
             }
             if (fsName != null)
             {
                 ShaderFunction fsFunction = shaderModel.GetFunction(fsName);
                 string fsCode = set.FragmentShaderCode;
-                FxcTool.AssertCompilesCode(fsCode, "ps_5_0", fsFunction.Name);
+                ToolChain.Hlsl.AssertCompilesCode(fsCode, Stage.Fragment, fsFunction.Name);
             }
         }
 
-        [GlsLangValidatorToolTheory]
+        [Glsl330Theory]
         [MemberData(nameof(ShaderSets))]
         public void Glsl330EndToEnd(string vsName, string fsName)
         {
@@ -119,17 +158,17 @@ namespace ShaderGen.Tests
             {
                 ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
                 string vsCode = set.VertexShaderCode;
-                GlsLangValidatorTool.AssertCompilesCode(vsCode, "vert", false);
+                ToolChain.Glsl330.AssertCompilesCode(vsCode, Stage.Vertex, vsFunction.Name);
             }
             if (fsName != null)
             {
                 ShaderFunction fsFunction = shaderModel.GetFunction(fsName);
                 string fsCode = set.FragmentShaderCode;
-                GlsLangValidatorTool.AssertCompilesCode(fsCode, "frag", false);
+                ToolChain.Glsl330.AssertCompilesCode(fsCode, Stage.Fragment, fsFunction.Name);
             }
         }
 
-        [GlsLangValidatorToolTheory]
+        [GlslEs300Theory]
         [MemberData(nameof(ShaderSets))]
         public void GlslEs300EndToEnd(string vsName, string fsName)
         {
@@ -161,7 +200,7 @@ namespace ShaderGen.Tests
             }
         }
 
-        [GlsLangValidatorToolTheory]
+        [Glsl450Theory]
         [MemberData(nameof(ShaderSets))]
         public void Glsl450EndToEnd(string vsName, string fsName)
         {
@@ -193,7 +232,7 @@ namespace ShaderGen.Tests
             }
         }
 
-        [MetalToolTheory]
+        [MetalTheory]
         [MemberData(nameof(ShaderSets))]
         public void MetalEndToEnd(string vsName, string fsName)
         {
@@ -224,9 +263,9 @@ namespace ShaderGen.Tests
                 MetalTool.AssertCompilesCode(fsCode);
             }
         }
-
-        [ToolFact(RequiredTools = Tool.All)]
-        public void AllSetsAllLanguagesEndToEnd()
+        
+        [BackendFact(typeof(HlslBackend), typeof(GlslEs300Backend), typeof(Glsl330Backend), typeof(Glsl450Backend), typeof(MetalBackend))]
+        public void AllSetsEndToEnd()
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             LanguageBackend[] backends = new LanguageBackend[]
@@ -250,7 +289,7 @@ namespace ShaderGen.Tests
                     {
                         if (backend is HlslBackend)
                         {
-                            FxcTool.AssertCompilesCode(set.VertexShaderCode, "vs_5_0", set.VertexFunction.Name);
+                            ToolChain.Hlsl.AssertCompilesCode(set.VertexShaderCode, Stage.Vertex, set.VertexFunction.Name);
                         }
                         else if (backend is MetalBackend)
                         {
@@ -266,7 +305,7 @@ namespace ShaderGen.Tests
                     {
                         if (backend is HlslBackend)
                         {
-                            FxcTool.AssertCompilesCode(set.FragmentShaderCode, "ps_5_0", set.FragmentFunction.Name);
+                            ToolChain.Hlsl.AssertCompilesCode(set.FragmentShaderCode, Stage.Fragment, set.FragmentFunction.Name);
                         }
                         else if (backend is MetalBackend)
                         {
@@ -282,7 +321,7 @@ namespace ShaderGen.Tests
                     {
                         if (backend is HlslBackend)
                         {
-                            FxcTool.AssertCompilesCode(set.ComputeShaderCode, "cs_5_0", set.ComputeFunction.Name);
+                            ToolChain.Hlsl.AssertCompilesCode(set.ComputeShaderCode, Stage.Compute, set.ComputeFunction.Name);
                         }
                         else if (backend is MetalBackend)
                         {

@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace ShaderGen.Tests
+namespace ShaderGen.Tests.Tools
 {
     public static class FxcTool
     {
@@ -80,20 +80,6 @@ namespace ShaderGen.Tests
             }
 
             return path;
-        }
-    }
-
-    public class ToolResult
-    {
-        public int ExitCode { get; }
-        public string StdOut { get; }
-        public string StdError { get; }
-
-        public ToolResult(int exitCode, string stdOut, string stdError)
-        {
-            ExitCode = exitCode;
-            StdOut = stdOut;
-            StdError = stdError;
         }
     }
 }

@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-namespace ShaderGen.Tests
+namespace ShaderGen.Tests.Tools
 {
     public static class MetalTool
     {

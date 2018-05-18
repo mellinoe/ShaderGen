@@ -1,13 +1,15 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using ShaderGen.Hlsl;
+using ShaderGen.Tests.Attributes;
+using ShaderGen.Tests.Tools;
 using Xunit;
 
 namespace ShaderGen.Tests
 {
     public static class ShaderSetDiscovererTests
     {
-        [Fact]
+        [HlslFact]
         public static void ShaderSetAutoDiscovery()
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();

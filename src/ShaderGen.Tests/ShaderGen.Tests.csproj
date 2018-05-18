@@ -23,6 +23,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Tools\FxcTool.cs" />
+    <Compile Remove="Tools\GlslangValidatorTool.cs" />
+    <Compile Remove="Tools\MetalTool.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="xunit.runner.json" />
   </ItemGroup>
 
@@ -30,6 +36,12 @@
     <Content Include="xunit.runner.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Tools\FxcTool.cs" />
+    <None Include="Tools\GlslangValidatorTool.cs" />
+    <None Include="Tools\MetalTool.cs" />
   </ItemGroup>
 
 </Project>

@@ -99,14 +99,14 @@ namespace ShaderGen
 
         public ShaderGenerator(
             Compilation compilation,
-            LanguageBackend[] languages)
+            params LanguageBackend[] languages)
             : this(compilation, languages, Array.Empty<IShaderSetProcessor>())
         { }
 
         public ShaderGenerator(
             Compilation compilation,
             LanguageBackend[] languages,
-            IShaderSetProcessor[] processors)
+            params IShaderSetProcessor[] processors)
         {
             if (compilation == null)
             {

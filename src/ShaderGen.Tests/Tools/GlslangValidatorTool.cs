@@ -4,7 +4,8 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace ShaderGen.Tests
+
+namespace ShaderGen.Tests.Tools
 {
     public static class GlsLangValidatorTool
     {

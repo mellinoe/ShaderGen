@@ -1,6 +1,8 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using ShaderGen.Hlsl;
+using ShaderGen.Tests.Attributes;
+using ShaderGen.Tests.Tools;
 using TestShaders;
 using Xunit;
 
@@ -59,7 +61,7 @@ namespace ShaderGen.Tests
             Assert.Equal(SemanticType.TextureCoordinate, fsInput.Fields[1].SemanticType);
         }
 
-        [Fact]
+        [HlslFact]
         public void PartialFiles()
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
