@@ -456,14 +456,24 @@ namespace ShaderGen
                     || resource.ResourceKind == ShaderResourceKind.RWStructuredBuffer)
                 {
                     TypeReference type = resource.ValueType;
-                    if (TryDiscoverStructure(setName, type.Name, out StructureDefinition sd))
-                    {
-                        if (!sd.CSharpMatchesShaderAlignment)
-                        {
-                            throw new ShaderGenerationException(
-                                $"Structure type {type.Name} cannot be used as a resource because its alignment is not consistent between C# and shader languages.");
-                        }
-                    }
+                    ValidateAlignedStruct(setName, type);
+                }
+            }
+        }
+
+        private void ValidateAlignedStruct(string setName, TypeReference tr)
+        {
+            StructureDefinition def = GetContext(setName).Structures.SingleOrDefault(sd => sd.Name == tr.Name);
+            if (def != null)
+            {
+                if (!def.CSharpMatchesShaderAlignment)
+                {
+                    throw new ShaderGenerationException(
+                        $"Structure type {tr.Name} cannot be used as a resource because its alignment is not consistent between C# and shader languages.");
+                }
+                foreach (FieldDefinition fd in def.Fields)
+                {
+                    ValidateAlignedStruct(setName, fd.Type);
                 }
             }
         }
