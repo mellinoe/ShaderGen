@@ -702,6 +702,21 @@ namespace ShaderGen
                 + Visit(node.WhenFalse);
         }
 
+        public override string VisitDoStatement(DoStatementSyntax node)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("    ");
+            sb.Append(node.DoKeyword);
+            sb.Append(" {");
+            sb.AppendLine();
+            sb.Append(Visit(node.Statement));
+            sb.AppendLine();
+            sb.Append(" } while(");
+            sb.Append(Visit(node.Condition));
+            sb.Append(");");
+            return sb.ToString();
+        }
+
         protected string GetParameterDeclList()
         {
             return string.Join(", ", _shaderFunction.Parameters.Select(FormatParameter));
