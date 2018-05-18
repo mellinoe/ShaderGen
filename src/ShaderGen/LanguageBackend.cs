@@ -81,7 +81,10 @@ namespace ShaderGen
             {
                 foreach (ParameterDefinition funcParam in sf.Function.Parameters)
                 {
-                    ForceTypeDiscovery(setName, funcParam.Type);
+                    if (funcParam.Symbol.Type.TypeKind == TypeKind.Struct)
+                    {
+                        ForceTypeDiscovery(setName, funcParam.Type);
+                    }
                 }
             }
 
