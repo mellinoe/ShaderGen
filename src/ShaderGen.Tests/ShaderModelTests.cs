@@ -78,7 +78,8 @@ namespace ShaderGen.Tests
             GeneratedShaderSet set = sets[0];
             ShaderModel shaderModel = set.Model;
             string vsCode = set.VertexShaderCode;
-            FxcTool.AssertCompilesCode(vsCode, "vs_5_0", "VertexShaderFunc");
+            ToolResult result = ToolChain.Hlsl.Compile(vsCode, Stage.Vertex, "VertexShaderFunc");
+            Assert.False(result.HasError, result.ToString());
         }
 
         [Fact]

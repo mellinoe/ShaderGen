@@ -51,6 +51,22 @@ namespace ShaderGen.Tests.Tools
         public static readonly ToolChain Metal;
 
         /// <summary>
+        /// Gets all known <see cref="ToolChain">ToolChains</see>.
+        /// </summary>
+        /// <value>
+        /// All.
+        /// </value>
+        public static IEnumerable<ToolChain> All => _toolChains.Values;
+
+        /// <summary>
+        /// Gets all known backend types.
+        /// </summary>
+        /// <value>
+        /// All backend types.
+        /// </value>
+        public static IEnumerable<Type> AllBackendTypes => _toolChains.Keys;
+
+        /// <summary>
         /// Initializes the <see cref="ToolChain"/> class.
         /// </summary>
         static ToolChain()
@@ -58,21 +74,21 @@ namespace ShaderGen.Tests.Tools
             List<ToolChain> tools = new List<ToolChain>();
 
             string fxcExe = FindFxcPath();
-            Hlsl = new ToolChain(typeof(HlslBackend), fxcExe, FxcArguments);
+            Hlsl = new ToolChain(typeof(HlslBackend), c => new HlslBackend(c), fxcExe, FxcArguments);
             tools.Add(Hlsl);
 
             string glslvExe = FindGlslvPath();
 
             string NonVulkan(string f, Stage s, string e, string o) => GlsvArguments(f, s, e, false, o);
-            GlslEs300 = new ToolChain(typeof(GlslEs300Backend), glslvExe, NonVulkan);
-            Glsl330 = new ToolChain(typeof(Glsl330Backend), glslvExe, NonVulkan);
-            Glsl450 = new ToolChain(typeof(Glsl450Backend), glslvExe, (f, s, e, o) => GlsvArguments(f, s, e, true, o));
+            GlslEs300 = new ToolChain(typeof(GlslEs300Backend), c => new GlslEs300Backend(c), glslvExe, NonVulkan);
+            Glsl330 = new ToolChain(typeof(Glsl330Backend), c => new Glsl330Backend(c), glslvExe, NonVulkan);
+            Glsl450 = new ToolChain(typeof(Glsl450Backend), c => new Glsl450Backend(c), glslvExe, (f, s, e, o) => GlsvArguments(f, s, e, true, o));
             tools.Add(GlslEs300);
             tools.Add(Glsl330);
             tools.Add(Glsl450);
-            
+
             string metalPath = FindMetalPath();
-            Metal = new ToolChain(typeof(MetalBackend), metalPath, MetalArguments);
+            Metal = new ToolChain(typeof(MetalBackend), c => new MetalBackend(c), metalPath, MetalArguments, Encoding.UTF8);
             tools.Add(Metal);
 
             // Set lookup dictionary
@@ -86,6 +102,16 @@ namespace ShaderGen.Tests.Tools
         /// <returns>A <see cref="ToolChain"/> if available; otherwise <see langword="null"/>.</returns>
         public static ToolChain Get(Type backendType) =>
             _toolChains.TryGetValue(backendType, out ToolChain toolChain) ? toolChain : null;
+
+        /// <summary>
+        /// Gets the <see cref="ToolChain" /> for the specified backend.
+        /// </summary>
+        /// <param name="backend">The backend.</param>
+        /// <returns>
+        /// A <see cref="ToolChain" /> if available; otherwise <see langword="null" />.
+        /// </returns>
+        public static ToolChain Get(LanguageBackend backend) =>
+            _toolChains.TryGetValue(backend.GetType(), out ToolChain toolChain) ? toolChain : null;
 
         /// <summary>
         /// The name of the backend this tool supports.
@@ -116,14 +142,26 @@ namespace ShaderGen.Tests.Tools
         private readonly ArgumentFormatterDelegate _argumentFormatter;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ToolChain"/> class.  For now tool chains are single tools, but this
+        /// The preferred file encoding for the tool.
+        /// </summary>
+        private readonly Encoding _preferredFileEncoding;
+
+        /// <summary>
+        /// The function to create a <see cref="LanguageBackend"/>.
+        /// </summary>
+        private readonly Func<Compilation, LanguageBackend> _createBackend;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ToolChain" /> class.  For now tool chains are single tools, but this
         /// could be easily extended to support multiple steps.
         /// </summary>
         /// <param name="backendType">Type of the backend.</param>
+        /// <param name="createBackend">The function to create the backend.</param>
         /// <param name="toolPath">The tool path.</param>
         /// <param name="argumentFormatter">The argument formatter.</param>
+        /// <param name="preferredFileEncoding">The preferred file encoding.</param>
         /// <exception cref="ArgumentOutOfRangeException">backendType</exception>
-        private ToolChain(Type backendType, string toolPath, ArgumentFormatterDelegate argumentFormatter)
+        private ToolChain(Type backendType, Func<Compilation, LanguageBackend> createBackend, string toolPath, ArgumentFormatterDelegate argumentFormatter, Encoding preferredFileEncoding = default(Encoding))
         {
             if (!backendType.IsSubclassOf(typeof(LanguageBackend)))
                 throw new ArgumentOutOfRangeException(nameof(backendType),
@@ -135,35 +173,63 @@ namespace ShaderGen.Tests.Tools
                 Name = Name.Substring(0, Name.Length - 7);
 
             BackendType = backendType;
+            _createBackend = createBackend;
             _toolPath = string.IsNullOrWhiteSpace(toolPath) ? null : toolPath;
             _argumentFormatter = argumentFormatter;
+            _preferredFileEncoding = preferredFileEncoding ?? Encoding.Default;
         }
 
-        public LanguageBackend GetBackend(Compilation compilation)
-        {
+        /// <summary>
+        /// Creates the backend.
+        /// </summary>
+        /// <param name="compilation">The compilation.</param>
+        /// <returns></returns>
+        public LanguageBackend CreateBackend(Compilation compilation) => _createBackend(compilation);
 
-        }
-
-        public void AssertCompilesCode(string code, Stage stage, string entryPoint)
+        /// <summary>
+        /// Compiles the specified path.
+        /// </summary>
+        /// <param name="code">The shader code.</param>
+        /// <param name="stage">The stage.</param>
+        /// <param name="entryPoint">The entry point.</param>
+        /// <param name="output">The output.</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public ToolResult Compile(string code, Stage stage, string entryPoint, string output = null)
         {
             using (TempFile tmpFile = new TempFile())
             {
-                File.WriteAllText(tmpFile, code, Encoding.UTF8);
-                AssertCompilesFile(tmpFile, stage, entryPoint);
+                File.WriteAllText(tmpFile, code, _preferredFileEncoding);
+                return CompileFile(tmpFile, code, stage, entryPoint);
             }
         }
 
-        public void AssertCompilesFile(string file, Stage stage, string entryPoint, string output = null)
+        /// <summary>
+        /// Compiles the specified path.
+        /// </summary>
+        /// <param name="path">The path.</param>
+        /// <param name="stage">The stage.</param>
+        /// <param name="entryPoint">The entry point.</param>
+        /// <param name="output">The output.</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public ToolResult CompileFile(string path, Stage stage, string entryPoint, string output = null)
         {
-            ToolResult result = Compile(file, stage, entryPoint, output);
-            if (result.ExitCode != 0)
-            {
-                string message = result.StdError;
-                throw new InvalidOperationException($"{Name} compilation failed: " + message);
-            }
+            string code = File.ReadAllText(path);
+            return CompileFile(path, code, stage, entryPoint, output);
         }
 
-        private ToolResult Compile(string file, Stage stage, string entryPoint, string output = null)
+        /// <summary>
+        /// Compiles the specified path.
+        /// </summary>
+        /// <param name="path">The path.</param>
+        /// <param name="code">The code.</param>
+        /// <param name="stage">The stage.</param>
+        /// <param name="entryPoint">The entry point.</param>
+        /// <param name="output">The output.</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        private ToolResult CompileFile(string path, string code, Stage stage, string entryPoint, string output = null)
         {
             if (!IsAvailable)
                 throw new InvalidOperationException($"The {Name} tool chain is not available!");
@@ -171,7 +237,7 @@ namespace ShaderGen.Tests.Tools
             ProcessStartInfo psi = new ProcessStartInfo()
             {
                 FileName = _toolPath,
-                Arguments = _argumentFormatter(file, stage, entryPoint, output),
+                Arguments = _argumentFormatter(path, stage, entryPoint, output),
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
             };
@@ -181,7 +247,7 @@ namespace ShaderGen.Tests.Tools
 
             string stdOut = p.StandardOutput.ReadToEnd();
             string stdError = p.StandardError.ReadToEnd();
-            return new ToolResult(p.ExitCode, stdOut, stdError);
+            return new ToolResult(this, code, p.ExitCode, stdOut, stdError);
         }
 
 
