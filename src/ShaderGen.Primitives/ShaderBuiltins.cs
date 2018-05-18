@@ -5,7 +5,16 @@ namespace ShaderGen
 {
     public static class ShaderBuiltins
     {
-        // Misc
+        /*
+         * Constants
+         */
+        public static float PI = (float)Math.PI;
+
+        public static float E = (float)Math.E;
+
+        /*
+         * Misc
+         */
         public static Vector4 Mul(Matrix4x4 m, Vector4 v) => throw new ShaderBuiltinException(); // TODO Shouldn't this return Matrix4x4?
         public static Vector4 Sample(Texture2DResource texture, SamplerResource sampler, Vector2 texCoords)
             => throw new ShaderBuiltinException();
