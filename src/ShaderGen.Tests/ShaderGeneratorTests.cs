@@ -4,6 +4,7 @@ using System.IO;
 using ShaderGen.Glsl;
 using ShaderGen.Hlsl;
 using ShaderGen.Metal;
+using ShaderGen.Tests.Attributes;
 using Xunit;
 
 namespace ShaderGen.Tests
@@ -64,7 +65,7 @@ namespace ShaderGen.Tests
             "TestShaders.ComplexCompute.CS"
         };
 
-        [Theory]
+        [FxcToolTheory]
         [MemberData(nameof(ShaderSets))]
         public void HlslEndToEnd(string vsName, string fsName)
         {
@@ -96,7 +97,7 @@ namespace ShaderGen.Tests
             }
         }
 
-        [Theory]
+        [GlsLangValidatorToolTheory]
         [MemberData(nameof(ShaderSets))]
         public void Glsl330EndToEnd(string vsName, string fsName)
         {
@@ -128,7 +129,7 @@ namespace ShaderGen.Tests
             }
         }
 
-        [Theory]
+        [GlsLangValidatorToolTheory]
         [MemberData(nameof(ShaderSets))]
         public void GlslEs300EndToEnd(string vsName, string fsName)
         {
@@ -160,7 +161,7 @@ namespace ShaderGen.Tests
             }
         }
 
-        [Theory]
+        [GlsLangValidatorToolTheory]
         [MemberData(nameof(ShaderSets))]
         public void Glsl450EndToEnd(string vsName, string fsName)
         {
@@ -192,7 +193,7 @@ namespace ShaderGen.Tests
             }
         }
 
-        [Theory]
+        [MetalToolTheory]
         [MemberData(nameof(ShaderSets))]
         public void MetalEndToEnd(string vsName, string fsName)
         {
@@ -224,7 +225,7 @@ namespace ShaderGen.Tests
             }
         }
 
-        [Fact]
+        [ToolFact(RequiredTools = Tool.All)]
         public void AllSetsAllLanguagesEndToEnd()
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();

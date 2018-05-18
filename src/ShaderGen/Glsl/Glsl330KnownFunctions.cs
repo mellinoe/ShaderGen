@@ -176,7 +176,6 @@ namespace ShaderGen.Glsl
                 { "Cos", SimpleNameTranslator("cos") },
                 { "Cosh", SimpleNameTranslator("cosh") },
                 { "Exp", SimpleNameTranslator("exp") },
-                { "Exp", SimpleNameTranslator("exp") },
                 { "Floor", SimpleNameTranslator("floor") },
                 // TODO IEEERemainder(Single, Single) - see https://stackoverflow.com/questions/1971645/is-math-ieeeremainderx-y-equivalent-to-xy
                 // How close is it to frac()?
@@ -185,7 +184,7 @@ namespace ShaderGen.Glsl
                 { "Max", SimpleNameTranslator("max") },
                 { "Min", SimpleNameTranslator("min") },
                 { "Pow", SimpleNameTranslator("pow") },
-                { "Log", Round },
+                { "Round", Round },
                 { "Sign", SimpleNameTranslator("sign") },
                 { "Sin", SimpleNameTranslator("sin") },
                 { "Sinh", SimpleNameTranslator("sinh") },

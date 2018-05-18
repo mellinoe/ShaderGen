@@ -11,6 +11,8 @@ namespace ShaderGen.Tests
     {
         private static readonly string s_fxcLocation = FindFxcExe();
 
+        public static bool IsAvailable => s_fxcLocation != null;
+
         public static void AssertCompilesCode(string code, string profile, string entryPoint)
         {
             using (TempFile tmpFile = new TempFile())
@@ -22,10 +24,8 @@ namespace ShaderGen.Tests
 
         public static void AssertCompilesFile(string file, string profile, string entryPoint, string output = null)
         {
-            if (s_fxcLocation == null)
-            {
-                return;
-            }
+            if (!IsAvailable)
+                throw new InvalidOperationException("Metal compilation unavailable!");
 
             ToolResult result = Compile(file, profile, entryPoint, output);
             if (result.ExitCode != 0)

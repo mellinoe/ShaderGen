@@ -9,6 +9,8 @@ namespace ShaderGen.Tests
     {
         private static readonly string s_toolPath = FindExe();
 
+        public static bool IsAvailable => s_toolPath != null;
+
         public static void AssertCompilesCode(string code)
         {
             using (TempFile tmpFile = new TempFile())
@@ -21,10 +23,8 @@ namespace ShaderGen.Tests
 
         public static void AssertCompilesFile(string file, string output = null)
         {
-            if (s_toolPath == null)
-            {
-                return;
-            }
+            if (!IsAvailable)
+                throw new InvalidOperationException("Metal compilation unavailable!");
 
             ToolResult result = Compile(file, output);
             if (result.ExitCode != 0)
