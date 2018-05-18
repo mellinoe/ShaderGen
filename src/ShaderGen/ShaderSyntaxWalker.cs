@@ -351,6 +351,10 @@ namespace ShaderGen
             {
                 return ShaderResourceKind.DepthTexture2DArray;
             }
+            else if (fullTypeName.Contains("ShaderGen.AtomicBuffer"))
+            {
+                return ShaderResourceKind.AtomicBuffer;
+            }
             else
             {
                 return ShaderResourceKind.Uniform;

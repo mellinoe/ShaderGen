@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace ShaderGen.Hlsl
 {
@@ -28,6 +29,8 @@ namespace ShaderGen.Hlsl
             { "ShaderGen.Int2", "int2" },
             { "ShaderGen.Int3", "int3" },
             { "ShaderGen.Int4", "int4" },
+            { "ShaderGen.AtomicBufferUInt32", "RWStructuredBuffer<uint>" },
+            { "ShaderGen.AtomicBufferInt32", "RWStructuredBuffer<int>" },
         };
 
         public static string GetMappedName(string name)

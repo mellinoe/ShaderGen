@@ -137,6 +137,7 @@ namespace ShaderGen.Metal
                             bufferBinding++;
                             break;
                         case ShaderResourceKind.RWStructuredBuffer:
+                        case ShaderResourceKind.AtomicBuffer:
                             if (resourcesUsed.Contains(rd))
                             {
                                 resourceArgList.Add(WriteRWStructuredBuffer(rd, bufferBinding));
@@ -209,7 +210,13 @@ namespace ShaderGen.Metal
 
         private string WriteRWStructuredBuffer(ResourceDefinition rd, int binding)
         {
-            return $"device {CSharpToShaderType(rd.ValueType.Name)} *{rd.Name} [[ buffer({binding}) ]]";
+            string valueType = rd.ValueType.Name;
+            string type = valueType == "ShaderGen.AtomicBufferUInt32"
+                ? "atomic_uint"
+                : valueType == "ShaderGen.AtomicBufferInt32"
+                    ? "atomic_int"
+                    : CSharpToShaderType(rd.ValueType.Name);
+            return $"device {type} *{rd.Name} [[ buffer({binding}) ]]";
         }
 
         private string WriteRWTexture2D(ResourceDefinition rd, int binding)
@@ -405,6 +412,13 @@ namespace ShaderGen.Metal
                     return $"thread depth2d<float> {rd.Name};";
                 case ShaderResourceKind.DepthTexture2DArray:
                     return $"thread depth2d_array<float> {rd.Name};";
+                case ShaderResourceKind.AtomicBuffer:
+                {
+                    string type = rd.ValueType.Name == "ShaderGen.AtomicBufferUInt32"
+                        ? "atomic_uint"
+                        : "atomic_int";
+                    return $"device {type}* {rd.Name}";
+                }
                 default:
                     Debug.Fail("Invalid ResourceKind: " + rd.ResourceKind);
                     throw new InvalidOperationException();
@@ -438,6 +452,13 @@ namespace ShaderGen.Metal
                     return $"thread depth2d<float> {rd.Name}_param";
                 case ShaderResourceKind.DepthTexture2DArray:
                     return $"thread depth2d_array<float> {rd.Name}_param";
+                case ShaderResourceKind.AtomicBuffer:
+                {
+                    string type = rd.ValueType.Name == "ShaderGen.AtomicBufferUInt32"
+                        ? "atomic_uint"
+                        : "atomic_int";
+                    return $"device {type}* {rd.Name}_param";
+                }
                 default:
                     throw new InvalidOperationException("Invalid ResourceKind: " + rd.ResourceKind);
             }

@@ -138,6 +138,12 @@ namespace ShaderGen
         public static Vector3 Tan(Vector3 value) => throw new ShaderBuiltinException();
         public static Vector4 Tan(Vector4 value) => throw new ShaderBuiltinException();
 
+        // Interlocked
+        public static uint InterlockedAdd(AtomicBufferUInt32 buffer, uint index, uint value) => throw new ShaderBuiltinException();
+        public static uint InterlockedAdd(AtomicBufferUInt32 buffer, int index, uint value) => throw new ShaderBuiltinException();
+        public static int InterlockedAdd(AtomicBufferInt32 buffer, uint index, int value) => throw new ShaderBuiltinException();
+        public static int InterlockedAdd(AtomicBufferInt32 buffer, int index, int value) => throw new ShaderBuiltinException();
+
         // Built-in variables
         public static uint VertexID => throw new ShaderBuiltinException();
         public static uint InstanceID => throw new ShaderBuiltinException();

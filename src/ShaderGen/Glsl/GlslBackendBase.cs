@@ -108,6 +108,7 @@ namespace ShaderGen.Glsl
                         break;
                     case ShaderResourceKind.StructuredBuffer:
                     case ShaderResourceKind.RWStructuredBuffer:
+                    case ShaderResourceKind.AtomicBuffer:
                         WriteStructuredBuffer(sb, rd, rd.ResourceKind == ShaderResourceKind.StructuredBuffer, structuredBufferIndex);
                         structuredBufferIndex++;
                         break;
@@ -345,7 +346,8 @@ namespace ShaderGen.Glsl
                 _uniformNames.Add(rd.Name);
             }
             if (rd.ResourceKind == ShaderResourceKind.StructuredBuffer
-                || rd.ResourceKind == ShaderResourceKind.RWStructuredBuffer)
+                || rd.ResourceKind == ShaderResourceKind.RWStructuredBuffer
+                || rd.ResourceKind == ShaderResourceKind.AtomicBuffer)
             {
                 _ssboNames.Add(rd.Name);
             }

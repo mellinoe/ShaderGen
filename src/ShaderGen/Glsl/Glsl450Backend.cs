@@ -36,11 +36,17 @@ namespace ShaderGen.Glsl
 
         protected override void WriteStructuredBuffer(StringBuilder sb, ResourceDefinition rd, bool isReadOnly, int index)
         {
+            string valueType = rd.ValueType.Name;
+            string type = valueType == "ShaderGen.AtomicBufferUInt32"
+                ? "uint"
+                : valueType == "ShaderGen.AtomicBufferInt32"
+                    ? "int"
+                    : CSharpToShaderType(rd.ValueType.Name);
             string layout = FormatLayoutStr(rd, "std430");
             string readOnlyStr = isReadOnly ? " readonly" : " ";
             sb.AppendLine($"{layout}{readOnlyStr} buffer {rd.Name}");
             sb.AppendLine("{");
-            sb.AppendLine($"    {CSharpToShaderType(rd.ValueType.Name)} field_{CorrectIdentifier(rd.Name.Trim())}[];");
+            sb.AppendLine($"    {type} field_{CorrectIdentifier(rd.Name.Trim())}[];");
             sb.AppendLine("};");
         }
 

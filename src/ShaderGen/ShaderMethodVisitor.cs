@@ -386,6 +386,10 @@ namespace ShaderGen
                         throw new ShaderGenerationException($"{name} can only be used within Fragment shaders.");
                     }
                     break;
+
+                case nameof(ShaderBuiltins.InterlockedAdd):
+                    _shaderFunction.UsesInterlockedAdd = true;
+                    break;
             }
         }
 
@@ -482,7 +486,8 @@ namespace ShaderGen
                     _resourcesUsed.Add(referencedResource);
                     _shaderFunction.UsesTexture2DMS |= referencedResource.ResourceKind == ShaderResourceKind.Texture2DMS;
                     bool usesStructuredBuffer = referencedResource.ResourceKind == ShaderResourceKind.StructuredBuffer
-                        || referencedResource.ResourceKind == ShaderResourceKind.RWStructuredBuffer;
+                        || referencedResource.ResourceKind == ShaderResourceKind.RWStructuredBuffer
+                        || referencedResource.ResourceKind == ShaderResourceKind.AtomicBuffer;
                     _shaderFunction.UsesStructuredBuffer |= usesStructuredBuffer;
                     _shaderFunction.UsesRWTexture2D |= referencedResource.ResourceKind == ShaderResourceKind.RWTexture2D;
                 }
