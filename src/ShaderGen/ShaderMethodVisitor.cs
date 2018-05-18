@@ -715,15 +715,25 @@ namespace ShaderGen
         public override string VisitDoStatement(DoStatementSyntax node)
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("    ");
             sb.Append(node.DoKeyword);
             sb.Append(" {");
             sb.AppendLine();
             sb.Append(Visit(node.Statement));
             sb.AppendLine();
-            sb.Append(" } while(");
+            sb.Append(" } while (");
             sb.Append(Visit(node.Condition));
             sb.Append(");");
+            return sb.ToString();
+
+        }
+
+        public override string VisitWhileStatement(WhileStatementSyntax node)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("while (");
+            sb.Append(Visit(node.Condition));
+            sb.AppendLine(")");
+            sb.Append(Visit(node.Statement));
             return sb.ToString();
         }
 
