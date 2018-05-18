@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using ShaderGen.Hlsl;
 
@@ -17,135 +18,154 @@ namespace ShaderGen.Glsl
 
             Dictionary<string, InvocationTranslator> builtinMappings = new Dictionary<string, InvocationTranslator>()
             {
-                { "Abs", SimpleNameTranslator("abs") },
-                { "Pow", SimpleNameTranslator("pow") },
-                { "Acos", SimpleNameTranslator("acos") },
-                { "Cos", SimpleNameTranslator("cos") },
-                { "Ddx", SimpleNameTranslator("dFdx") },
-                { "DdxFine", SimpleNameTranslator("dFdx") },
-                { "Ddy", SimpleNameTranslator("dFdy") },
-                { "DdyFine", SimpleNameTranslator("dFdy") },
-                { "Floor", SimpleNameTranslator("floor") },
-                { "Frac", SimpleNameTranslator("fract") },
-                { "Lerp", SimpleNameTranslator("mix") },
-                { "Sin", SimpleNameTranslator("sin") },
-                { "SmoothStep", SimpleNameTranslator("smoothstep") },
-                { "Tan", SimpleNameTranslator("tan") },
-                { "Clamp", SimpleNameTranslator("clamp") },
-                // BUG: https://stackoverflow.com/questions/7610631/glsl-mod-vs-hlsl-fmod
-                { "Mod", SimpleNameTranslator("mod") },
-                { "Mul", MatrixMul },
-                { "Sample", Sample },
-                { "SampleGrad", SampleGrad },
-                { "SampleComparisonLevelZero", SampleComparisonLevelZero },
-                { "Load", Load },
-                { "Store", Store },
-                { "Discard", Discard },
-                { "Saturate", Saturate },
+                { nameof(ShaderBuiltins.Abs), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Acos), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Acosh), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Asin), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Asinh), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Atan), SimpleNameTranslator() },// Note atan supports both (x) and (y,x)
+                { nameof(ShaderBuiltins.Atanh), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Cbrt), CubeRoot }, // We can calculate the 1/3rd power, which might not give exactly the same result?
+                { nameof(ShaderBuiltins.Ceiling), SimpleNameTranslator("ceil") },
+                { nameof(ShaderBuiltins.Clamp), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.ClipToTextureCoordinates), ClipToTextureCoordinates },
-                { "VertexID", VertexID },
-                { "InstanceID", InstanceID },
-                { "DispatchThreadID", DispatchThreadID },
-                { "GroupThreadID", GroupThreadID },
-                { "IsFrontFace", IsFrontFace },
-                { "InterlockedAdd", InterlockedAdd },
+                { nameof(ShaderBuiltins.Cos), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Cosh), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Ddx), SimpleNameTranslator("dFdx") },
+                { nameof(ShaderBuiltins.DdxFine), SimpleNameTranslator("dFdx") },
+                { nameof(ShaderBuiltins.Ddy), SimpleNameTranslator("dFdy") },
+                { nameof(ShaderBuiltins.DdyFine), SimpleNameTranslator("dFdy") },
+                { nameof(ShaderBuiltins.Discard), Discard },
+                { nameof(ShaderBuiltins.DispatchThreadID), DispatchThreadID },
+                { nameof(ShaderBuiltins.Exp), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Floor), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Frac), SimpleNameTranslator("fract") },
+                { nameof(ShaderBuiltins.GroupThreadID), GroupThreadID },
+                { nameof(ShaderBuiltins.InstanceID), InstanceID },
+                { nameof(ShaderBuiltins.InterlockedAdd), InterlockedAdd },
+                { nameof(ShaderBuiltins.IsFrontFace), IsFrontFace },
+                { nameof(ShaderBuiltins.Lerp), SimpleNameTranslator("mix") },
+                { nameof(ShaderBuiltins.Load), Load },
+                { nameof(ShaderBuiltins.Log), Log },
+                { nameof(ShaderBuiltins.Log2), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Log10), Log10 },
+                { nameof(ShaderBuiltins.Max), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Min), SimpleNameTranslator() },
+                // Potential BUG: https://stackoverflow.com/questions/7610631/glsl-mod-vs-hlsl-fmod
+                { nameof(ShaderBuiltins.Mod), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Mul), MatrixMul },
+                { nameof(ShaderBuiltins.Pow), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Round), Round },
+                { nameof(ShaderBuiltins.Sample), Sample },
+                { nameof(ShaderBuiltins.SampleComparisonLevelZero), SampleComparisonLevelZero },
+                { nameof(ShaderBuiltins.SampleGrad), SampleGrad },
+                { nameof(ShaderBuiltins.Saturate), Saturate },
+                { nameof(ShaderBuiltins.Sin), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Sinh), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.SmoothStep), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Sqrt), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Store), Store },
+                { nameof(ShaderBuiltins.Tan), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Tanh), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Truncate), SimpleNameTranslator("trunc") },
+                { nameof(ShaderBuiltins.VertexID), VertexID }
             };
             ret.Add("ShaderGen.ShaderBuiltins", new DictionaryTypeInvocationTranslator(builtinMappings));
 
             Dictionary<string, InvocationTranslator> v2Mappings = new Dictionary<string, InvocationTranslator>()
             {
-                { "Abs", SimpleNameTranslator("abs") },
-                { "Add", BinaryOpTranslator("+") },
-                { "Clamp", SimpleNameTranslator("clamp") },
-                { "Cos", SimpleNameTranslator("cos") },
-                { "Distance", SimpleNameTranslator("distance") },
-                { "DistanceSquared", DistanceSquared },
-                { "Divide", BinaryOpTranslator("/") },
-                { "Dot", SimpleNameTranslator("dot") },
-                { "Lerp", SimpleNameTranslator("mix") },
-                { "Max", SimpleNameTranslator("max") },
-                { "Min", SimpleNameTranslator("min") },
-                { "Multiply", BinaryOpTranslator("*") },
-                { "Negate", Negate },
-                { "Normalize", SimpleNameTranslator("normalize") },
-                { "Reflect", SimpleNameTranslator("reflect") },
-                { "Sin", SimpleNameTranslator("sin") },
-                { "SquareRoot", SimpleNameTranslator("sqrt") },
-                { "Subtract", BinaryOpTranslator("-") },
-                { "Length", SimpleNameTranslator("length") },
-                { "LengthSquared", LengthSquared },
                 { "ctor", VectorCtor },
-                { "Zero", VectorStaticAccessor },
-                { "One", VectorStaticAccessor },
-                { "UnitX", VectorStaticAccessor },
-                { "UnitY", VectorStaticAccessor },
-                { "Transform", Vector2Transform }
+                { nameof(Vector2.Abs), SimpleNameTranslator("abs") },
+                { nameof(Vector2.Add), BinaryOpTranslator("+") },
+                { nameof(Vector2.Clamp), SimpleNameTranslator("clamp") },
+                // Doesn't exist! { nameof(Vector2.Cos), SimpleNameTranslator("cos") },
+                { nameof(Vector2.Distance), SimpleNameTranslator("distance") },
+                { nameof(Vector2.DistanceSquared), DistanceSquared },
+                { nameof(Vector2.Divide), BinaryOpTranslator("/") },
+                { nameof(Vector2.Dot), SimpleNameTranslator("dot") },
+                { nameof(Vector2.Lerp), SimpleNameTranslator("mix") },
+                { nameof(Vector2.Max), SimpleNameTranslator("max") },
+                { nameof(Vector2.Min), SimpleNameTranslator("min") },
+                { nameof(Vector2.Multiply), BinaryOpTranslator("*") },
+                { nameof(Vector2.Negate), Negate },
+                { nameof(Vector2.Normalize), SimpleNameTranslator("normalize") },
+                { nameof(Vector2.Reflect), SimpleNameTranslator("reflect") },
+                // Doesn't exist! { nameof(Vector2.Sin), SimpleNameTranslator("sin") },
+                { nameof(Vector2.SquareRoot), SimpleNameTranslator("sqrt") },
+                { nameof(Vector2.Subtract), BinaryOpTranslator("-") },
+                { nameof(Vector2.Length), SimpleNameTranslator("length") },
+                { nameof(Vector2.LengthSquared), LengthSquared },
+                { nameof(Vector2.Zero), VectorStaticAccessor },
+                { nameof(Vector2.One), VectorStaticAccessor },
+                { nameof(Vector2.UnitX), VectorStaticAccessor },
+                { nameof(Vector2.UnitY), VectorStaticAccessor },
+                { nameof(Vector2.Transform), Vector2Transform }
             };
             ret.Add("System.Numerics.Vector2", new DictionaryTypeInvocationTranslator(v2Mappings));
 
             Dictionary<string, InvocationTranslator> v3Mappings = new Dictionary<string, InvocationTranslator>()
             {
-                { "Abs", SimpleNameTranslator("abs") },
-                { "Add", BinaryOpTranslator("+") },
-                { "Clamp", SimpleNameTranslator("clamp") },
-                { "Cos", SimpleNameTranslator("cos") },
-                { "Cross", SimpleNameTranslator("cross") },
-                { "Distance", SimpleNameTranslator("distance") },
-                { "DistanceSquared", DistanceSquared },
-                { "Divide", BinaryOpTranslator("/") },
-                { "Dot", SimpleNameTranslator("dot") },
-                { "Lerp", SimpleNameTranslator("mix") },
-                { "Max", SimpleNameTranslator("max") },
-                { "Min", SimpleNameTranslator("min") },
-                { "Multiply", BinaryOpTranslator("*") },
-                { "Negate", Negate },
-                { "Normalize", SimpleNameTranslator("normalize") },
-                { "Reflect", SimpleNameTranslator("reflect") },
-                { "Sin", SimpleNameTranslator("sin") },
-                { "SquareRoot", SimpleNameTranslator("sqrt") },
-                { "Subtract", BinaryOpTranslator("-") },
-                { "Length", SimpleNameTranslator("length") },
-                { "LengthSquared", LengthSquared },
                 { "ctor", VectorCtor },
-                { "Zero", VectorStaticAccessor },
-                { "One", VectorStaticAccessor },
-                { "UnitX", VectorStaticAccessor },
-                { "UnitY", VectorStaticAccessor },
-                { "UnitZ", VectorStaticAccessor },
-                { "Transform", Vector3Transform }
+                { nameof(Vector3.Abs), SimpleNameTranslator("abs") },
+                { nameof(Vector3.Add), BinaryOpTranslator("+") },
+                { nameof(Vector3.Clamp), SimpleNameTranslator("clamp") },
+                // Doesn't exist! { nameof(Vector3.Cos), SimpleNameTranslator("cos") },
+                { nameof(Vector3.Cross), SimpleNameTranslator("cross") },
+                { nameof(Vector3.Distance), SimpleNameTranslator("distance") },
+                { nameof(Vector3.DistanceSquared), DistanceSquared },
+                { nameof(Vector3.Divide), BinaryOpTranslator("/") },
+                { nameof(Vector3.Dot), SimpleNameTranslator("dot") },
+                { nameof(Vector3.Lerp), SimpleNameTranslator("mix") },
+                { nameof(Vector3.Max), SimpleNameTranslator("max") },
+                { nameof(Vector3.Min), SimpleNameTranslator("min") },
+                { nameof(Vector3.Multiply), BinaryOpTranslator("*") },
+                { nameof(Vector3.Negate), Negate },
+                { nameof(Vector3.Normalize), SimpleNameTranslator("normalize") },
+                { nameof(Vector3.Reflect), SimpleNameTranslator("reflect") },
+                // Doesn't exist! { nameof(Vector3.Sin), SimpleNameTranslator("sin") },
+                { nameof(Vector3.SquareRoot), SimpleNameTranslator("sqrt") },
+                { nameof(Vector3.Subtract), BinaryOpTranslator("-") },
+                { nameof(Vector3.Length), SimpleNameTranslator("length") },
+                { nameof(Vector3.LengthSquared), LengthSquared },
+                { nameof(Vector3.Zero), VectorStaticAccessor },
+                { nameof(Vector3.One), VectorStaticAccessor },
+                { nameof(Vector3.UnitX), VectorStaticAccessor },
+                { nameof(Vector3.UnitY), VectorStaticAccessor },
+                { nameof(Vector3.UnitZ), VectorStaticAccessor },
+                { nameof(Vector3.Transform), Vector3Transform }
             };
             ret.Add("System.Numerics.Vector3", new DictionaryTypeInvocationTranslator(v3Mappings));
 
             Dictionary<string, InvocationTranslator> v4Mappings = new Dictionary<string, InvocationTranslator>()
             {
-                { "Abs", SimpleNameTranslator("abs") },
-                { "Add", BinaryOpTranslator("+") },
-                { "Clamp", SimpleNameTranslator("clamp") },
-                { "Cos", SimpleNameTranslator("cos") },
-                { "Distance", SimpleNameTranslator("distance") },
-                { "DistanceSquared", DistanceSquared },
-                { "Divide", BinaryOpTranslator("/") },
-                { "Dot", SimpleNameTranslator("dot") },
-                { "Lerp", SimpleNameTranslator("mix") },
-                { "Max", SimpleNameTranslator("max") },
-                { "Min", SimpleNameTranslator("min") },
-                { "Multiply", BinaryOpTranslator("*") },
-                { "Negate", Negate },
-                { "Normalize", SimpleNameTranslator("normalize") },
-                { "Reflect", SimpleNameTranslator("reflect") },
-                { "Sin", SimpleNameTranslator("sin") },
-                { "SquareRoot", SimpleNameTranslator("sqrt") },
-                { "Subtract", BinaryOpTranslator("-") },
-                { "Length", SimpleNameTranslator("length") },
-                { "LengthSquared", LengthSquared },
                 { "ctor", VectorCtor },
-                { "Zero", VectorStaticAccessor },
-                { "One", VectorStaticAccessor },
-                { "UnitX", VectorStaticAccessor },
-                { "UnitY", VectorStaticAccessor },
-                { "UnitZ", VectorStaticAccessor },
-                { "UnitW", VectorStaticAccessor },
-                { "Transform", Vector4Transform }
+                { nameof(Vector4.Abs), SimpleNameTranslator("abs") },
+                { nameof(Vector4.Add), BinaryOpTranslator("+") },
+                { nameof(Vector4.Clamp), SimpleNameTranslator("clamp") },
+                // Doesn't exist! { nameof(Vector4.Cos), SimpleNameTranslator("cos") },
+                { nameof(Vector4.Distance), SimpleNameTranslator("distance") },
+                { nameof(Vector4.DistanceSquared), DistanceSquared },
+                { nameof(Vector4.Divide), BinaryOpTranslator("/") },
+                { nameof(Vector4.Dot), SimpleNameTranslator("dot") },
+                { nameof(Vector4.Lerp), SimpleNameTranslator("mix") },
+                { nameof(Vector4.Max), SimpleNameTranslator("max") },
+                { nameof(Vector4.Min), SimpleNameTranslator("min") },
+                { nameof(Vector4.Multiply), BinaryOpTranslator("*") },
+                { nameof(Vector4.Negate), Negate },
+                { nameof(Vector4.Normalize), SimpleNameTranslator("normalize") },
+                // Doesn't exist! { nameof(Vector4.Reflect), SimpleNameTranslator("reflect") },
+                // Doesn't exist! { nameof(Vector4.Sin), SimpleNameTranslator("sin") },
+                { nameof(Vector4.SquareRoot), SimpleNameTranslator("sqrt") },
+                { nameof(Vector4.Subtract), BinaryOpTranslator("-") },
+                { nameof(Vector4.Length), SimpleNameTranslator("length") },
+                { nameof(Vector4.LengthSquared), LengthSquared },
+                { nameof(Vector4.Zero), VectorStaticAccessor },
+                { nameof(Vector4.One), VectorStaticAccessor },
+                { nameof(Vector4.UnitX), VectorStaticAccessor },
+                { nameof(Vector4.UnitY), VectorStaticAccessor },
+                { nameof(Vector4.UnitZ), VectorStaticAccessor },
+                { nameof(Vector4.UnitW), VectorStaticAccessor },
+                { nameof(Vector4.Transform), Vector4Transform }
             };
             ret.Add("System.Numerics.Vector4", new DictionaryTypeInvocationTranslator(v4Mappings));
 
@@ -164,6 +184,7 @@ namespace ShaderGen.Glsl
 
             Dictionary<string, InvocationTranslator> mathfMappings = new Dictionary<string, InvocationTranslator>()
             {
+                // TODO Note cannot use nameof as MathF isn't included in this project...
                 { "Abs", SimpleNameTranslator("abs") },
                 { "Acos", SimpleNameTranslator("acos") },
                 { "Acosh", SimpleNameTranslator("acosh") },
@@ -186,7 +207,6 @@ namespace ShaderGen.Glsl
                 { "Min", SimpleNameTranslator("min") },
                 { "Pow", SimpleNameTranslator("pow") },
                 { "Round", Round },
-                { "Sign", SimpleNameTranslator("sign") },
                 { "Sin", SimpleNameTranslator("sin") },
                 { "Sinh", SimpleNameTranslator("sinh") },
                 { "Sqrt", SimpleNameTranslator("sqrt") },
@@ -195,7 +215,6 @@ namespace ShaderGen.Glsl
                 { "Truncate", SimpleNameTranslator("trunc") }
             };
             ret.Add("System.MathF", new DictionaryTypeInvocationTranslator(mathfMappings));
-
 
             ret.Add("ShaderGen.ShaderSwizzle", new SwizzleTranslator());
 
@@ -208,7 +227,7 @@ namespace ShaderGen.Glsl
 
             return ret;
         }
-        
+
         private static string MatrixCtor(string typeName, string methodName, InvocationParameterInfo[] p)
         {
             string paramList = string.Join(", ",
@@ -243,11 +262,11 @@ namespace ShaderGen.Glsl
             throw new ShaderGenerationException($"Reference to unknown function: {type}.{method}");
         }
 
-        private static InvocationTranslator SimpleNameTranslator(string nameTarget)
+        private static InvocationTranslator SimpleNameTranslator(string nameTarget = null)
         {
             return (type, method, parameters) =>
             {
-                return $"{nameTarget}({InvocationParameterInfo.GetInvocationParameterList(parameters)})";
+                return $"{nameTarget ?? method.ToLower()}({InvocationParameterInfo.GetInvocationParameterList(parameters)})";
             };
         }
 
