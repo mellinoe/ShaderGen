@@ -315,6 +315,10 @@ namespace ShaderGen.App
                 {
                     args += " /Od /Zi";
                 }
+                else
+                {
+                    args += " /O3";
+                }
                 string fxcPath = FindFxcExe();
                 ProcessStartInfo psi = new ProcessStartInfo(fxcPath, args);
                 psi.RedirectStandardOutput = true;
