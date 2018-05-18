@@ -1,5 +1,6 @@
 ﻿using ShaderGen;
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace TestShaders.VeldridShaders
 {
@@ -21,10 +22,13 @@ namespace TestShaders.VeldridShaders
             public Vector4 Color;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
         public struct Info
         {
             public uint ColorNormalizationFactor;
-            public Vector3 Padding0__;
+            private float _padding0;
+            private float _padding1;
+            private float _padding2;
         }
 
         public Info InfoBuffer;

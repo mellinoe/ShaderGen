@@ -14,5 +14,6 @@
         SamplerComparison,
         DepthTexture2D,
         DepthTexture2DArray,
+        AtomicBuffer,
     }
 }

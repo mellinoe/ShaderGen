@@ -248,7 +248,7 @@ namespace ShaderGen
                 INamedTypeSymbol namedTypeSymbol = (INamedTypeSymbol)exprSymbol.Symbol;
                 if (namedTypeSymbol.TypeKind == TypeKind.Enum)
                 {
-                    IFieldSymbol enumFieldSymbol = (IFieldSymbol) symbol;
+                    IFieldSymbol enumFieldSymbol = (IFieldSymbol)symbol;
                     string constantValueString = enumFieldSymbol.ConstantValue.ToString();
                     if (namedTypeSymbol.EnumUnderlyingType.SpecialType == SpecialType.System_UInt32)
                     {
@@ -359,6 +359,11 @@ namespace ShaderGen
                         });
                     }
 
+                    if (containingType == "ShaderGen.ShaderBuiltins")
+                    {
+                        ProcessBuiltInMethodInvocation(methodName, node);
+                    }
+
                     pis.AddRange(GetParameterInfos(node.ArgumentList));
                     return _backend.FormatInvocation(_setName, containingType, methodName, pis.ToArray());
                 }
@@ -385,6 +390,10 @@ namespace ShaderGen
                     {
                         throw new ShaderGenerationException($"{name} can only be used within Fragment shaders.");
                     }
+                    break;
+
+                case nameof(ShaderBuiltins.InterlockedAdd):
+                    _shaderFunction.UsesInterlockedAdd = true;
                     break;
             }
         }
@@ -445,7 +454,7 @@ namespace ShaderGen
         {
             Debug.Assert(symbol.Kind == SymbolKind.Discard);
 
-            string varType = Utilities.GetFullTypeName(((IDiscardSymbol) symbol).Type, out _);
+            string varType = Utilities.GetFullTypeName(((IDiscardSymbol)symbol).Type, out _);
             return _backend.CSharpToShaderType(varType);
         }
 
@@ -471,18 +480,22 @@ namespace ShaderGen
             if (symbol is IFieldSymbol fs && fs.HasConstantValue)
             {
                 // TODO: Share code to format constant values.
-                return string.Format(CultureInfo.InvariantCulture,"{0}", fs.ConstantValue);
+                return string.Format(CultureInfo.InvariantCulture, "{0}", fs.ConstantValue);
             }
             else if (symbol.Kind == SymbolKind.Field && containingTypeName == _containingTypeName)
             {
                 string symbolName = symbol.Name;
-                ResourceDefinition referencedResource = _backend.GetContext(_setName).Resources.Single(rd => rd.Name == symbolName);
-                _resourcesUsed.Add(referencedResource);
-                _shaderFunction.UsesTexture2DMS |= referencedResource.ResourceKind == ShaderResourceKind.Texture2DMS;
-                bool usesStructuredBuffer = referencedResource.ResourceKind == ShaderResourceKind.StructuredBuffer
-                    || referencedResource.ResourceKind == ShaderResourceKind.RWStructuredBuffer;
-                _shaderFunction.UsesStructuredBuffer |= usesStructuredBuffer;
-                _shaderFunction.UsesRWTexture2D |= referencedResource.ResourceKind == ShaderResourceKind.RWTexture2D;
+                ResourceDefinition referencedResource = _backend.GetContext(_setName).Resources.SingleOrDefault(rd => rd.Name == symbolName);
+                if (referencedResource != null)
+                {
+                    _resourcesUsed.Add(referencedResource);
+                    _shaderFunction.UsesTexture2DMS |= referencedResource.ResourceKind == ShaderResourceKind.Texture2DMS;
+                    bool usesStructuredBuffer = referencedResource.ResourceKind == ShaderResourceKind.StructuredBuffer
+                        || referencedResource.ResourceKind == ShaderResourceKind.RWStructuredBuffer
+                        || referencedResource.ResourceKind == ShaderResourceKind.AtomicBuffer;
+                    _shaderFunction.UsesStructuredBuffer |= usesStructuredBuffer;
+                    _shaderFunction.UsesRWTexture2D |= referencedResource.ResourceKind == ShaderResourceKind.RWTexture2D;
+                }
 
                 return _backend.CorrectFieldAccess(symbolInfo);
             }
@@ -697,6 +710,31 @@ namespace ShaderGen
                 + Visit(node.WhenTrue)
                 + node.ColonToken.ToFullString()
                 + Visit(node.WhenFalse);
+        }
+
+        public override string VisitDoStatement(DoStatementSyntax node)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(node.DoKeyword);
+            sb.Append(" {");
+            sb.AppendLine();
+            sb.Append(Visit(node.Statement));
+            sb.AppendLine();
+            sb.Append(" } while (");
+            sb.Append(Visit(node.Condition));
+            sb.Append(");");
+            return sb.ToString();
+
+        }
+
+        public override string VisitWhileStatement(WhileStatementSyntax node)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("while (");
+            sb.Append(Visit(node.Condition));
+            sb.AppendLine(")");
+            sb.Append(Visit(node.Statement));
+            return sb.ToString();
         }
 
         protected string GetParameterDeclList()

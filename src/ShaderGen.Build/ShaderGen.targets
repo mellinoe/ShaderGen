@@ -30,7 +30,7 @@
 
     <PropertyGroup>
       <_SGContinueOnError>false</_SGContinueOnError>
-      <_SGContinueOnError Condition="'$(DesignTimeBuild)' == 'true'">true</_SGContinueOnError>
+      <_SGContinueOnError Condition="'$(SGIgnoreErrors)' == 'true' Or '$(DesignTimeBuild)' == 'true'">true</_SGContinueOnError>
     </PropertyGroup>
 
     <Exec Command="dotnet &quot;$(_SGExePath)&quot; $(_SGArgs)"

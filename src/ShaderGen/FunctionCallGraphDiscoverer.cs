@@ -32,11 +32,6 @@ namespace ShaderGen
 
         private void TraverseNode(HashSet<ShaderFunctionAndMethodDeclarationSyntax> result, CallGraphNode node)
         {
-            if (node.Name.FullName.Contains("Scatter"))
-            {
-
-            }
-
             foreach (ShaderFunctionAndMethodDeclarationSyntax existing in result)
             {
                 if (node.Parents.Any(cgn => cgn.Name.Equals(existing)))
@@ -68,6 +63,11 @@ namespace ShaderGen
             TypeAndMethodName[] childrenNames = walker.GetChildren();
             foreach (TypeAndMethodName childName in childrenNames)
             {
+                if (childName.Equals(node.Name))
+                {
+                    throw new ShaderGenerationException(
+                        $"A function invoked transitively by {_rootNode.Name} calls {childName}, which calls itself. Recursive functions are not supported.");
+                }
                 CallGraphNode childNode = GetNode(childName);
                 if (childNode.Declaration != null)
                 {
@@ -133,19 +133,34 @@ namespace ShaderGen
                 if (node.Expression is IdentifierNameSyntax ins)
                 {
                     SymbolInfo symbolInfo = _discoverer.Compilation.GetSemanticModel(node.SyntaxTree).GetSymbolInfo(ins);
-                    string containingType = symbolInfo.Symbol.ContainingType.ToDisplayString();
-                    string methodName = symbolInfo.Symbol.Name;
+                    ISymbol symbol = symbolInfo.Symbol;
+                    if (symbol == null && symbolInfo.CandidateSymbols.Length == 1)
+                    {
+                        symbol = symbolInfo.CandidateSymbols[0];
+                    }
+                    if (symbol == null)
+                    {
+                        throw new ShaderGenerationException($"A member reference could not be identified: {node.Expression}");
+                    }
+
+                    string containingType = symbol.ContainingType.ToDisplayString();
+                    string methodName = symbol.Name;
                     _children.Add(new TypeAndMethodName() { TypeName = containingType, MethodName = methodName });
                 }
                 else if (node.Expression is MemberAccessExpressionSyntax maes)
                 {
                     SymbolInfo methodSymbol = _discoverer.Compilation.GetSemanticModel(maes.SyntaxTree).GetSymbolInfo(maes);
-                    if (methodSymbol.Symbol == null)
+                    ISymbol symbol = methodSymbol.Symbol;
+                    if (symbol == null && methodSymbol.CandidateSymbols.Length == 1)
+                    {
+                        symbol = methodSymbol.CandidateSymbols[0];
+                    }
+                    if (symbol == null)
                     {
                         throw new ShaderGenerationException($"A member reference could not be identified: {node.Expression}");
                     }
 
-                    if (methodSymbol.Symbol is IMethodSymbol ims)
+                    if (symbol is IMethodSymbol ims)
                     {
                         string containingType = Utilities.GetFullMetadataName(ims.ContainingType);
                         string methodName = ims.MetadataName;

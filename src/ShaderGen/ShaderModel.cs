@@ -54,38 +54,7 @@ namespace ShaderGen
 
         public int GetTypeSize(TypeReference tr)
         {
-            if (s_knownTypeSizes.TryGetValue(tr.Name, out int ret))
-            {
-                return ret;
-            }
-            else if (tr.TypeInfo.Type.TypeKind == TypeKind.Enum)
-            {
-                string enumBaseType = ((INamedTypeSymbol) tr.TypeInfo.Type).EnumUnderlyingType.GetFullMetadataName();
-                if (s_knownTypeSizes.TryGetValue(enumBaseType, out int enumRet))
-                {
-                    return enumRet;
-                }
-                else
-                {
-                    throw new InvalidOperationException($"Unknown enum base type: {enumBaseType}");
-                }
-            }
-            else
-            {
-                StructureDefinition sd = GetStructureDefinition(tr);
-                if (sd == null)
-                {
-                    throw new InvalidOperationException("Unable to determine the size for type: " + tr.Name);
-                }
-                int totalSize = 0;
-                foreach (FieldDefinition fd in sd.Fields)
-                {
-                    int fieldTypeSize = GetTypeSize(fd.Type);
-                    totalSize += fieldTypeSize * (Math.Max(1, fd.ArrayElementCount));
-                }
-
-                return totalSize;
-            }
+            return GetStructureDefinition(tr).Alignment.CSharpSize;
         }
 
         private static readonly Dictionary<string, int> s_knownTypeSizes = new Dictionary<string, int>()

@@ -71,6 +71,8 @@ namespace ShaderGen.Glsl
             HashSet<ResourceDefinition> resourcesUsed
                 = ProcessFunctions(setName, entryPoint, out string funcStr, out string entryStr);
 
+            ValidateResourcesUsed(setName, resourcesUsed);
+
             int structuredBufferIndex = 0;
             int rwTextureIndex = 0;
             foreach (ResourceDefinition rd in context.Resources)
@@ -106,6 +108,7 @@ namespace ShaderGen.Glsl
                         break;
                     case ShaderResourceKind.StructuredBuffer:
                     case ShaderResourceKind.RWStructuredBuffer:
+                    case ShaderResourceKind.AtomicBuffer:
                         WriteStructuredBuffer(sb, rd, rd.ResourceKind == ShaderResourceKind.StructuredBuffer, structuredBufferIndex);
                         structuredBufferIndex++;
                         break;
@@ -343,7 +346,8 @@ namespace ShaderGen.Glsl
                 _uniformNames.Add(rd.Name);
             }
             if (rd.ResourceKind == ShaderResourceKind.StructuredBuffer
-                || rd.ResourceKind == ShaderResourceKind.RWStructuredBuffer)
+                || rd.ResourceKind == ShaderResourceKind.RWStructuredBuffer
+                || rd.ResourceKind == ShaderResourceKind.AtomicBuffer)
             {
                 _ssboNames.Add(rd.Name);
             }

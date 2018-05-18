@@ -53,39 +53,39 @@ namespace ShaderGen.Hlsl
                 case SemanticType.None:
                     return string.Empty;
                 case SemanticType.Position:
-                    {
-                        int val = tracker.Position++;
-                        return " : POSITION" + val.ToString();
-                    }
+                {
+                    int val = tracker.Position++;
+                    return " : POSITION" + val.ToString();
+                }
                 case SemanticType.Normal:
-                    {
-                        int val = tracker.Normal++;
-                        return " : NORMAL" + val.ToString();
-                    }
+                {
+                    int val = tracker.Normal++;
+                    return " : NORMAL" + val.ToString();
+                }
                 case SemanticType.TextureCoordinate:
-                    {
-                        int val = tracker.TexCoord++;
-                        return " : TEXCOORD" + val.ToString();
-                    }
+                {
+                    int val = tracker.TexCoord++;
+                    return " : TEXCOORD" + val.ToString();
+                }
                 case SemanticType.Color:
-                    {
-                        int val = tracker.Color++;
-                        return " : COLOR" + val.ToString();
-                    }
+                {
+                    int val = tracker.Color++;
+                    return " : COLOR" + val.ToString();
+                }
                 case SemanticType.Tangent:
-                    {
-                        int val = tracker.Tangent++;
-                        return " : TANGENT" + val.ToString();
-                    }
+                {
+                    int val = tracker.Tangent++;
+                    return " : TANGENT" + val.ToString();
+                }
                 case SemanticType.SystemPosition:
-                    {
-                        return " : SV_Position";
-                    }
+                {
+                    return " : SV_Position";
+                }
                 case SemanticType.ColorTarget:
-                    {
-                        int val = tracker.ColorTarget++;
-                        return " : SV_Target" + val.ToString();
-                    }
+                {
+                    int val = tracker.ColorTarget++;
+                    return " : SV_Target" + val.ToString();
+                }
                 default: throw new ShaderGenerationException("Invalid semantic type: " + semanticType);
             }
         }
@@ -145,6 +145,11 @@ namespace ShaderGen.Hlsl
             sb.AppendLine($"RWStructuredBuffer<{CSharpToShaderType(rd.ValueType.Name)}> {CorrectIdentifier(rd.Name)}: register(u{binding});");
         }
 
+        private void WriteAtomicBuffer(StringBuilder sb, ResourceDefinition rd, int binding)
+        {
+            sb.AppendLine($"{CSharpToShaderType(rd.ValueType)} {CorrectIdentifier(rd.Name)}: register(u{binding});");
+        }
+
         private void WriteRWTexture2D(StringBuilder sb, ResourceDefinition rd, int binding)
         {
             sb.AppendLine($"RWTexture2D<{CSharpToShaderType(rd.ValueType.Name)}> {CorrectIdentifier(rd.Name)}: register(u{binding});");
@@ -178,6 +183,8 @@ namespace ShaderGen.Hlsl
 
             HashSet<ResourceDefinition> resourcesUsed
                 = ProcessFunctions(setName, entryPoint, out string funcStr, out string entryStr);
+
+            ValidateResourcesUsed(setName, resourcesUsed);
 
             // Emit all of the resources now, because we've learned which ones are actually used by this function.
             int uniformBinding = 0, textureBinding = 0, samplerBinding = 0, uavBinding = function.ColorOutputCount;
@@ -260,9 +267,22 @@ namespace ShaderGen.Hlsl
                             }
                             uavBinding++;
                             break;
+                        case ShaderResourceKind.AtomicBuffer:
+                            if (resourcesUsed.Contains(rd))
+                            {
+                                WriteAtomicBuffer(sb, rd, uavBinding);
+                            }
+                            uavBinding++;
+                            break;
+
                         default: throw new ShaderGenerationException("Illegal resource kind: " + rd.ResourceKind);
                     }
                 }
+            }
+
+            if (setContext.Functions.Any(sfamds => sfamds.Function.UsesInterlockedAdd))
+            {
+                WriteInterlockedAddHelpers(sb);
             }
 
             // Resources need to be defined before the function that uses them -- so append this after the resources.
@@ -270,6 +290,12 @@ namespace ShaderGen.Hlsl
             sb.AppendLine(entryStr);
 
             return new MethodProcessResult(sb.ToString(), resourcesUsed);
+        }
+
+        private void WriteInterlockedAddHelpers(StringBuilder sb)
+        {
+            sb.AppendLine($"uint _SG_Util_InterlockedAdd(RWStructuredBuffer<uint> b, uint i, uint v) {{ uint r; InterlockedAdd(b[i], v, r); return r; }}");
+            sb.AppendLine($"int _SG_Util_InterlockedAdd(RWStructuredBuffer<int> b, uint i, int v) {{ int r; InterlockedAdd(b[i], v, r); return r; }}");
         }
 
         protected override StructureDefinition GetRequiredStructureType(string setName, TypeReference type)

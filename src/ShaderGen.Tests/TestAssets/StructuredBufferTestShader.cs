@@ -7,6 +7,7 @@ namespace TestShaders
     public class StructuredBufferTestShader
     {
         public StructuredBuffer<Matrix4x4> StructuredInput;
+        public StructuredBuffer<TestStructure> TestStructures;
 
         [VertexShader]
         public VertexOutput VS(PositionTexture input)
@@ -30,5 +31,14 @@ namespace TestShaders
             [VertexSemantic(SemanticType.TextureCoordinate)]
             public Vector2 TextureCoord;
         }
+
+        public struct TestStructure
+        {
+            public Vector4 X;
+            public Vector2 Y;
+            public Vector2 Z;
+            public Vector4 W;
+        }
     }
+
 }

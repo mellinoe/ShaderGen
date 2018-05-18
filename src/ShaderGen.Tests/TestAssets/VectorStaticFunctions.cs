@@ -1,15 +1,20 @@
 ﻿using ShaderGen;
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace TestShaders
 {
     public class VectorStaticFunctions
     {
+        [StructLayout(LayoutKind.Sequential)]
         public struct VectorHolder
         {
-            public Vector2 V2;
-            public Vector3 V3;
             public Vector4 V4;
+            public Vector3 V3;
+            private float _padding0;
+            public Vector2 V2;
+            private float _padding1;
+            private float _padding2;
             public Matrix4x4 M4x4;
         }
 

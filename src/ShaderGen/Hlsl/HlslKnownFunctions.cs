@@ -46,6 +46,7 @@ namespace ShaderGen.Hlsl
                 { "DispatchThreadID", DispatchThreadID },
                 { "GroupThreadID", GroupThreadID },
                 { "IsFrontFace", IsFrontFace },
+                { "InterlockedAdd", InterlockedAdd },
             };
             ret.Add("ShaderGen.ShaderBuiltins", new DictionaryTypeInvocationTranslator(builtinMappings));
 
@@ -343,6 +344,11 @@ namespace ShaderGen.Hlsl
         private static string IsFrontFace(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
             return "_builtins_IsFrontFace";
+        }
+
+        private static string InterlockedAdd(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return $"_SG_Util_InterlockedAdd({parameters[0].Identifier}, {parameters[1].Identifier}, {parameters[2].Identifier})";
         }
 
         private static string VectorCtor(string typeName, string methodName, InvocationParameterInfo[] parameters)

@@ -47,6 +47,7 @@ namespace ShaderGen.Metal
                 { "DispatchThreadID", DispatchThreadID },
                 { "GroupThreadID", GroupThreadID },
                 { "IsFrontFace", IsFrontFace },
+                { "InterlockedAdd", InterlockedAdd },
             };
             ret.Add("ShaderGen.ShaderBuiltins", new DictionaryTypeInvocationTranslator(builtinMappings));
 
@@ -382,6 +383,11 @@ namespace ShaderGen.Metal
         private static string IsFrontFace(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
             return "_builtins_IsFrontFace";
+        }
+
+        private static string InterlockedAdd(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return $"atomic_fetch_add_explicit(&{parameters[0].Identifier}[{parameters[1].Identifier}], {parameters[2].Identifier}, memory_order_relaxed)";
         }
 
         private static string VectorCtor(string typeName, string methodName, InvocationParameterInfo[] parameters)

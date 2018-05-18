@@ -65,6 +65,11 @@ namespace ShaderGen
                 return string.Empty;
             }
 
+            if (s.Kind == SymbolKind.ArrayType)
+            {
+                return GetFullMetadataName(((IArrayTypeSymbol)s).ElementType) + "[]";
+            }
+
             StringBuilder sb = new StringBuilder(s.MetadataName);
             ISymbol last = s;
 
@@ -143,10 +148,10 @@ namespace ShaderGen
         {
             string ns = GetFullNamespace(node);
             List<string> nestedTypeParts = new List<string>();
-            while (SyntaxNodeHelper.TryGetParentSyntax(node, out ClassDeclarationSyntax cds))
+            while (SyntaxNodeHelper.TryGetParentSyntax(node, out TypeDeclarationSyntax tds))
             {
-                nestedTypeParts.Add(cds.Identifier.ToFullString().Trim());
-                node = cds;
+                nestedTypeParts.Add(tds.Identifier.ToFullString().Trim());
+                node = tds;
             }
 
             string nestedTypeStr = string.Join("+", nestedTypeParts);

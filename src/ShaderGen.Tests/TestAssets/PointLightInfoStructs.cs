@@ -1,5 +1,6 @@
 ﻿using ShaderGen;
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace TestShaders
 {
@@ -8,7 +9,8 @@ namespace TestShaders
         public PointLightsInfo PointLights;
         public const int MyOtherConst = 20;
 
-        [VertexShader] SystemPosition4 VS(Position4 input)
+        [VertexShader]
+        SystemPosition4 VS(Position4 input)
         {
             const int MyConst = 10;
 
@@ -41,12 +43,15 @@ namespace TestShaders
         Phong
     }
 
+    [StructLayout(LayoutKind.Sequential)]
     public struct PointLightsInfo
     {
         public const int MaxLights = 4;
 
         public int NumActiveLights;
-        public Vector3 _padding;
+        public float _padding0;
+        public float _padding1;
+        public float _padding2;
         [ArraySize(MaxLights)] public PointLightInfo[] PointLights;
         [ArraySize(2)] public PointLightInfo[] PointLights2;
     }

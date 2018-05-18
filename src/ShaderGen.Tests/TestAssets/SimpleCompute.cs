@@ -12,6 +12,9 @@ namespace TestShaders
         public RWStructuredBuffer<PointLightInfo> RWBufferWithCustomStruct;
         public RWTexture2DResource<float> RWTex;
 
+        public AtomicBufferUInt32 AtomicU32;
+        public AtomicBufferInt32 AtomicI32;
+
         [ComputeShader(1, 1, 1)]
         public void CS()
         {
@@ -26,6 +29,17 @@ namespace TestShaders
                 RWTex,
                 new UInt2(10, 20),
                 existing + DispatchThreadID.X);
+
+            FuncUsingInterlockedAdd();
+        }
+
+        private void FuncUsingInterlockedAdd()
+        {
+            // Interlocked
+            uint originalU32 = InterlockedAdd(AtomicU32, 5, 55);
+            originalU32 = InterlockedAdd(AtomicU32, 5u, 55); // unsigned index overload
+            int originalI32 = InterlockedAdd(AtomicI32, 5, 55);
+            originalI32 = InterlockedAdd(AtomicI32, 5u, 55); // unsigned index overload
         }
     }
 }

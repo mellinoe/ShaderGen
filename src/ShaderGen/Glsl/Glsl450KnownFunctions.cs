@@ -48,6 +48,7 @@ namespace ShaderGen.Glsl
                 { "DispatchThreadID", DispatchThreadID },
                 { "GroupThreadID", GroupThreadID },
                 { "IsFrontFace", IsFrontFace },
+                { "InterlockedAdd", InterlockedAdd },
             };
             ret.Add("ShaderGen.ShaderBuiltins", new DictionaryTypeInvocationTranslator(builtinMappings));
 
@@ -388,6 +389,11 @@ namespace ShaderGen.Glsl
         private static string IsFrontFace(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
             return "gl_FrontFacing";
+        }
+
+        private static string InterlockedAdd(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return $"atomicAdd({parameters[0].Identifier}[{parameters[1].Identifier}], {parameters[2].Identifier})";
         }
 
         private static string VectorCtor(string typeName, string methodName, InvocationParameterInfo[] parameters)
