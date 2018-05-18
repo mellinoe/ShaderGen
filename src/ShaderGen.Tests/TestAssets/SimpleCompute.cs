@@ -30,6 +30,11 @@ namespace TestShaders
                 new UInt2(10, 20),
                 existing + DispatchThreadID.X);
 
+            FuncUsingInterlockedAdd();
+        }
+
+        private void FuncUsingInterlockedAdd()
+        {
             // Interlocked
             uint originalU32 = InterlockedAdd(AtomicU32, 5, 55);
             originalU32 = InterlockedAdd(AtomicU32, 5u, 55); // unsigned index overload

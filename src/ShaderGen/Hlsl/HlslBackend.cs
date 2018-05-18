@@ -280,7 +280,7 @@ namespace ShaderGen.Hlsl
                 }
             }
 
-            if (function.UsesInterlockedAdd)
+            if (setContext.Functions.Any(sfamds => sfamds.Function.UsesInterlockedAdd))
             {
                 WriteInterlockedAddHelpers(sb);
             }

@@ -359,6 +359,11 @@ namespace ShaderGen
                         });
                     }
 
+                    if (containingType == "ShaderGen.ShaderBuiltins")
+                    {
+                        ProcessBuiltInMethodInvocation(methodName, node);
+                    }
+
                     pis.AddRange(GetParameterInfos(node.ArgumentList));
                     return _backend.FormatInvocation(_setName, containingType, methodName, pis.ToArray());
                 }
