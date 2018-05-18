@@ -417,7 +417,7 @@ namespace ShaderGen.Metal
                     string type = rd.ValueType.Name == "ShaderGen.AtomicBufferUInt32"
                         ? "atomic_uint"
                         : "atomic_int";
-                    return $"device {type}* {rd.Name}";
+                    return $"device {type}* {rd.Name};";
                 }
                 default:
                     Debug.Fail("Invalid ResourceKind: " + rd.ResourceKind);

@@ -20,9 +20,6 @@ namespace TestShaders
 
         public VectorHolder VH;
 
-        public AtomicBufferUInt32 AtomicU32;
-        public AtomicBufferInt32 AtomicI32;
-
         [VertexShader]
         public SystemPosition4 VS(Position4 input)
         {
@@ -115,12 +112,6 @@ namespace TestShaders
             r2 = ClipToTextureCoordinates(VH.V4);
             Vector4 v4 = VH.V4;
             r2 = ClipToTextureCoordinates(v4);
-
-            // Interlocked
-            uint originalU32 = InterlockedAdd(AtomicU32, 5, 55);
-            originalU32 = InterlockedAdd(AtomicU32, 5u, 55); // unsigned index overload
-            int originalI32 = InterlockedAdd(AtomicI32, 5, 55);
-            originalI32 = InterlockedAdd(AtomicI32, 5u, 55); // unsigned index overload
 
             SystemPosition4 output;
             output.Position = input.Position;
