@@ -74,9 +74,18 @@ namespace ShaderGen
             ResourceDefinition[] vertexResources = null;
             ResourceDefinition[] fragmentResources = null;
             ResourceDefinition[] computeResources = null;
+            ShaderFunctionAndMethodDeclarationSyntax[] contextFunctions = context.Functions.ToArray();
 
-            // HACK: Discover all method input structures.
-            foreach (ShaderFunctionAndMethodDeclarationSyntax sf in context.Functions.ToArray())
+            // Discover all parameter types
+            foreach (ShaderFunctionAndMethodDeclarationSyntax sf in contextFunctions)
+            {
+                foreach (ParameterDefinition funcParam in sf.Function.Parameters)
+                {
+                    ForceTypeDiscovery(setName, funcParam.Type);
+                }
+            }
+
+            foreach (ShaderFunctionAndMethodDeclarationSyntax sf in contextFunctions)
             {
                 if (sf.Function.IsEntryPoint)
                 {
@@ -115,15 +124,15 @@ namespace ShaderGen
             return rightExpr;
         }
 
-        private void ForceTypeDiscovery(string setName, TypeReference fd)
+        private void ForceTypeDiscovery(string setName, TypeReference tr)
         {
-            if (ShaderPrimitiveTypes.IsPrimitiveType(fd.Name))
+            if (ShaderPrimitiveTypes.IsPrimitiveType(tr.Name))
             {
                 return;
             }
-            if (fd.TypeInfo.Type.TypeKind == TypeKind.Enum)
+            if (tr.TypeInfo.Type.TypeKind == TypeKind.Enum)
             {
-                INamedTypeSymbol enumBaseType = ((INamedTypeSymbol)fd.TypeInfo.Type).EnumUnderlyingType;
+                INamedTypeSymbol enumBaseType = ((INamedTypeSymbol)tr.TypeInfo.Type).EnumUnderlyingType;
                 if (enumBaseType != null
                     && enumBaseType.SpecialType != SpecialType.System_Int32
                     && enumBaseType.SpecialType != SpecialType.System_UInt32)
@@ -132,10 +141,16 @@ namespace ShaderGen
                 }
                 return;
             }
-            if (!TryDiscoverStructure(setName, fd.Name, out StructureDefinition sd))
+            ITypeSymbol type = tr.TypeInfo.Type;
+            string name = tr.Name;
+            if (type is INamedTypeSymbol namedTypeSymb && namedTypeSymb.TypeArguments.Length == 1)
+            {
+                name = Utilities.GetFullTypeName(namedTypeSymb.TypeArguments[0], out _);
+            }
+            if (!TryDiscoverStructure(setName, name, out StructureDefinition sd))
             {
                 throw new ShaderGenerationException("" +
-                    "Resource type's field could not be resolved: " + fd.Name + " " + fd.Name);
+                    "Resource type's field could not be resolved: " + name);
             }
             foreach (FieldDefinition field in sd.Fields)
             {
