@@ -216,6 +216,13 @@ namespace ShaderGen.Tests
                     nameof(TestShaders) + "." + nameof(StructureSizeTests) + "+" + nameof(StructureSizeTests.SizeTest_3));
             Assert.Equal(64, test3.Alignment.CSharpSize);
             Assert.False(test3.CSharpMatchesShaderAlignment);
+
+            Assert.Equal(4, shaderModel.GetTypeSize(test3.Fields[0].Type));
+            Assert.Equal(12, shaderModel.GetTypeSize(test3.Fields[1].Type));
+            Assert.Equal(12, shaderModel.GetTypeSize(test3.Fields[2].Type));
+            Assert.Equal(16, shaderModel.GetTypeSize(test3.Fields[3].Type));
+            Assert.Equal(4, shaderModel.GetTypeSize(test3.Fields[4].Type));
+            Assert.Equal(16, shaderModel.GetTypeSize(test3.Fields[5].Type));
         }
     }
 }

@@ -204,10 +204,10 @@ namespace ShaderGen
             { "System.Int16", 2 },
             { "System.UInt32", 4 },
             { "System.Int32", 4 },
-            { "System.UInt64", 4 },
-            { "System.Int64", 4 },
+            { "System.UInt64", 8 },
+            { "System.Int64", 8 },
             { "System.Single", 4 },
-            { "System.Double", 4 },
+            { "System.Double", 8 },
         };
 
         private static readonly Dictionary<string, int> s_shaderAlignments = new Dictionary<string, int>()
