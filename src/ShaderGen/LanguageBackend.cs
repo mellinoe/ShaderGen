@@ -133,9 +133,9 @@ namespace ShaderGen
             {
                 return;
             }
-            if (tr.TypeInfo.Type.TypeKind == TypeKind.Enum)
+            if (tr.TypeInfo.TypeKind == TypeKind.Enum)
             {
-                INamedTypeSymbol enumBaseType = ((INamedTypeSymbol)tr.TypeInfo.Type).EnumUnderlyingType;
+                INamedTypeSymbol enumBaseType = ((INamedTypeSymbol)tr.TypeInfo).EnumUnderlyingType;
                 if (enumBaseType != null
                     && enumBaseType.SpecialType != SpecialType.System_Int32
                     && enumBaseType.SpecialType != SpecialType.System_UInt32)
@@ -144,7 +144,7 @@ namespace ShaderGen
                 }
                 return;
             }
-            ITypeSymbol type = tr.TypeInfo.Type;
+            ITypeSymbol type = tr.TypeInfo;
             string name = tr.Name;
             if (type is INamedTypeSymbol namedTypeSymb && namedTypeSymb.TypeArguments.Length == 1)
             {
@@ -190,9 +190,9 @@ namespace ShaderGen
             }
 
             string typeNameString;
-            if (typeReference.TypeInfo.Type.TypeKind == TypeKind.Enum)
+            if (typeReference.TypeInfo.TypeKind == TypeKind.Enum)
             {
-                typeNameString = Utilities.GetFullName(((INamedTypeSymbol)typeReference.TypeInfo.Type).EnumUnderlyingType);
+                typeNameString = Utilities.GetFullName(((INamedTypeSymbol)typeReference.TypeInfo).EnumUnderlyingType);
             }
             else
             {
@@ -287,13 +287,11 @@ namespace ShaderGen
                 }
 
                 string invocationList = string.Join(", ", formattedParams);
-                string fullMethodName = CSharpToShaderType(function.Function.DeclaringType) + "_" + function.Function.Name;
+                string fullMethodName = CSharpToShaderType(function.Function.DeclaringType) + "_" + function.Function.Name.Replace(".", "0_");
                 return $"{fullMethodName}({invocationList})";
             }
-            else
-            {
-                return FormatInvocationCore(setName, type, method, parameterInfos);
-            }
+
+            return FormatInvocationCore(setName, type, method, parameterInfos);
         }
 
         protected virtual string FormatInvocationParameter(ParameterDefinition def, InvocationParameterInfo ipi)

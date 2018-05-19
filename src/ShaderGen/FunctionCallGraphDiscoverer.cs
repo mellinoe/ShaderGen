@@ -90,14 +90,25 @@ namespace ShaderGen
             return node;
         }
 
-        private bool GetDeclaration(TypeAndMethodName name, out MethodDeclarationSyntax decl)
+        private bool GetDeclaration(TypeAndMethodName name, out BaseMethodDeclarationSyntax decl)
         {
+            bool isConstructor = name.MethodName == ".ctor";
             INamedTypeSymbol symb = Compilation.GetTypeByMetadataName(name.TypeName);
             foreach (SyntaxReference synRef in symb.DeclaringSyntaxReferences)
             {
                 SyntaxNode node = synRef.GetSyntax();
                 foreach (SyntaxNode child in node.ChildNodes())
                 {
+                    if (isConstructor)
+                    {
+                        if (child is ConstructorDeclarationSyntax cds)
+                        {
+                            decl = cds;
+                            return true;
+                        }
+                    }
+
+
                     if (child is MethodDeclarationSyntax mds)
                     {
                         if (mds.Identifier.ToFullString() == name.MethodName)
@@ -123,12 +134,31 @@ namespace ShaderGen
                 _discoverer = discoverer;
             }
 
+            public override void VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
+            {
+                SymbolInfo symbolInfo = _discoverer.Compilation.GetSemanticModel(node.SyntaxTree).GetSymbolInfo(node);
+                ISymbol symbol = symbolInfo.Symbol;
+                if (symbol == null && symbolInfo.CandidateSymbols.Length == 1)
+                {
+                    symbol = symbolInfo.CandidateSymbols[0];
+                }
+                if (symbol == null)
+                {
+                    throw new ShaderGenerationException($"A constructor reference could not be identified: {node}");
+                }
+
+                string containingType = symbol.ContainingType.ToDisplayString();
+                _children.Add(new TypeAndMethodName() { TypeName = containingType, MethodName = ".ctor" });
+
+                base.VisitObjectCreationExpression(node);
+            }
+
             public override void VisitInvocationExpression(InvocationExpressionSyntax node)
             {
-                if (node.ToFullString().Contains("RandomInUnitSphere"))
-                {
-
-                }
+                //if (node.ToFullString().Contains("RandomInUnitSphere"))
+                //{
+                //
+                //}
 
                 if (node.Expression is IdentifierNameSyntax ins)
                 {
@@ -185,7 +215,7 @@ namespace ShaderGen
         /// <summary>
         /// May be null.
         /// </summary>
-        public MethodDeclarationSyntax Declaration;
+        public BaseMethodDeclarationSyntax Declaration;
         /// <summary>
         /// Functions called by this function.
         /// </summary>

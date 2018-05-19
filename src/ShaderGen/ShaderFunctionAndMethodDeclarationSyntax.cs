@@ -6,14 +6,14 @@ namespace ShaderGen
     public class ShaderFunctionAndMethodDeclarationSyntax : IEquatable<ShaderFunctionAndMethodDeclarationSyntax>
     {
         public ShaderFunction Function { get; }
-        public MethodDeclarationSyntax MethodDeclaration { get; }
+        public BaseMethodDeclarationSyntax MethodDeclaration { get; }
 
         /// <summary>
         /// Only present for entry-point functions.
         /// </summary>
         public ShaderFunctionAndMethodDeclarationSyntax[] OrderedFunctionList { get; }
 
-        public ShaderFunctionAndMethodDeclarationSyntax(ShaderFunction function, MethodDeclarationSyntax methodDeclaration, ShaderFunctionAndMethodDeclarationSyntax[] orderedFunctionList)
+        public ShaderFunctionAndMethodDeclarationSyntax(ShaderFunction function, BaseMethodDeclarationSyntax methodDeclaration, ShaderFunctionAndMethodDeclarationSyntax[] orderedFunctionList)
         {
             Function = function;
             MethodDeclaration = methodDeclaration;

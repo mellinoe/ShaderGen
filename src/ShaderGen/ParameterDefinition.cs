@@ -27,7 +27,7 @@ namespace ShaderGen
 
             ParameterDirection direction = ParameterDirection.In;
 
-            IParameterSymbol declaredSymbol = (IParameterSymbol) semanticModel.GetDeclaredSymbol(ps);
+            IParameterSymbol declaredSymbol = (IParameterSymbol)semanticModel.GetDeclaredSymbol(ps);
             RefKind refKind = declaredSymbol.RefKind;
             if (refKind == RefKind.Out)
             {
@@ -38,7 +38,7 @@ namespace ShaderGen
                 direction = ParameterDirection.InOut;
             }
 
-            return new ParameterDefinition(name, new TypeReference(fullType, semanticModel.GetTypeInfo(ps.Type)), direction, declaredSymbol);
+            return new ParameterDefinition(name, new TypeReference(fullType, semanticModel.GetTypeInfo(ps.Type).Type), direction, declaredSymbol);
         }
     }
 

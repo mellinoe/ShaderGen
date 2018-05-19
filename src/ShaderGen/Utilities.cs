@@ -194,7 +194,7 @@ namespace ShaderGen
                 .Where(attrSyntax => attrSyntax.Name.ToString().Contains(name)).ToArray();
         }
 
-        public static AttributeSyntax[] GetMethodAttributes(MethodDeclarationSyntax mds, string name)
+        public static AttributeSyntax[] GetMethodAttributes(BaseMethodDeclarationSyntax mds, string name)
         {
             return mds.DescendantNodes().OfType<AttributeSyntax>()
             .Where(attrSyntax => attrSyntax.Name.ToString().Contains(name)).ToArray();
@@ -222,20 +222,27 @@ namespace ShaderGen
         }
 
         internal static ShaderFunctionAndMethodDeclarationSyntax GetShaderFunction(
-            MethodDeclarationSyntax node, 
+            BaseMethodDeclarationSyntax node,
             Compilation compilation,
             bool generateOrderedFunctionList)
         {
-            string functionName = node.Identifier.ToFullString();
-            List<ParameterDefinition> parameters = new List<ParameterDefinition>();
-            foreach (ParameterSyntax ps in node.ParameterList.Parameters)
-            {
-                parameters.Add(ParameterDefinition.GetParameterDefinition(compilation, ps));
-            }
-
             SemanticModel semanticModel = compilation.GetSemanticModel(node.SyntaxTree);
 
-            TypeReference returnType = new TypeReference(semanticModel.GetFullTypeName(node.ReturnType), semanticModel.GetTypeInfo(node.ReturnType));
+            string functionName;
+            TypeReference returnTypeReference;
+            if (node is MethodDeclarationSyntax mds)
+            {
+                functionName = mds.Identifier.ToFullString();
+                returnTypeReference = new TypeReference(semanticModel.GetFullTypeName(mds.ReturnType), semanticModel.GetTypeInfo(mds.ReturnType).Type);
+            }
+            else if (node is ConstructorDeclarationSyntax cds)
+            {
+                functionName = ".ctor";
+                ITypeSymbol typeSymbol = semanticModel.GetDeclaredSymbol(cds).ContainingType;
+                returnTypeReference = new TypeReference(GetFullTypeName(typeSymbol, out _), typeSymbol);
+            }
+            else
+                throw new ArgumentOutOfRangeException(nameof(node), "Unsupported BaseMethodDeclarationSyntax type.");
 
             UInt3 computeGroupCounts = new UInt3();
             bool isFragmentShader = false, isComputeShader = false;
@@ -265,10 +272,19 @@ namespace ShaderGen
                         : ShaderFunctionType.Normal;
 
             string nestedTypePrefix = GetFullNestedTypePrefix(node, out bool nested);
+
+
+
+            List<ParameterDefinition> parameters = new List<ParameterDefinition>();
+            foreach (ParameterSyntax ps in node.ParameterList.Parameters)
+            {
+                parameters.Add(ParameterDefinition.GetParameterDefinition(compilation, ps));
+            }
+
             ShaderFunction sf = new ShaderFunction(
                 nestedTypePrefix,
                 functionName,
-                returnType,
+                returnTypeReference,
                 parameters.ToArray(),
                 type,
                 computeGroupCounts);
