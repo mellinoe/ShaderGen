@@ -34,6 +34,11 @@ namespace ShaderGen.Tests.Tools
         public readonly string StdError;
 
         /// <summary>
+        /// The compiled output (if any); otherwise <see langword="null"/>.
+        /// </summary>
+        public readonly IReadOnlyCollection<byte> CompiledOutput;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ToolResult" /> class.
         /// </summary>
         /// <param name="toolChain">The tool chain.</param>
@@ -42,13 +47,14 @@ namespace ShaderGen.Tests.Tools
         /// <param name="stdOut">The standard out.</param>
         /// <param name="stdError">The standard error.</param>
         /// <param name="output">The output.</param>
-        public ToolResult(ToolChain toolChain, string code, int exitCode, string stdOut, string stdError)
+        public ToolResult(ToolChain toolChain, string code, int exitCode, string stdOut, string stdError, IReadOnlyCollection<byte> outputBytes)
         {
             ToolChain = toolChain;
             Code = code ?? string.Empty;
             ExitCode = exitCode;
             StdOut = stdOut;
             StdError = stdError;
+            CompiledOutput = outputBytes;
         }
 
         /// <summary>

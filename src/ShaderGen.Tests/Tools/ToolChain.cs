@@ -194,14 +194,15 @@ namespace ShaderGen.Tests.Tools
         /// <param name="stage">The stage.</param>
         /// <param name="entryPoint">The entry point.</param>
         /// <param name="outputFile">The outputFile.</param>
+        /// <param name="timeout">The timeout.</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public ToolResult Compile(string code, Stage stage, string entryPoint, string outputFile = null)
+        public ToolResult Compile(string code, Stage stage, string entryPoint, int timeout = 3000)
         {
             using (TempFile tmpFile = new TempFile())
             {
                 File.WriteAllText(tmpFile, code, _preferredFileEncoding);
-                return CompileFile(tmpFile, code, stage, entryPoint, outputFile);
+                return CompileFile(tmpFile, code, stage, entryPoint, timeout);
             }
         }
 
@@ -212,12 +213,13 @@ namespace ShaderGen.Tests.Tools
         /// <param name="stage">The stage.</param>
         /// <param name="entryPoint">The entry point.</param>
         /// <param name="outputFile">The outputFile.</param>
+        /// <param name="timeout">The timeout.</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public ToolResult CompileFile(string path, Stage stage, string entryPoint, string outputFile = null)
+        public ToolResult CompileFile(string path, Stage stage, string entryPoint, int timeout = 3000)
         {
             string code = File.ReadAllText(path);
-            return CompileFile(path, code, stage, entryPoint, outputFile);
+            return CompileFile(path, code, stage, entryPoint, timeout);
         }
 
         /// <summary>
@@ -231,18 +233,18 @@ namespace ShaderGen.Tests.Tools
         /// <param name="timeout">The timeout in milliseconds.</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        private ToolResult CompileFile(string path, string code, Stage stage, string entryPoint,
-            string outputFile = null, int timeout = 3000)
+        private ToolResult CompileFile(string path, string code, Stage stage, string entryPoint, int timeout = 3000)
         {
             if (!IsAvailable)
                 throw new InvalidOperationException($"The {Name} tool chain is not available!");
 
+            using (TempFile tempFile = new TempFile())
             using (Process process = new Process())
             {
                 process.StartInfo = new ProcessStartInfo
                 {
                     FileName = _toolPath,
-                    Arguments = _argumentFormatter(path, stage, entryPoint, outputFile),
+                    Arguments = _argumentFormatter(path, stage, entryPoint, tempFile),
                     CreateNoWindow = true,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -287,7 +289,10 @@ namespace ShaderGen.Tests.Tools
                     else
                         exitCode = process.ExitCode;
 
-                    return new ToolResult(this, code, exitCode, output.ToString(), error.ToString());
+                    // Get compiled output (if any).
+                    IReadOnlyCollection<byte> outputBytes = !File.Exists(tempFile) ? null : File.ReadAllBytes(tempFile);
+
+                    return new ToolResult(this, code, exitCode, output.ToString(), error.ToString(), outputBytes);
                 }
             }
         }
