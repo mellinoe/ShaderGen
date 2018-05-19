@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
 
@@ -20,7 +22,15 @@ namespace ShaderGen.Tests.Tools
         /// The exit code
         /// </summary>
         public readonly int ExitCode;
+
+        /// <summary>
+        /// The standard out.
+        /// </summary>
         public readonly string StdOut;
+
+        /// <summary>
+        /// The standard error.
+        /// </summary>
         public readonly string StdError;
 
         /// <summary>
@@ -31,6 +41,7 @@ namespace ShaderGen.Tests.Tools
         /// <param name="exitCode">The exit code.</param>
         /// <param name="stdOut">The standard out.</param>
         /// <param name="stdError">The standard error.</param>
+        /// <param name="output">The output.</param>
         public ToolResult(ToolChain toolChain, string code, int exitCode, string stdOut, string stdError)
         {
             ToolChain = toolChain;

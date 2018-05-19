@@ -192,15 +192,15 @@ namespace ShaderGen.Tests.Tools
         /// <param name="code">The shader code.</param>
         /// <param name="stage">The stage.</param>
         /// <param name="entryPoint">The entry point.</param>
-        /// <param name="output">The output.</param>
+        /// <param name="outputFile">The outputFile.</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public ToolResult Compile(string code, Stage stage, string entryPoint, string output = null)
+        public ToolResult Compile(string code, Stage stage, string entryPoint, string outputFile = null)
         {
             using (TempFile tmpFile = new TempFile())
             {
                 File.WriteAllText(tmpFile, code, _preferredFileEncoding);
-                return CompileFile(tmpFile, code, stage, entryPoint);
+                return CompileFile(tmpFile, code, stage, entryPoint, outputFile);
             }
         }
 
@@ -210,13 +210,13 @@ namespace ShaderGen.Tests.Tools
         /// <param name="path">The path.</param>
         /// <param name="stage">The stage.</param>
         /// <param name="entryPoint">The entry point.</param>
-        /// <param name="output">The output.</param>
+        /// <param name="outputFile">The outputFile.</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public ToolResult CompileFile(string path, Stage stage, string entryPoint, string output = null)
+        public ToolResult CompileFile(string path, Stage stage, string entryPoint, string outputFile = null)
         {
             string code = File.ReadAllText(path);
-            return CompileFile(path, code, stage, entryPoint, output);
+            return CompileFile(path, code, stage, entryPoint, outputFile);
         }
 
         /// <summary>
@@ -226,10 +226,10 @@ namespace ShaderGen.Tests.Tools
         /// <param name="code">The code.</param>
         /// <param name="stage">The stage.</param>
         /// <param name="entryPoint">The entry point.</param>
-        /// <param name="output">The output.</param>
+        /// <param name="outputFile">The outputFile.</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        private ToolResult CompileFile(string path, string code, Stage stage, string entryPoint, string output = null)
+        private ToolResult CompileFile(string path, string code, Stage stage, string entryPoint, string outputFile = null)
         {
             if (!IsAvailable)
                 throw new InvalidOperationException($"The {Name} tool chain is not available!");
@@ -237,17 +237,30 @@ namespace ShaderGen.Tests.Tools
             ProcessStartInfo psi = new ProcessStartInfo()
             {
                 FileName = _toolPath,
-                Arguments = _argumentFormatter(path, stage, entryPoint, output),
+                Arguments = _argumentFormatter(path, stage, entryPoint, outputFile),
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
             };
 
-            Process p = Process.Start(psi);
-            p.WaitForExit(4000);
+            Process p = null;
+            try
+            {
+                p = Process.Start(psi);
+                if (p?.WaitForExit(6000) != true)
+                    return new ToolResult(this, code, -2, null, $"Timed out calling: {_toolPath} {psi.Arguments}");
 
-            string stdOut = p.StandardOutput.ReadToEnd();
-            string stdError = p.StandardError.ReadToEnd();
-            return new ToolResult(this, code, p.ExitCode, stdOut, stdError);
+                string stdOut = p.StandardOutput.ReadToEnd();
+                string stdError = p.StandardError.ReadToEnd();
+                return new ToolResult(this, code, p.ExitCode, stdOut, stdError);
+            }
+            catch (Exception e)
+            {
+                return new ToolResult(this, code, -1, null, $"Exception {e.Message} calling: {_toolPath} {psi.Arguments}");
+            }
+            finally
+            {
+                p?.Close();
+            }
         }
 
 
@@ -326,19 +339,12 @@ namespace ShaderGen.Tests.Tools
 
             string exeExtension = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : string.Empty;
             string exePath = Path.Combine(vulkanSdkPath, "bin", "glslangvalidator" + exeExtension);
-            if (File.Exists(exePath))
-            {
-                return exePath;
-            }
-
-            return null;
+            return File.Exists(exePath) ? exePath : null;
         }
 
         private static string GlsvArguments(string file, Stage stage, string entrypoint, bool vulkanSemantics, string output)
         {
             StringBuilder args = new StringBuilder();
-            if (vulkanSemantics)
-                args.Append("-V ");
             args.Append("-S ");
             switch (stage)
             {
@@ -354,10 +360,17 @@ namespace ShaderGen.Tests.Tools
                 default:
                     throw new ArgumentOutOfRangeException(nameof(stage), stage, null);
             }
-            if (output != null)
-                args.Append($" -o \"{output}\"");
 
-            args.Append($" {file}");
+            if (vulkanSemantics)
+            {
+                args.Append(" -V");
+
+                // Only support file output for Vulkan
+                if (output != null)
+                    args.Append($" -o \"{output}\"");
+            }
+
+            args.Append($" \"{file}\"");
             return args.ToString();
         }
 
@@ -372,7 +385,7 @@ namespace ShaderGen.Tests.Tools
             args.Append("-x metal ");
             args.Append("-mmacosx-version-min=10.12 ");
             args.Append($" -o ");
-            args.Append(output != null ? $"\"output\"" : " -o /dev/null");
+            args.Append(output != null ? $"\"outputFile\"" : " -o /dev/null");
             args.Append($" \"{file}\"");
             return args.ToString();
         }
