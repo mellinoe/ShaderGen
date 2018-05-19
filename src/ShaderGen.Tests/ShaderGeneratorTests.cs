@@ -219,7 +219,7 @@ namespace ShaderGen.Tests
                             failed = true;
                         }
                         else
-                            _output.WriteLine($"Compiled Vertex Compute from set \"{set.Name}\"!");
+                            _output.WriteLine($"Compiled Compute Shader from set \"{set.Name}\"!");
                     }
                 }
 

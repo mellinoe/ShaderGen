@@ -1,39 +1,18 @@
-﻿using System.Numerics;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using ShaderGen;
+using TestShaders;
 using static ShaderGen.ShaderBuiltins;
 
 namespace TestShaders
 {
     /// <summary>
-    /// 
+    /// Shader to test built in methods.
     /// </summary>
     public class ShaderBuiltinsComputeTest
     {
+        public const uint Methods = 2;
 
-        /// <summary>
-        /// Used to pass data to/from Compute Shader
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        public struct Parameters
-        {
-            public Matrix4x4 P1_Matrix;
-            public Matrix4x4 P2_Matrix;
-            public Vector2 P1_Vector2;
-            public float P1_Float;
-            public float P2_Float;
-            public Vector2 P2_V2;
-            public float P3_Float;
-            public float P4_Float;
-            public Vector3 P1_Vector3;
-            public float P5_Float;
-            public Vector3 P2_Vector3;
-            public float P6_Float;
-            public Vector4 P1_Vector4;
-            public Vector4 P2_Vector4;
-        }
-
-        [ResourceSet(0)] public RWStructuredBuffer<Parameters> InOutParameters;
+        [ResourceSet(0)] public RWStructuredBuffer<ComputeShaderParameters> InOutParameters;
 
         [ResourceSet(1)] public uint Method;
 
@@ -48,7 +27,22 @@ namespace TestShaders
          */
         public void DoCS(UInt3 dispatchThreadID)
         {
-            // TODO
+            uint index = dispatchThreadID.X;
+
+            // ReSharper disable once RedundantCast - WORKAROUND for #75
+            if (index >= (uint)Methods) return;
+
+            ComputeShaderParameters parameters = InOutParameters[index];
+            switch (dispatchThreadID.X)
+            {
+                // Abs
+                case 0:
+                    parameters.OutFloat = Abs(parameters.P1Float);
+                    parameters.OutFloatSet = true;
+                    break;
+            }
+
+            InOutParameters[index] = parameters;
         }
     }
 }

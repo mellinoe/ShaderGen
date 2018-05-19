@@ -93,7 +93,7 @@ namespace ShaderGen.Tests
         private static string[] GetReferenceItems()
         {
             string[] lines = File.ReadAllLines(Path.Combine(ProjectBasePath, "References.txt"));
-            return lines.Select(l => l.Trim()).ToArray();;
+            return lines.Select(l => l.Trim()).ToArray(); ;
         }
 
         public static string[] GetPackageDirs()
@@ -142,25 +142,6 @@ namespace ShaderGen.Tests
         public void Dispose()
         {
             File.Delete(FilePath);
-        }
-    }
-
-    public class TempFile2 : IDisposable
-    {
-        public readonly string FilePath0;
-        public readonly string FilePath1;
-
-        public TempFile2() : this(Path.GetTempFileName(), Path.GetTempFileName()) { }
-        public TempFile2(string path0, string path1)
-        {
-            FilePath0 = path0;
-            FilePath1 = path1;
-        }
-
-        public void Dispose()
-        {
-            File.Delete(FilePath0);
-            File.Delete(FilePath1);
         }
     }
 }

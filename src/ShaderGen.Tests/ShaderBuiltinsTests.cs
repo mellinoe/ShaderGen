@@ -6,45 +6,72 @@ using ShaderGen.Hlsl;
 using ShaderGen.Tests.Tools;
 using TestShaders;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace ShaderGen.Tests
 {
     public class ShaderBuiltinsTests
     {
+        private readonly ITestOutputHelper _output;
+
+        public ShaderBuiltinsTests(ITestOutputHelper output)
+        {
+            _output = output;
+        }
+
         [Fact]
         public void TestShaderBuiltins_Compute()
         {
-            string csFunctionName = $"TestShaders.ShaderBuiltinsComputeTest.CS";
+            string csFunctionName = "TestShaders.ShaderBuiltinsComputeTest.CS";
             Compilation compilation = TestUtil.GetTestProjectCompilation();
 
             // Get backends for every toolchain that is available
-            LanguageBackend[] backends = new[] { ToolChain.Glsl330.CreateBackend(compilation) };
-            /* This is how yet get all, for now we're just using Glsl330
+            LanguageBackend[] backends = // new[] { ToolChain.Glsl330.CreateBackend(compilation) };
+            // This is how yet get all, for now we're just using Glsl330
              ToolChain.All
             .Where(t => t.IsAvailable)
             .Select(t => t.CreateBackend(compilation))
             .ToArray();
-            */
+
             ShaderSetProcessor processor = new ShaderSetProcessor();
 
             ShaderGenerator sg = new ShaderGenerator(
                 compilation,
                 backends,
-                null, null, csFunctionName, processor);
-            ShaderGenerationResult genResult = sg.GenerateShaders();
-            /*
-            IReadOnlyList<GeneratedShaderSet> sets = genResult.GetOutput(backend);
-            Assert.Equal(1, sets.Count);
-            ShaderModel shaderModel = sets[0].Model;
+                null,
+                null,
+                csFunctionName,
+                processor);
 
-            Assert.Equal(2, shaderModel.Structures.Length);
-            Assert.Equal(3, shaderModel.AllResources.Length);
-            ShaderFunction vsEntry = shaderModel.GetFunction(csFunctionName);
-            Assert.Equal("VS", vsEntry.Name);
-            Assert.Single(vsEntry.Parameters);
-            Assert.True(vsEntry.IsEntryPoint);
-            Assert.Equal(ShaderFunctionType.VertexEntryPoint, vsEntry.Type);*/
+            ShaderGenerationResult generationResult = sg.GenerateShaders();
+
+            string spacer1 = new string('=', 80);
+            string spacer2 = new string('-', 80);
+
+            bool failed = false;
+            foreach (LanguageBackend backend in backends)
+            {
+                ToolChain toolChain = ToolChain.Get(backend);
+                GeneratedShaderSet set = generationResult.GetOutput(backend).Single();
+                _output.WriteLine(spacer1);
+                _output.WriteLine($"Generated shader set for {toolChain.Name} backend.");
+
+                ToolResult result = toolChain.Compile(set.ComputeShaderCode, Stage.Compute, set.ComputeFunction.Name);
+                if (result.HasError)
+                {
+                    _output.WriteLine($"Failed to compile Compute Shader from set \"{set.Name}\"!");
+                    _output.WriteLine(result.ToString());
+                    failed = true;
+                }
+                else
+                    _output.WriteLine($"Compiled Compute Shader from set \"{set.Name}\"!");
+
+                _output.WriteLine(string.Empty);
+            }
+
+            Assert.False(failed);
         }
+
         private class ShaderSetProcessor : IShaderSetProcessor
         {
             public string Result { get; private set; }
