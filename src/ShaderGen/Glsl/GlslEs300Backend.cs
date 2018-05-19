@@ -19,7 +19,8 @@ namespace ShaderGen.Glsl
 
         protected override void WriteVersionHeader(ShaderFunction function, StringBuilder sb)
         {
-            bool useVersion320 = function.UsesTexture2DMS;
+            bool useVersion320 = function.UsesTexture2DMS || function.Type == ShaderFunctionType.ComputeEntryPoint;
+            // TODO: Do we also need to check:  function.UsesStructuredBuffer ?
             bool useVersion310 = function.UsesStructuredBuffer;
             string versionNumber = useVersion320 ? "320" :
                                    useVersion310 ? "310" : "300";
