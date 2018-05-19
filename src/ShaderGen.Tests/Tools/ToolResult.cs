@@ -86,7 +86,7 @@ namespace ShaderGen.Tests.Tools
                 StringSplitOptions.None))
             {
                 lines++;
-                if (lines > 100)
+                if (lines > 999)
                 {
                     builder.AppendLine("... (line count exceeded)");
                     continue;

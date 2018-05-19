@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using ShaderGen.Glsl;
 using ShaderGen.Hlsl;
@@ -227,39 +228,67 @@ namespace ShaderGen.Tests.Tools
         /// <param name="stage">The stage.</param>
         /// <param name="entryPoint">The entry point.</param>
         /// <param name="outputFile">The outputFile.</param>
+        /// <param name="timeout">The timeout in milliseconds.</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        private ToolResult CompileFile(string path, string code, Stage stage, string entryPoint, string outputFile = null)
+        private ToolResult CompileFile(string path, string code, Stage stage, string entryPoint,
+            string outputFile = null, int timeout = 3000)
         {
             if (!IsAvailable)
                 throw new InvalidOperationException($"The {Name} tool chain is not available!");
 
-            ProcessStartInfo psi = new ProcessStartInfo()
+            using (Process process = new Process())
             {
-                FileName = _toolPath,
-                Arguments = _argumentFormatter(path, stage, entryPoint, outputFile),
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-            };
+                process.StartInfo = new ProcessStartInfo
+                {
+                    FileName = _toolPath,
+                    Arguments = _argumentFormatter(path, stage, entryPoint, outputFile),
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false
+                };
 
-            Process p = null;
-            try
-            {
-                p = Process.Start(psi);
-                if (p?.WaitForExit(6000) != true)
-                    return new ToolResult(this, code, -2, null, $"Timed out calling: {_toolPath} {psi.Arguments}");
+                StringBuilder output = new StringBuilder();
+                StringBuilder error = new StringBuilder();
 
-                string stdOut = p.StandardOutput.ReadToEnd();
-                string stdError = p.StandardError.ReadToEnd();
-                return new ToolResult(this, code, p.ExitCode, stdOut, stdError);
-            }
-            catch (Exception e)
-            {
-                return new ToolResult(this, code, -1, null, $"Exception {e.Message} calling: {_toolPath} {psi.Arguments}");
-            }
-            finally
-            {
-                p?.Close();
+                using (AutoResetEvent outputWaitHandle = new AutoResetEvent(false))
+                using (AutoResetEvent errorWaitHandle = new AutoResetEvent(false))
+                {
+                    // Add handlers to handle data
+                    process.OutputDataReceived += (sender, e) =>
+                    {
+                        if (e.Data == null)
+                            outputWaitHandle.Set();
+                        else
+                            output.AppendLine(e.Data);
+                    };
+                    process.ErrorDataReceived += (sender, e) =>
+                    {
+                        if (e.Data == null)
+                            errorWaitHandle.Set();
+                        else
+                            error.AppendLine(e.Data);
+                    };
+
+                    process.Start();
+
+                    process.BeginOutputReadLine();
+                    process.BeginErrorReadLine();
+
+                    int exitCode;
+                    if (!process.WaitForExit(timeout) || !outputWaitHandle.WaitOne(timeout) ||
+                        !errorWaitHandle.WaitOne(timeout))
+                    {
+                        if (output.Length > 0) output.AppendLine("TIMED OUT!").AppendLine();
+                        error.AppendLine($"Timed out calling: \"{_toolPath}\" {process.StartInfo.Arguments}");
+                        exitCode = int.MinValue;
+                    }
+                    else
+                        exitCode = process.ExitCode;
+
+                    return new ToolResult(this, code, exitCode, output.ToString(), error.ToString());
+                }
             }
         }
 
