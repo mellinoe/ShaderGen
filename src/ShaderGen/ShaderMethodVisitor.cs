@@ -447,7 +447,7 @@ namespace ShaderGen
             string fullName = Utilities.GetFullName(symbolInfo);
 
             InvocationParameterInfo[] parameters = GetParameterInfos(node.ArgumentList);
-            return _backend.FormatInvocation(_setName, fullName, "ctor", parameters);
+            return _backend.FormatInvocation(_setName, fullName, ".ctor", parameters);
         }
 
         private string GetDiscardedVariableType(ISymbol symbol)

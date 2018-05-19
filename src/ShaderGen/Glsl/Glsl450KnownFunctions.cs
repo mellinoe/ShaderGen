@@ -74,7 +74,7 @@ namespace ShaderGen.Glsl
                 { "Subtract", BinaryOpTranslator("-") },
                 { "Length", SimpleNameTranslator("length") },
                 { "LengthSquared", LengthSquared },
-                { "ctor", VectorCtor },
+                { ".ctor", VectorCtor },
                 { "Zero", VectorStaticAccessor },
                 { "One", VectorStaticAccessor },
                 { "UnitX", VectorStaticAccessor },
@@ -106,7 +106,7 @@ namespace ShaderGen.Glsl
                 { "Subtract", BinaryOpTranslator("-") },
                 { "Length", SimpleNameTranslator("length") },
                 { "LengthSquared", LengthSquared },
-                { "ctor", VectorCtor },
+                { ".ctor", VectorCtor },
                 { "Zero", VectorStaticAccessor },
                 { "One", VectorStaticAccessor },
                 { "UnitX", VectorStaticAccessor },
@@ -138,7 +138,7 @@ namespace ShaderGen.Glsl
                 { "Subtract", BinaryOpTranslator("-") },
                 { "Length", SimpleNameTranslator("length") },
                 { "LengthSquared", LengthSquared },
-                { "ctor", VectorCtor },
+                { ".ctor", VectorCtor },
                 { "Zero", VectorStaticAccessor },
                 { "One", VectorStaticAccessor },
                 { "UnitX", VectorStaticAccessor },
@@ -151,14 +151,14 @@ namespace ShaderGen.Glsl
 
             Dictionary<string, InvocationTranslator> u2Mappings = new Dictionary<string, InvocationTranslator>()
             {
-                { "ctor", VectorCtor },
+                { ".ctor", VectorCtor },
             };
             ret.Add("ShaderGen.UInt2", new DictionaryTypeInvocationTranslator(u2Mappings));
             ret.Add("ShaderGen.Int2", new DictionaryTypeInvocationTranslator(u2Mappings));
 
             Dictionary<string, InvocationTranslator> m4x4Mappings = new Dictionary<string, InvocationTranslator>()
             {
-                { "ctor", MatrixCtor }
+                { ".ctor", MatrixCtor }
             };
             ret.Add("System.Numerics.Matrix4x4", new DictionaryTypeInvocationTranslator(m4x4Mappings));
 
