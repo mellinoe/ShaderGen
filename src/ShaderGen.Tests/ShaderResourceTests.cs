@@ -12,11 +12,7 @@ namespace ShaderGen.Tests
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             foreach (LanguageBackend backend in TestUtil.GetAllBackends(compilation))
             {
-                ShaderGenerator sg = new ShaderGenerator(
-                    compilation,
-                    "ShaderGen.Tests.ReferenceTypeField.VS",
-                    null,
-                    backend);
+                ShaderGenerator sg = new ShaderGenerator(compilation, backend, "ShaderGen.Tests.ReferenceTypeField.VS");
 
                 Assert.Throws<ShaderGenerationException>(() => sg.GenerateShaders());
             }

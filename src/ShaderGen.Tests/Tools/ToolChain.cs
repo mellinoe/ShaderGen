@@ -193,7 +193,6 @@ namespace ShaderGen.Tests.Tools
         /// <param name="code">The shader code.</param>
         /// <param name="stage">The stage.</param>
         /// <param name="entryPoint">The entry point.</param>
-        /// <param name="outputFile">The outputFile.</param>
         /// <param name="timeout">The timeout.</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
@@ -212,7 +211,6 @@ namespace ShaderGen.Tests.Tools
         /// <param name="path">The path.</param>
         /// <param name="stage">The stage.</param>
         /// <param name="entryPoint">The entry point.</param>
-        /// <param name="outputFile">The outputFile.</param>
         /// <param name="timeout">The timeout.</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
@@ -229,7 +227,6 @@ namespace ShaderGen.Tests.Tools
         /// <param name="code">The code.</param>
         /// <param name="stage">The stage.</param>
         /// <param name="entryPoint">The entry point.</param>
-        /// <param name="outputFile">The outputFile.</param>
         /// <param name="timeout">The timeout in milliseconds.</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
@@ -258,6 +255,7 @@ namespace ShaderGen.Tests.Tools
                 using (AutoResetEvent errorWaitHandle = new AutoResetEvent(false))
                 {
                     // Add handlers to handle data
+                    // ReSharper disable AccessToDisposedClosure
                     process.OutputDataReceived += (sender, e) =>
                     {
                         if (e.Data == null)
@@ -272,6 +270,7 @@ namespace ShaderGen.Tests.Tools
                         else
                             error.AppendLine(e.Data);
                     };
+                    // ReSharper restore AccessToDisposedClosure
 
                     process.Start();
 

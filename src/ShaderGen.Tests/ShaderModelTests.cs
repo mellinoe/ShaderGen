@@ -16,11 +16,7 @@ namespace ShaderGen.Tests
             string functionName = "TestShaders.TestVertexShader.VS";
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             HlslBackend backend = new HlslBackend(compilation);
-            ShaderGenerator sg = new ShaderGenerator(
-                compilation,
-                functionName,
-                null,
-                backend);
+            ShaderGenerator sg = new ShaderGenerator(compilation, backend, functionName);
             ShaderGenerationResult genResult = sg.GenerateShaders();
             IReadOnlyList<GeneratedShaderSet> sets = genResult.GetOutput(backend);
             Assert.Equal(1, sets.Count);
@@ -41,11 +37,7 @@ namespace ShaderGen.Tests
             string functionName = "TestShaders.TestVertexShader.VS";
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             HlslBackend backend = new HlslBackend(compilation);
-            ShaderGenerator sg = new ShaderGenerator(
-                compilation,
-                functionName,
-                null,
-                backend);
+            ShaderGenerator sg = new ShaderGenerator(compilation, backend, functionName);
             ShaderGenerationResult genResult = sg.GenerateShaders();
             IReadOnlyList<GeneratedShaderSet> sets = genResult.GetOutput(backend);
             Assert.Equal(1, sets.Count);
@@ -66,11 +58,7 @@ namespace ShaderGen.Tests
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             HlslBackend backend = new HlslBackend(compilation);
-            ShaderGenerator sg = new ShaderGenerator(
-                compilation,
-                "TestShaders.PartialVertex.VertexShaderFunc",
-                null,
-                backend);
+            ShaderGenerator sg = new ShaderGenerator(compilation, backend, "TestShaders.PartialVertex.VertexShaderFunc");
 
             ShaderGenerationResult genResult = sg.GenerateShaders();
             IReadOnlyList<GeneratedShaderSet> sets = genResult.GetOutput(backend);
@@ -87,11 +75,7 @@ namespace ShaderGen.Tests
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             HlslBackend backend = new HlslBackend(compilation);
-            ShaderGenerator sg = new ShaderGenerator(
-                compilation,
-                "TestShaders.PointLightTestShaders.VS",
-                null,
-                backend);
+            ShaderGenerator sg = new ShaderGenerator(compilation, backend, "TestShaders.PointLightTestShaders.VS");
 
             ShaderGenerationResult genResult = sg.GenerateShaders();
             IReadOnlyList<GeneratedShaderSet> sets = genResult.GetOutput(backend);
@@ -108,11 +92,7 @@ namespace ShaderGen.Tests
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             HlslBackend backend = new HlslBackend(compilation);
-            ShaderGenerator sg = new ShaderGenerator(
-                compilation,
-                "TestShaders.MultipleResourceSets.VS",
-                null,
-                backend);
+            ShaderGenerator sg = new ShaderGenerator(compilation, backend, "TestShaders.MultipleResourceSets.VS");
 
             ShaderGenerationResult genResult = sg.GenerateShaders();
             IReadOnlyList<GeneratedShaderSet> sets = genResult.GetOutput(backend);
@@ -158,10 +138,7 @@ namespace ShaderGen.Tests
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             HlslBackend backend = new HlslBackend(compilation);
             ShaderGenerator sg = new ShaderGenerator(
-                compilation,
-                "TestShaders.UsedResourcesShaders.VS",
-                "TestShaders.UsedResourcesShaders.FS",
-                backend);
+                compilation, backend, "TestShaders.UsedResourcesShaders.VS", "TestShaders.UsedResourcesShaders.FS");
 
             ShaderGenerationResult genResult = sg.GenerateShaders();
             IReadOnlyList<GeneratedShaderSet> sets = genResult.GetOutput(backend);
@@ -188,11 +165,7 @@ namespace ShaderGen.Tests
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             HlslBackend backend = new HlslBackend(compilation);
-            ShaderGenerator sg = new ShaderGenerator(
-                compilation,
-                "TestShaders.StructureSizeTests.VS",
-                null,
-                backend);
+            ShaderGenerator sg = new ShaderGenerator(compilation, backend, "TestShaders.StructureSizeTests.VS");
 
             ShaderGenerationResult genResult = sg.GenerateShaders();
             IReadOnlyList<GeneratedShaderSet> sets = genResult.GetOutput(backend);

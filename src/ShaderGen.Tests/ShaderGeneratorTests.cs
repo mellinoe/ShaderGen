@@ -84,11 +84,7 @@ namespace ShaderGen.Tests
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             ToolChain toolChain = ToolChain.Get(backendType);
             LanguageBackend backend = toolChain.CreateBackend(compilation);
-            ShaderGenerator sg = new ShaderGenerator(
-                compilation,
-                vsName,
-                fsName,
-                backend);
+            ShaderGenerator sg = new ShaderGenerator(compilation, backend, vsName, fsName, csName);
 
             ShaderGenerationResult generationResult = sg.GenerateShaders();
 
@@ -246,11 +242,7 @@ namespace ShaderGen.Tests
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
             Glsl330Backend backend = new Glsl330Backend(compilation);
-            ShaderGenerator sg = new ShaderGenerator(
-                compilation,
-                vsName,
-                fsName,
-                backend);
+            ShaderGenerator sg = new ShaderGenerator(compilation, backend, vsName, fsName);
 
             Assert.Throws<ShaderGenerationException>(() => sg.GenerateShaders());
         }
