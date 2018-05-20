@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace ShaderGen
 {
@@ -16,7 +15,6 @@ namespace ShaderGen
             { "System.SByte", 1 },
             { "System.UIn16", 2 },
             { "System.Int16", 2 },
-            { "System.Boolean", 4 },
             { "System.UInt32", 4 },
             { "System.Int32", 4 },
             { "System.UInt64", 4 },
@@ -81,6 +79,10 @@ namespace ShaderGen
                 return alignmentInfo;
             }
 
+            // NOTE This check only works for known types accessible to ShaderGen, but it will pick up most non-blittable types.
+            if (BlittableHelper.IsBlittable(symbolFullName) == false)
+                throw new ShaderGenerationException($"Cannot use the {symbolFullName} type in a shader as it is not a blittable type.");
+
             // Unknown type, get the instance fields.
             ITypeSymbol[] fields = typeSymbol.GetMembers()
                 .Where(symb => symb.Kind == SymbolKind.Field && !symb.IsStatic)
@@ -98,6 +100,7 @@ namespace ShaderGen
             // Calculate size of struct from it's fields alignment infos
             foreach (ITypeSymbol fieldType in fields)
             {
+                // Determine if type is blittblae
                 alignmentInfo = Analyze(fieldType);
                 csharpAlignment = Math.Max(csharpAlignment, alignmentInfo.CSharpAlignment);
                 csharpSize += alignmentInfo.CSharpSize + csharpSize % alignmentInfo.CSharpAlignment;
