@@ -44,19 +44,19 @@ namespace TestShaders
                 // Abs
                 case 0:
                     parameters.OutFloat = Abs(parameters.P1Float);
-                    parameters.OutFloatSet = 1;
+                    parameters.OutFloatSet = (uint)1;
                     break;
                 case 1:
                     parameters.OutVector2 = Abs(parameters.P1Vector2);
-                    parameters.OutVector2Set = 1;
+                    parameters.OutVector2Set = (uint)1;
                     break;
                 case 2:
                     parameters.OutVector3 = Abs(parameters.P1Vector3);
-                    parameters.OutVector3Set = 1;
+                    parameters.OutVector3Set = (uint)1;
                     break;
                 case 3:
                     parameters.OutVector4 = Abs(parameters.P1Vector4);
-                    parameters.OutVector4Set = 1;
+                    parameters.OutVector4Set = (uint)1;
                     break;
             }
 

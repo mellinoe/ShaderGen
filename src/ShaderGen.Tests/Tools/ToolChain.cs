@@ -153,7 +153,7 @@ namespace ShaderGen.Tests.Tools
         /// <value>
         ///   <see langword="true"/> if this <see cref="ToolChain"/> is available; otherwise, <see langword="false"/>.
         /// </value>
-        public bool IsAvailable => _toolPath != null || !GraphicsDevice.IsBackendSupported(GraphicsBackend);
+        public bool IsAvailable => _toolPath != null && GraphicsDevice.IsBackendSupported(GraphicsBackend);
 
         /// <summary>
         /// The tool path (currently only single executables supported).

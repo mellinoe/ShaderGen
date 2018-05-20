@@ -27,9 +27,26 @@ namespace ShaderGen.Tests
             _output = output;
         }
 
+
+        [GlslEs300Fact]
+        public void TestShaderBuiltins_GlslEs300()
+            => TestShaderBuiltins(ToolChain.GlslEs300);
+
         [Glsl330Fact]
         public void TestShaderBuiltins_Glsl330()
             => TestShaderBuiltins(ToolChain.Glsl330);
+
+        [Glsl450Fact]
+        public void TestShaderBuiltins_Glsl450()
+            => TestShaderBuiltins(ToolChain.Glsl450);
+
+        [HlslFact]
+        public void TestShaderBuiltins_Hlsl()
+            => TestShaderBuiltins(ToolChain.Hlsl);
+
+        [MetalFact]
+        public void TestShaderBuiltins_Metal()
+            => TestShaderBuiltins(ToolChain.Metal);
 
         private void TestShaderBuiltins(ToolChain toolChain)
         {
