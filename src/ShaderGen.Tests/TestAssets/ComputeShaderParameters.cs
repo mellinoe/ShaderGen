@@ -1,8 +1,10 @@
 ﻿using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace TestShaders
 {
-    public struct ComputeShaderParameters
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct ComputeShaderParameters
     {
         public /*readonly*/ Matrix4x4 P1Matrix;
         public /*readonly*/ Matrix4x4 P2Matrix;
@@ -27,10 +29,10 @@ namespace TestShaders
         public /*readonly*/ Vector2 OutVector2;
 
 
-        public /*readonly*/ bool OutFloatSet;
-        public /*readonly*/ bool OutVector2Set;
-        public /*readonly*/ bool OutVector3Set;
-        public /*readonly*/ bool OutVector4Set;
+        public /*readonly*/ uint OutFloatSet;
+        public /*readonly*/ uint OutVector2Set;
+        public /*readonly*/ uint OutVector3Set;
+        public /*readonly*/ uint OutVector4Set;
 
         /*
         public ComputeShaderParameters(

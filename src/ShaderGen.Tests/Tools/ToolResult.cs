@@ -6,6 +6,9 @@ using System.Text;
 
 namespace ShaderGen.Tests.Tools
 {
+    /// <summary>
+    /// The result of a compilation tool execution.
+    /// </summary>
     public class ToolResult
     {
         /// <summary>
@@ -36,7 +39,7 @@ namespace ShaderGen.Tests.Tools
         /// <summary>
         /// The compiled output (if any); otherwise <see langword="null"/>.
         /// </summary>
-        public readonly IReadOnlyCollection<byte> CompiledOutput;
+        public readonly byte[] CompiledOutput;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ToolResult" /> class.
@@ -46,8 +49,8 @@ namespace ShaderGen.Tests.Tools
         /// <param name="exitCode">The exit code.</param>
         /// <param name="stdOut">The standard out.</param>
         /// <param name="stdError">The standard error.</param>
-        /// <param name="output">The output.</param>
-        public ToolResult(ToolChain toolChain, string code, int exitCode, string stdOut, string stdError, IReadOnlyCollection<byte> outputBytes)
+        /// <param name="outputBytes">The output bytes.</param>
+        public ToolResult(ToolChain toolChain, string code, int exitCode, string stdOut, string stdError, byte[] outputBytes)
         {
             ToolChain = toolChain;
             Code = code ?? string.Empty;

@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis;
 using ShaderGen.Glsl;
 using ShaderGen.Hlsl;
 using ShaderGen.Metal;
+using Veldrid;
 
 namespace ShaderGen.Tests.Tools
 {
@@ -22,9 +23,14 @@ namespace ShaderGen.Tests.Tools
         private delegate string ArgumentFormatterDelegate(string file, Stage stage, string entryPoint, string output = null);
 
         /// <summary>
-        /// All the currently available tools by <see cref="LanguageBackend"/>.
+        /// All the currently available tools by <see cref="LanguageBackend">Backend</see> <see cref="Type"/>.
         /// </summary>
-        private static readonly IReadOnlyDictionary<Type, ToolChain> _toolChains;
+        private static readonly IReadOnlyDictionary<Type, ToolChain> _toolChainsByBackendType;
+
+        /// <summary>
+        /// All the currently available tools by <see cref="GraphicsBackend"/>.
+        /// </summary>
+        private static readonly IReadOnlyDictionary<GraphicsBackend, ToolChain> _toolChainsByGraphicsBackend;
 
         /// <summary>
         /// The HLSL tool chain.
@@ -57,7 +63,7 @@ namespace ShaderGen.Tests.Tools
         /// <value>
         /// All.
         /// </value>
-        public static IEnumerable<ToolChain> All => _toolChains.Values;
+        public static IEnumerable<ToolChain> All => _toolChainsByBackendType.Values;
 
         /// <summary>
         /// Gets all known backend types.
@@ -65,7 +71,7 @@ namespace ShaderGen.Tests.Tools
         /// <value>
         /// All backend types.
         /// </value>
-        public static IEnumerable<Type> AllBackendTypes => _toolChains.Keys;
+        public static IEnumerable<Type> AllBackendTypes => _toolChainsByBackendType.Keys;
 
         /// <summary>
         /// Initializes the <see cref="ToolChain"/> class.
@@ -75,25 +81,27 @@ namespace ShaderGen.Tests.Tools
             List<ToolChain> tools = new List<ToolChain>();
 
             string fxcExe = FindFxcPath();
-            Hlsl = new ToolChain(typeof(HlslBackend), c => new HlslBackend(c), fxcExe, FxcArguments);
+            Hlsl = new ToolChain(typeof(HlslBackend), GraphicsBackend.Direct3D11, c => new HlslBackend(c), fxcExe, FxcArguments);
             tools.Add(Hlsl);
 
             string glslvExe = FindGlslvPath();
 
             string NonVulkan(string f, Stage s, string e, string o) => GlsvArguments(f, s, e, false, o);
-            GlslEs300 = new ToolChain(typeof(GlslEs300Backend), c => new GlslEs300Backend(c), glslvExe, NonVulkan);
-            Glsl330 = new ToolChain(typeof(Glsl330Backend), c => new Glsl330Backend(c), glslvExe, NonVulkan);
-            Glsl450 = new ToolChain(typeof(Glsl450Backend), c => new Glsl450Backend(c), glslvExe, (f, s, e, o) => GlsvArguments(f, s, e, true, o));
+            GlslEs300 = new ToolChain(typeof(GlslEs300Backend), GraphicsBackend.OpenGLES, c => new GlslEs300Backend(c), glslvExe, NonVulkan);
+            Glsl330 = new ToolChain(typeof(Glsl330Backend), GraphicsBackend.OpenGL, c => new Glsl330Backend(c), glslvExe, NonVulkan);
+            Glsl450 = new ToolChain(typeof(Glsl450Backend), GraphicsBackend.Vulkan, c => new Glsl450Backend(c), glslvExe, (f, s, e, o) => GlsvArguments(f, s, e, true, o));
             tools.Add(GlslEs300);
             tools.Add(Glsl330);
             tools.Add(Glsl450);
 
             string metalPath = FindMetalPath();
-            Metal = new ToolChain(typeof(MetalBackend), c => new MetalBackend(c), metalPath, MetalArguments, Encoding.UTF8);
+            Metal = new ToolChain(typeof(MetalBackend), GraphicsBackend.Metal, c => new MetalBackend(c), metalPath,
+                MetalArguments, Encoding.UTF8);
             tools.Add(Metal);
 
-            // Set lookup dictionary
-            _toolChains = tools.ToDictionary(t => t.BackendType);
+            // Set lookup dictionarys
+            _toolChainsByBackendType = tools.ToDictionary(t => t.BackendType);
+            _toolChainsByGraphicsBackend = tools.ToDictionary(t => t.GraphicsBackend);
         }
 
         /// <summary>
@@ -102,7 +110,7 @@ namespace ShaderGen.Tests.Tools
         /// <param name="backendType">Type of the backend.</param>
         /// <returns>A <see cref="ToolChain"/> if available; otherwise <see langword="null"/>.</returns>
         public static ToolChain Get(Type backendType) =>
-            _toolChains.TryGetValue(backendType, out ToolChain toolChain) ? toolChain : null;
+            _toolChainsByBackendType.TryGetValue(backendType, out ToolChain toolChain) ? toolChain : null;
 
         /// <summary>
         /// Gets the <see cref="ToolChain" /> for the specified backend.
@@ -112,7 +120,22 @@ namespace ShaderGen.Tests.Tools
         /// A <see cref="ToolChain" /> if available; otherwise <see langword="null" />.
         /// </returns>
         public static ToolChain Get(LanguageBackend backend) =>
-            _toolChains.TryGetValue(backend.GetType(), out ToolChain toolChain) ? toolChain : null;
+            _toolChainsByBackendType.TryGetValue(backend.GetType(), out ToolChain toolChain) ? toolChain : null;
+
+        /// <summary>
+        /// Gets the <see cref="ToolChain" /> for the specified <see cref="GraphicsBackend"/>.
+        /// </summary>
+        /// <param name="graphicsBackend">The graphics backend.</param>
+        /// <returns>
+        /// A <see cref="ToolChain" /> if available; otherwise <see langword="null" />.
+        /// </returns>
+        public static ToolChain Get(GraphicsBackend graphicsBackend) =>
+            _toolChainsByGraphicsBackend.TryGetValue(graphicsBackend, out ToolChain toolChain) ? toolChain : null;
+
+        /// <summary>
+        /// The graphics backend.
+        /// </summary>
+        public readonly GraphicsBackend GraphicsBackend;
 
         /// <summary>
         /// The name of the backend this tool supports.
@@ -130,7 +153,7 @@ namespace ShaderGen.Tests.Tools
         /// <value>
         ///   <see langword="true"/> if this <see cref="ToolChain"/> is available; otherwise, <see langword="false"/>.
         /// </value>
-        public bool IsAvailable => _toolPath != null;
+        public bool IsAvailable => _toolPath != null || !GraphicsDevice.IsBackendSupported(GraphicsBackend);
 
         /// <summary>
         /// The tool path (currently only single executables supported).
@@ -157,12 +180,13 @@ namespace ShaderGen.Tests.Tools
         /// could be easily extended to support multiple steps.
         /// </summary>
         /// <param name="backendType">Type of the backend.</param>
+        /// <param name="graphicsBackend">The graphics backend.</param>
         /// <param name="createBackend">The function to create the backend.</param>
         /// <param name="toolPath">The tool path.</param>
         /// <param name="argumentFormatter">The argument formatter.</param>
         /// <param name="preferredFileEncoding">The preferred file encoding.</param>
         /// <exception cref="ArgumentOutOfRangeException">backendType</exception>
-        private ToolChain(Type backendType, Func<Compilation, LanguageBackend> createBackend, string toolPath, ArgumentFormatterDelegate argumentFormatter, Encoding preferredFileEncoding = default(Encoding))
+        private ToolChain(Type backendType, GraphicsBackend graphicsBackend, Func<Compilation, LanguageBackend> createBackend, string toolPath, ArgumentFormatterDelegate argumentFormatter, Encoding preferredFileEncoding = default(Encoding))
         {
             if (!backendType.IsSubclassOf(typeof(LanguageBackend)))
                 throw new ArgumentOutOfRangeException(nameof(backendType),
@@ -177,8 +201,17 @@ namespace ShaderGen.Tests.Tools
             _createBackend = createBackend;
             _toolPath = string.IsNullOrWhiteSpace(toolPath) ? null : toolPath;
             _argumentFormatter = argumentFormatter;
+            GraphicsBackend = graphicsBackend;
             _preferredFileEncoding = preferredFileEncoding ?? Encoding.Default;
         }
+
+        /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
+        /// </returns>
+        public override string ToString() => $"{Name} tool chain";
 
         /// <summary>
         /// Creates the backend.
@@ -288,8 +321,10 @@ namespace ShaderGen.Tests.Tools
                     else
                         exitCode = process.ExitCode;
 
-                    // Get compiled output (if any).
-                    IReadOnlyCollection<byte> outputBytes = !File.Exists(tempFile) ? null : File.ReadAllBytes(tempFile);
+                    // Get compiled output (if any), otherwise use the source code.
+                    byte[] outputBytes = !File.Exists(tempFile)
+                        ? _preferredFileEncoding.GetBytes(code)
+                        : File.ReadAllBytes(tempFile);
 
                     return new ToolResult(this, code, exitCode, output.ToString(), error.ToString(), outputBytes);
                 }
