@@ -15,11 +15,6 @@ namespace TestShaders
         /// </summary>
         public const uint Methods = 4;
 
-        /// <summary>
-        /// The number of flag bytes in <see cref="ComputeShaderParameters"/>.
-        /// </summary>
-        public const uint FlagBytes = 16;
-
         [ResourceSet(0)] public RWStructuredBuffer<ComputeShaderParameters> InOutParameters;
 
         [ComputeShader(1, 1, 1)]
@@ -44,19 +39,15 @@ namespace TestShaders
                 // Abs
                 case 0:
                     parameters.OutFloat = Abs(parameters.P1Float);
-                    parameters.OutFloatSet = (uint)1;
                     break;
                 case 1:
                     parameters.OutVector2 = Abs(parameters.P1Vector2);
-                    parameters.OutVector2Set = (uint)1;
                     break;
                 case 2:
                     parameters.OutVector3 = Abs(parameters.P1Vector3);
-                    parameters.OutVector3Set = (uint)1;
                     break;
                 case 3:
                     parameters.OutVector4 = Abs(parameters.P1Vector4);
-                    parameters.OutVector4Set = (uint)1;
                     break;
             }
 

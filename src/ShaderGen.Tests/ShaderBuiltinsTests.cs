@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using ShaderGen.Glsl;
-using ShaderGen.Hlsl;
 using ShaderGen.Tests.Attributes;
 using ShaderGen.Tests.Tools;
 using TestShaders;
@@ -84,53 +83,23 @@ namespace ShaderGen.Tests
             else
                 _output.WriteLine($"Compiled Compute Shader from set \"{set.Name}\"!");
 
-
             /*
-             * Build test data
+             * Build test data in parallel
              */
+            // We need two copies, one for the CPU & one for GPU
             ComputeShaderParameters[] cpuParameters = new ComputeShaderParameters[ShaderBuiltinsComputeTest.Methods];
-            Random random = new Random();
+            ComputeShaderParameters[] gpuParameters = new ComputeShaderParameters[ShaderBuiltinsComputeTest.Methods];
 
             int sizeOfParametersStruct = Unsafe.SizeOf<ComputeShaderParameters>();
-            int writeSize = sizeOfParametersStruct - (int)ShaderBuiltinsComputeTest.FlagBytes; // Don't set flag bytes
-            Parallel.For(0, ShaderBuiltinsComputeTest.Methods,
-                i =>
-                {
-                    /*
-                     * Fast code to initialise all but the output flags of the compute shader to random values
-                     * TODO: .net core 2.1 Span<byte> can do this even quicker.
-                     */
-                    unsafe
-                    {
-                        // Create new empty parameters object an assign it to array.
-                        cpuParameters[i] = new ComputeShaderParameters();
-
-                        // This buffer holds a random number
-                        byte[] buffer = new byte[4];
-                        int pi = 0;
-
-                        // Grab pointer to struct
-                        ref byte asRefByte = ref Unsafe.As<ComputeShaderParameters, byte>(ref cpuParameters[i]);
-                        fixed (byte* ptr = &asRefByte)
-                            while (pi < writeSize)
-                            {
-                                int b = pi % 4;
-                                if (b == 0)
-                                    // Update random number in buffer every 4 bytes
-                                    random.NextBytes(buffer);
-                                *(ptr + pi++) = buffer[b];
-                            }
-                    }
-                });
-
-            // Clone parameters for GPU
-            ComputeShaderParameters[] gpuParameters = new ComputeShaderParameters[cpuParameters.Length];
-            Array.Copy(cpuParameters, gpuParameters, cpuParameters.Length);
+            Parallel.For(
+                0,
+                ShaderBuiltinsComputeTest.Methods,
+                i => cpuParameters[i] = gpuParameters[i] = GetRandom<ComputeShaderParameters>());
 
             _output.WriteLine($"Generated random parameters for {ShaderBuiltinsComputeTest.Methods} methods.");
 
             /*
-             * Run shader on CPU.
+             * Run shader on CPU in parallel
              */
             ShaderBuiltinsComputeTest cpuTest = new ShaderBuiltinsComputeTest
             {
@@ -143,7 +112,7 @@ namespace ShaderGen.Tests
             /*
              * Run shader on GPU.
              */
-            WindowCreateInfo windowCreateInfo = new WindowCreateInfo()
+            WindowCreateInfo windowCreateInfo = new WindowCreateInfo
             {
                 X = 100,
                 Y = 100,
@@ -161,8 +130,6 @@ namespace ShaderGen.Tests
             using (GraphicsDevice graphicsDevice =
                 VeldridStartup.CreateGraphicsDevice(window, options, toolChain.GraphicsBackend))
             {
-                _output.WriteLine($"Created graphics device using {toolChain.GraphicsBackend}.");
-
                 ResourceFactory factory = graphicsDevice.ResourceFactory;
                 using (DeviceBuffer inOutBuffer = factory.CreateBuffer(
                     new BufferDescription(
@@ -209,7 +176,6 @@ namespace ShaderGen.Tests
 
                     graphicsDevice.SubmitCommands(commandList);
                     graphicsDevice.WaitForIdle();
-                    _output.WriteLine("Executed compute shaders.");
 
                     // Read back parameters
                     MappedResourceView<ComputeShaderParameters> map = graphicsDevice.Map<ComputeShaderParameters>(inOutBuffer, MapMode.Write);
@@ -219,13 +185,71 @@ namespace ShaderGen.Tests
                     graphicsDevice.WaitForIdle();
                 }
             }
+
+            _output.WriteLine($"Executed compute shader using {toolChain.GraphicsBackend}.");
+
+            /*
+             * Compare results
+             */
+
+            // Get dictionary of parameter fields
+            Dictionary<string, FieldInfo> fieldInfos = typeof(ComputeShaderParameters).GetFields().ToDictionary(f => f.Name);
+            bool failed = false;
+            for (int i = 0; i < ShaderBuiltinsComputeTest.Methods; i++)
+            {
+                var cpu = cpuParameters[i];
+                var gpu = gpuParameters[i];
+
+                foreach (var kvp in fieldInfos)
+                {
+                    object aValue = kvp.Value.GetValue(cpu);
+                    object bValue = kvp.Value.GetValue(gpu);
+                    if (Equals(aValue, bValue)) continue;
+
+                    _output.WriteLine($"CPU.{kvp.Key} '{aValue}' != GPU.{kvp.Key} '{bValue}'");
+                    failed = true;
+                }
+            }
+
+            Assert.False(failed, "GPU and CPU results were not identical!");
+
+            _output.WriteLine("CPU & CPU results were identical for all methods!");
         }
 
-        public static float RandomFloat(Random randomGenerator)
+        /// <summary>
+        /// The random number generators for each thread.
+        /// </summary>
+        private static readonly ThreadLocal<Random> _randomGenerators =
+            new ThreadLocal<Random>(() => new Random());
+
+        /// <summary>
+        /// Create a type with random data.
+        /// </summary>
+        /// <typeparam name="T">The random type</typeparam>
+        /// <param name="size">The optional number of bytes to fill.</param>
+        /// <returns></returns>
+        public unsafe T GetRandom<T>(int size = default(int))
         {
-            byte[] bytes = new byte[4];
-            randomGenerator.NextBytes(bytes);
-            return BitConverter.ToSingle(bytes, 0);
+            Random random = _randomGenerators.Value;
+            size = Math.Min(Unsafe.SizeOf<T>(), size < 1 ? Int32.MaxValue : size);
+            T result = Activator.CreateInstance<T>();
+            // This buffer holds a random number
+            byte[] buffer = new byte[4];
+            int pi = 0;
+
+            // Grab pointer to struct
+            ref byte asRefByte = ref Unsafe.As<T, byte>(ref result);
+            fixed (byte* ptr = &asRefByte)
+                while (pi < size)
+                {
+                    int b = pi % 4;
+                    if (b == 0)
+                        // Update random number in buffer every 4 bytes
+                        random.NextBytes(buffer);
+                    *(ptr + pi++) = buffer[b];
+                }
+
+            return result;
         }
 
         private class ShaderSetProcessor : IShaderSetProcessor

@@ -28,12 +28,6 @@ namespace TestShaders
         public /*readonly*/ Vector2 P3Vector2;
         public /*readonly*/ Vector2 OutVector2;
 
-
-        public /*readonly*/ uint OutFloatSet;
-        public /*readonly*/ uint OutVector2Set;
-        public /*readonly*/ uint OutVector3Set;
-        public /*readonly*/ uint OutVector4Set;
-
         /*
         public ComputeShaderParameters(
             float p1Float = default(float),
