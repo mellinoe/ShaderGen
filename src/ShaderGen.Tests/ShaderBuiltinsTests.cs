@@ -206,7 +206,7 @@ namespace ShaderGen.Tests
                     object bValue = kvp.Value.GetValue(gpu);
                     if (Equals(aValue, bValue)) continue;
 
-                    _output.WriteLine($"CPU.{kvp.Key} '{aValue}' != GPU.{kvp.Key} '{bValue}'");
+                    _output.WriteLine($"Method {i} inconsistent: CPU.{kvp.Key} '{aValue}' != GPU.{kvp.Key} '{bValue}'");
                     failed = true;
                 }
             }
