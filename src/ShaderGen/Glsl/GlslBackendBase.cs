@@ -133,7 +133,7 @@ namespace ShaderGen.Glsl
 
             // Append version last because it relies on information from parsing the shader.
             StringBuilder versionSB = new StringBuilder();
-            WriteVersionHeader(function, versionSB);
+            WriteVersionHeader(function, entryPoint.OrderedFunctionList, versionSB);
 
             sb.Insert(0, versionSB.ToString());
 
@@ -393,7 +393,10 @@ namespace ShaderGen.Glsl
             "input", "output",
         };
 
-        protected abstract void WriteVersionHeader(ShaderFunction function, StringBuilder sb);
+        protected abstract void WriteVersionHeader(
+            ShaderFunction function,
+            ShaderFunctionAndMethodDeclarationSyntax[] orderedFunctions,
+            StringBuilder sb);
         protected abstract void WriteUniform(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteSampler(StringBuilder sb, ResourceDefinition rd);
         protected abstract void WriteSamplerComparison(StringBuilder sb, ResourceDefinition rd);
