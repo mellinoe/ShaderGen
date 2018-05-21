@@ -322,9 +322,9 @@ namespace ShaderGen.Tests.Tools
                         exitCode = process.ExitCode;
 
                     // Get compiled output (if any), otherwise use the source code.
-                    byte[] outputBytes = !File.Exists(tempFile)
-                        ? _preferredFileEncoding.GetBytes(code)
-                        : File.ReadAllBytes(tempFile);
+                    byte[] outputBytes = File.ReadAllBytes(tempFile);
+                    if (outputBytes.Length < 1)
+                        outputBytes = _preferredFileEncoding.GetBytes(code);
 
                     return new ToolResult(this, code, exitCode, output.ToString(), error.ToString(), outputBytes);
                 }

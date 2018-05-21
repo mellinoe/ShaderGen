@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -83,6 +84,8 @@ namespace ShaderGen.Tests
             else
                 _output.WriteLine($"Compiled Compute Shader from set \"{set.Name}\"!");
 
+            Assert.NotNull(compilationResult.CompiledOutput);
+
             /*
              * Build test data in parallel
              */
@@ -134,7 +137,7 @@ namespace ShaderGen.Tests
                 using (DeviceBuffer inOutBuffer = factory.CreateBuffer(
                     new BufferDescription(
                         (uint)sizeOfParametersStruct * ShaderBuiltinsComputeTest.Methods,
-                        BufferUsage.StructuredBufferReadWrite | BufferUsage.Dynamic,
+                        BufferUsage.StructuredBufferReadWrite,
                         (uint)sizeOfParametersStruct)))
 
                 using (Shader computeShader = factory.CreateShader(
@@ -177,12 +180,21 @@ namespace ShaderGen.Tests
                     graphicsDevice.SubmitCommands(commandList);
                     graphicsDevice.WaitForIdle();
 
-                    // Read back parameters
-                    MappedResourceView<ComputeShaderParameters> map = graphicsDevice.Map<ComputeShaderParameters>(inOutBuffer, MapMode.Write);
-                    for (int i = 0; i < gpuParameters.Length; i++)
-                        gpuParameters[i] = map[i];
-                    graphicsDevice.Unmap(inOutBuffer);
-                    graphicsDevice.WaitForIdle();
+                    // Read back parameters using a staging buffer
+                    using (DeviceBuffer stagingBuffer = factory.CreateBuffer(new BufferDescription(inOutBuffer.SizeInBytes, BufferUsage.Staging)))
+                    {
+                        commandList.Begin();
+                        commandList.CopyBuffer(inOutBuffer, 0, stagingBuffer, 0, stagingBuffer.SizeInBytes);
+                        commandList.End();
+                        graphicsDevice.SubmitCommands(commandList);
+                        graphicsDevice.WaitForIdle();
+
+                        // Read back parameters
+                        MappedResourceView<ComputeShaderParameters> map = graphicsDevice.Map<ComputeShaderParameters>(stagingBuffer, MapMode.Read);
+                        for (int i = 0; i < gpuParameters.Length; i++)
+                            gpuParameters[i] = map[i];
+                        graphicsDevice.Unmap(stagingBuffer);
+                    }
                 }
             }
 
@@ -191,22 +203,15 @@ namespace ShaderGen.Tests
             /*
              * Compare results
              */
-
-            // Get dictionary of parameter fields
-            Dictionary<string, FieldInfo> fieldInfos = typeof(ComputeShaderParameters).GetFields().ToDictionary(f => f.Name);
             bool failed = false;
+
             for (int i = 0; i < ShaderBuiltinsComputeTest.Methods; i++)
             {
-                var cpu = cpuParameters[i];
-                var gpu = gpuParameters[i];
+                ComputeShaderParameters cpu = cpuParameters[i];
+                ComputeShaderParameters gpu = gpuParameters[i];
 
-                foreach (var kvp in fieldInfos)
+                foreach (Tuple<string, object, object> tuple in DeepCompareObjectFields(cpu, gpu))
                 {
-                    object aValue = kvp.Value.GetValue(cpu);
-                    object bValue = kvp.Value.GetValue(gpu);
-                    if (Equals(aValue, bValue)) continue;
-
-                    _output.WriteLine($"Method {i} inconsistent: CPU.{kvp.Key} '{aValue}' != GPU.{kvp.Key} '{bValue}'");
                     failed = true;
                 }
             }
@@ -215,6 +220,61 @@ namespace ShaderGen.Tests
 
             _output.WriteLine("CPU & CPU results were identical for all methods!");
         }
+
+        public static IReadOnlyCollection<Tuple<string, object, object>> DeepCompareObjectFields<T>(T a, T b)
+        {
+            // Creat failures list
+            List<Tuple<string, object, object>> failures = new List<Tuple<string, object, object>>();
+
+            // Get dictionary of fields by field name and type
+            Dictionary<Type, IReadOnlyCollection<FieldInfo>> childFieldInfos =
+                new Dictionary<Type, IReadOnlyCollection<FieldInfo>>();
+
+            Type currentType = typeof(T);
+            object aValue = a;
+            object bValue = b;
+            Stack<Tuple<string, Type, object, object>> stack = new Stack<Tuple<string, Type, object, object>>();
+            stack.Push(Tuple.Create(string.Empty, currentType, aValue, bValue));
+
+            while (stack.Count > 0)
+            {
+                // Pop top of stack.
+                Tuple<string, Type, object, object> tuple = stack.Pop();
+                currentType = tuple.Item2;
+                aValue = tuple.Item3;
+                bValue = tuple.Item4;
+
+                if (Equals(aValue, bValue)) continue;
+
+                // Get fields (cached)
+                if (!childFieldInfos.TryGetValue(currentType, out IReadOnlyCollection<FieldInfo> childFields))
+                    childFieldInfos.Add(currentType, childFields = currentType.GetFields().Where(f => !f.IsStatic).ToArray());
+
+                if (childFields.Count < 1)
+                {
+                    // No child fields, we have an inequality
+                    string fullName = tuple.Item1;
+                    failures.Add(Tuple.Create(fullName, aValue, bValue));
+                    continue;
+                }
+
+                foreach (FieldInfo childField in childFields)
+                {
+                    object aMemberValue = childField.GetValue(aValue);
+                    object bMemberValue = childField.GetValue(bValue);
+
+                    // Short cut equality
+                    if (Equals(aMemberValue, bMemberValue)) continue;
+                    string fullName = string.IsNullOrWhiteSpace(tuple.Item1)
+                        ? childField.Name
+                        : $"{tuple.Item1}.{childField.Name}";
+                    stack.Push(Tuple.Create(fullName, childField.FieldType, aMemberValue, bMemberValue));
+                }
+            }
+
+            return failures.AsReadOnly();
+        }
+
 
         /// <summary>
         /// The random number generators for each thread.

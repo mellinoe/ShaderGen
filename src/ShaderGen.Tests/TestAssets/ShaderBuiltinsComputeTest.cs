@@ -28,13 +28,13 @@ namespace TestShaders
          */
         public void DoCS(UInt3 dispatchThreadID)
         {
-            uint index = dispatchThreadID.X;
+            int index = (int)dispatchThreadID.X;
 
             // ReSharper disable once RedundantCast - WORKAROUND for #75
-            if (index >= (uint)Methods) return;
+            if (index >= Methods) return;
 
             ComputeShaderParameters parameters = InOutParameters[index];
-            switch (dispatchThreadID.X)
+            switch (index)
             {
                 // Abs
                 case 0:
