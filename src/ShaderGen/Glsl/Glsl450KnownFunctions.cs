@@ -344,7 +344,7 @@ namespace ShaderGen.Glsl
 
         private static string Discard(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"discard;";
+            return $"discard";
         }
 
         private static string Saturate(string typeName, string methodName, InvocationParameterInfo[] parameters)

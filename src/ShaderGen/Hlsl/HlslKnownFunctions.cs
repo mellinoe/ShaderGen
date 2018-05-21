@@ -311,7 +311,7 @@ namespace ShaderGen.Hlsl
 
         private static string Discard(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"discard;";
+            return $"discard";
         }
 
         private static string ClipToTextureCoordinates(string typeName, string methodName, InvocationParameterInfo[] parameters)
