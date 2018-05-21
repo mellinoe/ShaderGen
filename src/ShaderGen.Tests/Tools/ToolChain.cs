@@ -11,6 +11,8 @@ using ShaderGen.Glsl;
 using ShaderGen.Hlsl;
 using ShaderGen.Metal;
 using Veldrid;
+using Veldrid.Sdl2;
+using Veldrid.StartupUtilities;
 
 namespace ShaderGen.Tests.Tools
 {
@@ -81,21 +83,23 @@ namespace ShaderGen.Tests.Tools
             List<ToolChain> tools = new List<ToolChain>();
 
             string fxcExe = FindFxcPath();
-            Hlsl = new ToolChain(typeof(HlslBackend), GraphicsBackend.Direct3D11, c => new HlslBackend(c), fxcExe, FxcArguments);
+            Hlsl = new ToolChain(typeof(HlslBackend), GraphicsBackend.Direct3D11, c => new HlslBackend(c), CreateHeadlessD3D, fxcExe, FxcArguments);
             tools.Add(Hlsl);
 
             string glslvExe = FindGlslvPath();
 
             string NonVulkan(string f, Stage s, string e, string o) => GlsvArguments(f, s, e, false, o);
-            GlslEs300 = new ToolChain(typeof(GlslEs300Backend), GraphicsBackend.OpenGLES, c => new GlslEs300Backend(c), glslvExe, NonVulkan);
-            Glsl330 = new ToolChain(typeof(Glsl330Backend), GraphicsBackend.OpenGL, c => new Glsl330Backend(c), glslvExe, NonVulkan);
-            Glsl450 = new ToolChain(typeof(Glsl450Backend), GraphicsBackend.Vulkan, c => new Glsl450Backend(c), glslvExe, (f, s, e, o) => GlsvArguments(f, s, e, true, o));
+            GlslEs300 = new ToolChain(typeof(GlslEs300Backend), GraphicsBackend.OpenGLES, c => new GlslEs300Backend(c), () => CreateHeadlessGL(GraphicsBackend.OpenGLES), glslvExe, NonVulkan);
+            Glsl330 = new ToolChain(typeof(Glsl330Backend), GraphicsBackend.OpenGL, c => new Glsl330Backend(c),
+                () => CreateHeadlessGL(GraphicsBackend.OpenGL), glslvExe, NonVulkan);
+            Glsl450 = new ToolChain(typeof(Glsl450Backend), GraphicsBackend.Vulkan, c => new Glsl450Backend(c), CreateHeadlessVulkan, glslvExe, (f, s, e, o) => GlsvArguments(f, s, e, true, o));
             tools.Add(GlslEs300);
             tools.Add(Glsl330);
             tools.Add(Glsl450);
 
             string metalPath = FindMetalPath();
-            Metal = new ToolChain(typeof(MetalBackend), GraphicsBackend.Metal, c => new MetalBackend(c), metalPath,
+            Metal = new ToolChain(typeof(MetalBackend), GraphicsBackend.Metal, c => new MetalBackend(c),
+                CreateHeadlessMetal, metalPath,
                 MetalArguments, Encoding.UTF8);
             tools.Add(Metal);
 
@@ -176,17 +180,30 @@ namespace ShaderGen.Tests.Tools
         private readonly Func<Compilation, LanguageBackend> _createBackend;
 
         /// <summary>
+        /// Function to create a headless graphics device.
+        /// </summary>
+        private readonly Func<GraphicsDevice> _createHeadless;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ToolChain" /> class.  For now tool chains are single tools, but this
         /// could be easily extended to support multiple steps.
         /// </summary>
         /// <param name="backendType">Type of the backend.</param>
         /// <param name="graphicsBackend">The graphics backend.</param>
         /// <param name="createBackend">The function to create the backend.</param>
+        /// <param name="createHeadless">The function to create a headless graphics device.</param>
         /// <param name="toolPath">The tool path.</param>
         /// <param name="argumentFormatter">The argument formatter.</param>
         /// <param name="preferredFileEncoding">The preferred file encoding.</param>
         /// <exception cref="ArgumentOutOfRangeException">backendType</exception>
-        private ToolChain(Type backendType, GraphicsBackend graphicsBackend, Func<Compilation, LanguageBackend> createBackend, string toolPath, ArgumentFormatterDelegate argumentFormatter, Encoding preferredFileEncoding = default(Encoding))
+        private ToolChain(
+            Type backendType,
+            GraphicsBackend graphicsBackend,
+            Func<Compilation, LanguageBackend> createBackend,
+            Func<GraphicsDevice> createHeadless,
+            string toolPath,
+            ArgumentFormatterDelegate argumentFormatter,
+            Encoding preferredFileEncoding = default(Encoding))
         {
             if (!backendType.IsSubclassOf(typeof(LanguageBackend)))
                 throw new ArgumentOutOfRangeException(nameof(backendType),
@@ -199,6 +216,7 @@ namespace ShaderGen.Tests.Tools
 
             BackendType = backendType;
             _createBackend = createBackend;
+            _createHeadless = createHeadless;
             _toolPath = string.IsNullOrWhiteSpace(toolPath) ? null : toolPath;
             _argumentFormatter = argumentFormatter;
             GraphicsBackend = graphicsBackend;
@@ -219,6 +237,12 @@ namespace ShaderGen.Tests.Tools
         /// <param name="compilation">The compilation.</param>
         /// <returns></returns>
         public LanguageBackend CreateBackend(Compilation compilation) => _createBackend(compilation);
+
+        /// <summary>
+        /// Creates a headless <see cref="GraphicsDevice" />
+        /// </summary>
+        /// <returns></returns>
+        public GraphicsDevice CreateHeadless() => _createHeadless();
 
         /// <summary>
         /// Compiles the specified path.
@@ -457,5 +481,49 @@ namespace ShaderGen.Tests.Tools
             args.Append($" \"{file}\"");
             return args.ToString();
         }
+
+        private static GraphicsDevice CreateHeadlessGL(GraphicsBackend backend)
+        {
+            WindowCreateInfo windowCreateInfo = new WindowCreateInfo
+            {
+                X = 0,
+                Y = 0,
+                WindowWidth = 1,
+                WindowHeight = 1,
+                WindowTitle = "Headless Graphics",
+                WindowInitialState = WindowState.Hidden
+            };
+            Sdl2Window window = VeldridStartup.CreateWindow(ref windowCreateInfo);
+            GraphicsDeviceOptions options = new GraphicsDeviceOptions(
+                true,
+                PixelFormat.R16_UNorm,
+                true,
+                ResourceBindingModel.Improved);
+            return VeldridStartup.CreateDefaultOpenGLGraphicsDevice(options, window, backend);
+        }
+
+        private static GraphicsDevice CreateHeadlessVulkan() =>
+            GraphicsDevice.CreateVulkan(
+                new GraphicsDeviceOptions(
+                    true,
+                    PixelFormat.R16_UNorm,
+                    true,
+                    ResourceBindingModel.Improved));
+
+        private static GraphicsDevice CreateHeadlessD3D() =>
+            GraphicsDevice.CreateD3D11(
+                new GraphicsDeviceOptions(
+                    true,
+                    PixelFormat.R16_UNorm,
+                    true,
+                    ResourceBindingModel.Improved));
+
+        private static GraphicsDevice CreateHeadlessMetal() =>
+            GraphicsDevice.CreateMetal(
+                new GraphicsDeviceOptions(
+                    true,
+                    PixelFormat.R16_UNorm,
+                    true,
+                    ResourceBindingModel.Improved));
     }
 }
