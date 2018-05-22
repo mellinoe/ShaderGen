@@ -160,10 +160,12 @@ namespace ShaderGen.Tests.Tools
         /// </value>
         public bool IsAvailable => _toolPath != null;
 
+        private readonly Lazy<bool> _headlessAvailable;
+
         /// <summary>
         /// Indicates whether a headless graphics device is available.
         /// </summary>
-        public readonly bool HeadlessAvailable;
+        public bool HeadlessAvailable => _headlessAvailable.Value;
 
         /// <summary>
         /// The tool path (currently only single executables supported).
@@ -227,25 +229,24 @@ namespace ShaderGen.Tests.Tools
             _argumentFormatter = argumentFormatter;
             GraphicsBackend = graphicsBackend;
             _preferredFileEncoding = preferredFileEncoding ?? Encoding.Default;
-
-            if (_toolPath != null &&
-                _createHeadless != null &&
-                GraphicsDevice.IsBackendSupported(GraphicsBackend))
+            _headlessAvailable = new Lazy<bool>(() =>
             {
+                if (_createHeadless == null ||
+                    !GraphicsDevice.IsBackendSupported(GraphicsBackend))
+                    return false;
+
                 try
                 {
                     // Try to create a headless graphics device
                     using (_createHeadless()) { }
 
-                    HeadlessAvailable = true;
+                    return true;
                 }
                 catch
                 {
-                    HeadlessAvailable = false;
-
                 }
-            }
-            else HeadlessAvailable = false;
+                return false;
+            });
         }
 
         /// <summary>

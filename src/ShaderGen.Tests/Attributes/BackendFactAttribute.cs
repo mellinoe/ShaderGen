@@ -40,7 +40,7 @@ namespace ShaderGen.Tests.Attributes
 
                 if (missingBackends.Count < 1) return null;
 
-                string last = missingBackends.Last();
+                string last = missingBackends.LastOrDefault();
                 return missingBackends.Count == 1
                     ? $"The {last} backend's tool chain is not available."
                     : $"The {string.Join(", ", missingBackends.Take(missingBackends.Count - 1))} and {last} backends' tool chains are not available.";
