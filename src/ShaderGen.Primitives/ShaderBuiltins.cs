@@ -189,7 +189,7 @@ namespace ShaderGen
         public static Vector4 Frac(Vector4 value) => new Vector4(Frac(value.X), Frac(value.Y), Frac(value.Z), Frac(value.W));
 
         // Lerp
-        public static float Lerp(float x, float y, float s) => x * s + y * (1f - s);
+        public static float Lerp(float x, float y, float s) => x * (1f - s) + y * s;
         public static Vector2 Lerp(Vector2 x, Vector2 y, Vector2 s) => new Vector2(Lerp(x.X, y.X, s.X), Lerp(x.Y, y.Y, s.Y));
         public static Vector2 Lerp(Vector2 x, Vector2 y, float s) => new Vector2(Lerp(x.X, y.X, s), Lerp(x.Y, y.Y, s));
         public static Vector3 Lerp(Vector3 x, Vector3 y, Vector3 s) => new Vector3(Lerp(x.X, y.X, s.X), Lerp(x.Y, y.Y, s.Y), Lerp(x.Z, y.Z, s.Z));
@@ -289,7 +289,13 @@ namespace ShaderGen
         public static float SmoothStep(float min, float max, float x)
         {
             // From https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/smoothstep.xhtml
-            float t = Saturate(x - min);
+            /*
+             * t = clamp((x - min) / (max - min), 0.0, 1.0);
+             * return t * t * (3.0 - 2.0 * t);
+             * Results are undefined if min ≥ max.
+            */
+            if (min >= max) return float.NaN;
+            float t = Saturate((x - min) / (max - min));
             return t * t * (3f - 2f * t);
         }
         public static Vector2 SmoothStep(Vector2 min, Vector2 max, Vector2 x) => new Vector2(SmoothStep(min.X, max.X, x.X), SmoothStep(min.Y, max.Y, x.Y));

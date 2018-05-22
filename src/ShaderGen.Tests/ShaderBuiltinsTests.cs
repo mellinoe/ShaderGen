@@ -22,9 +22,23 @@ namespace ShaderGen.Tests
     public class ShaderBuiltinsTests
     {
         /// <summary>
-        /// How close float's need to be, to be considered a match.
+        /// How close float's need to be, to be considered a match (ratio).
         /// </summary>
-        private const float Tolerance = 0.001f;// float.Epsilon * 2;
+        private const float Tolerance = 0.001f;
+
+        /// <summary>
+        /// How close float's need to be, to be considered a match (ratio).
+        /// </summary>
+        private const float ToleranceRatio = 0.001f;
+
+        /// <summary>
+        /// Will ignore failures if either value is <see cref="float.NaN"/>.
+        /// </summary>
+        private const bool IgnoreNan = true;
+        /// <summary>
+        /// Will ignore failures if either value is <see cref="float.PositiveInfinity"/> or  <see cref="float.NegativeInfinity"/>
+        /// </summary>
+        private const bool IgnoreInfinity = true;
 
         /// <summary>
         /// The maximum test duration for each backend.
@@ -109,9 +123,9 @@ namespace ShaderGen.Tests
 
             // Create failure data structure, first by method #, then by field name.
             Dictionary<int, List<Tuple<ComputeShaderParameters, ComputeShaderParameters,
-                IReadOnlyCollection<Tuple<string, object, object>>>>> failures
+                IReadOnlyCollection<Tuple<string, float, float>>>>> failures
                 = new Dictionary<int, List<Tuple<ComputeShaderParameters, ComputeShaderParameters,
-                    IReadOnlyCollection<Tuple<string, object, object>>>>>();
+                    IReadOnlyCollection<Tuple<string, float, float>>>>>();
 
             // We need two copies, one for the CPU & one for GPU
             ComputeShaderParameters[] cpuParameters = new ComputeShaderParameters[ShaderBuiltinsComputeTest.Methods];
@@ -215,16 +229,41 @@ namespace ShaderGen.Tests
                             ComputeShaderParameters cpu = cpuParameters[method];
                             ComputeShaderParameters gpu = gpuParameters[method];
 
-                            IReadOnlyCollection<Tuple<string, object, object>> deepCompareObjectFields = DeepCompareObjectFields(cpu, gpu);
+                            // Filter results based on tolerances.
+                            IReadOnlyCollection<Tuple<string, float, float>> deepCompareObjectFields =
+                                DeepCompareObjectFields(cpu, gpu)
+                                    .Select(t => Tuple.Create(t.Item1, (float)t.Item2, (float)t.Item3))
+                                    .Where(t =>
+                                    {
+                                        float a = t.Item2;
+                                        float b = t.Item3;
+                                        bool comparable = true;
+                                        if (float.IsNaN(a) || float.IsNaN(b))
+                                        {
+                                            if (IgnoreNan) return false;
+                                            comparable = false;
+                                        }
+                                        if (float.IsInfinity(a) || float.IsInfinity(b))
+                                        {
+                                            if (IgnoreInfinity) return false;
+                                            comparable = false;
+                                        }
+
+                                        return !comparable ||
+                                               Math.Abs(1.0f - a / b) > ToleranceRatio &&
+                                               Math.Abs(a - b) > Tolerance;
+                                    })
+                                    .ToArray();
+
                             if (deepCompareObjectFields.Count < 1) continue;
 
                             if (!failures.TryGetValue(method, out var methodList))
                                 failures.Add(method, methodList =
                                     new List<Tuple<ComputeShaderParameters, ComputeShaderParameters,
-                                        IReadOnlyCollection<Tuple<string, object, object>>>>());
+                                        IReadOnlyCollection<Tuple<string, float, float>>>>());
                             methodList.Add(
                                 new Tuple<ComputeShaderParameters, ComputeShaderParameters,
-                                    IReadOnlyCollection<Tuple<string, object, object>>>(
+                                    IReadOnlyCollection<Tuple<string, float, float>>>(
                                     cpu, gpu, deepCompareObjectFields));
                         }
 
@@ -248,7 +287,7 @@ namespace ShaderGen.Tests
 
                 // Output failures in descending order.
                 foreach (KeyValuePair<int, List<Tuple<ComputeShaderParameters, ComputeShaderParameters,
-                    IReadOnlyCollection<Tuple<string, object, object>>>>> method in failures.OrderByDescending(kvp =>
+                    IReadOnlyCollection<Tuple<string, float, float>>>>> method in failures.OrderByDescending(kvp =>
                     kvp.Value.Count))
                 {
                     int methodFailureCount = method.Value.Count;
@@ -257,9 +296,8 @@ namespace ShaderGen.Tests
                     _output.WriteLine(
                         $"Method {method.Key} failed {methodFailureCount} times ({100f * methodFailureCount / loops:##.##}%).");
 
-                    foreach (IGrouping<string, Tuple<float, float>> group in method.Value.SelectMany(t => t.Item3)
-                        .ToLookup(f => f.Item1,
-                            f => Tuple.Create((float)f.Item2, (float)f.Item3)).OrderByDescending(g => g.Count()))
+                    foreach (IGrouping<string, Tuple<string, float, float>> group in method.Value.SelectMany(t => t.Item3)
+                        .ToLookup(f => f.Item1).OrderByDescending(g => g.Count()))
                     {
                         _output.WriteLine(spacer2);
                         _output.WriteLine(string.Empty);
@@ -268,7 +306,7 @@ namespace ShaderGen.Tests
                         _output.WriteLine($"  {group.Key} failed {fieldFailureCount} times ({100f * fieldFailureCount / methodFailureCount:##.##}%)");
 
                         int examples = 0;
-                        foreach (Tuple<float, float> tuple in group)
+                        foreach (Tuple<string, float, float> tuple in group)
                         {
                             if (examples++ > 10)
                             {
@@ -276,7 +314,7 @@ namespace ShaderGen.Tests
                                 break;
                             }
 
-                            _output.WriteLine($"    {tuple.Item1,13} != {tuple.Item2}");
+                            _output.WriteLine($"    {tuple.Item2,13} != {tuple.Item3}");
                         }
                     }
                 }
@@ -318,11 +356,6 @@ namespace ShaderGen.Tests
 
                 if (childFields.Count < 1)
                 {
-                    // Use float tolerance check
-                    if (currentType == typeof(float) &&
-                        Math.Abs((float)aValue - (float)bValue) <= Tolerance)
-                        continue;
-
                     // No child fields, we have an inequality
                     string fullName = tuple.Item1;
                     failures.Add(Tuple.Create(fullName, aValue, bValue));
