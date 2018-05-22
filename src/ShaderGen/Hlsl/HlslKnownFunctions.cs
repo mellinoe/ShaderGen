@@ -587,6 +587,7 @@ namespace ShaderGen.Hlsl
         {
             InvocationParameterInfo firstParameter = parameters[0];
             string target = firstParameter.Identifier;
+            // Note this is pretty inaccurate on the GPU!
             return
                 $"log(({Cvc(firstParameter.FullTypeName, 1f)}+{target})/({Cvc(firstParameter.FullTypeName, 1f)}-{target})/{Cvc(firstParameter.FullTypeName, 2f)})";
         }

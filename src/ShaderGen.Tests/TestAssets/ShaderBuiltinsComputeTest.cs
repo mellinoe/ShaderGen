@@ -14,7 +14,7 @@ namespace TestShaders
         /// <summary>
         /// The number of methods.
         /// </summary>
-        public const uint Methods = 153;
+        public const uint Methods = 147;
 
         [ResourceSet(0)] public RWStructuredBuffer<ComputeShaderParameters> InOutParameters;
 
@@ -400,161 +400,143 @@ namespace TestShaders
                     parameters.OutVector4 = Mod(parameters.P1Vector4, parameters.P2Vector4);
                     break;
 
-                // Mod:
+                // Mul:
                 case 107:
-                    parameters.OutFloat = Mod(parameters.P1Float, parameters.P2Float);
-                    break;
-                case 108:
-                    parameters.OutVector2 = Mod(parameters.P1Vector2, parameters.P2Vector2);
-                    break;
-                case 109:
-                    parameters.OutVector2 = Mod(parameters.P1Vector2, parameters.P2Vector2);
-                    break;
-                case 110:
-                    parameters.OutVector3 = Mod(parameters.P1Vector3, parameters.P2Vector3);
-                    break;
-                case 111:
-                    parameters.OutVector3 = Mod(parameters.P1Vector3, parameters.P2Vector3);
-                    break;
-                case 112:
-                    parameters.OutVector4 = Mod(parameters.P1Vector4, parameters.P2Vector4);
-                    break;
-                case 113:
-                    parameters.OutVector4 = Mod(parameters.P1Vector4, parameters.P2Vector4);
+                    parameters.OutVector4 = Mul(parameters.P1Matrix, parameters.P1Vector4);
                     break;
 
                 // Pow
-                case 114:
+                case 108:
                     parameters.OutFloat = Pow(parameters.P1Float, parameters.P2Float);
                     break;
-                case 115:
+                case 109:
                     parameters.OutVector2 = Pow(parameters.P1Vector2, parameters.P2Vector2);
                     break;
-                case 116:
+                case 110:
                     parameters.OutVector3 = Pow(parameters.P1Vector3, parameters.P2Vector3);
                     break;
-                case 117:
+                case 111:
                     parameters.OutVector4 = Pow(parameters.P1Vector4, parameters.P2Vector4);
                     break;
 
                 // Round
-                case 118:
+                case 112:
                     parameters.OutFloat = Round(parameters.P1Float);
                     break;
-                case 119:
+                case 113:
                     parameters.OutVector2 = Round(parameters.P1Vector2);
                     break;
-                case 120:
+                case 114:
                     parameters.OutVector3 = Round(parameters.P1Vector3);
                     break;
-                case 121:
+                case 115:
                     parameters.OutVector4 = Round(parameters.P1Vector4);
                     break;
 
                 // Saturate
-                case 122:
+                case 116:
                     parameters.OutFloat = Saturate(parameters.P1Float);
                     break;
-                case 123:
+                case 117:
                     parameters.OutVector2 = Saturate(parameters.P1Vector2);
                     break;
-                case 124:
+                case 118:
                     parameters.OutVector3 = Saturate(parameters.P1Vector3);
                     break;
-                case 125:
+                case 119:
                     parameters.OutVector4 = Saturate(parameters.P1Vector4);
                     break;
 
                 // Sinh
-                case 126:
+                case 120:
                     parameters.OutFloat = Sinh(parameters.P1Float);
                     break;
-                case 127:
+                case 121:
                     parameters.OutVector2 = Sinh(parameters.P1Vector2);
                     break;
-                case 128:
+                case 122:
                     parameters.OutVector3 = Sinh(parameters.P1Vector3);
                     break;
-                case 129:
+                case 123:
                     parameters.OutVector4 = Sinh(parameters.P1Vector4);
                     break;
 
                 // Sqrt
-                case 130:
+                case 124:
                     parameters.OutFloat = Sqrt(parameters.P1Float);
                     break;
-                case 131:
+                case 125:
                     parameters.OutVector2 = Sqrt(parameters.P1Vector2);
                     break;
-                case 132:
+                case 126:
                     parameters.OutVector3 = Sqrt(parameters.P1Vector3);
                     break;
-                case 133:
+                case 127:
                     parameters.OutVector4 = Sqrt(parameters.P1Vector4);
                     break;
 
                 // SmoothStep
-                case 134:
+                case 128:
                     parameters.OutFloat = SmoothStep(parameters.P1Float, parameters.P2Float, parameters.P3Float);
                     break;
-                case 135:
+                case 129:
                     parameters.OutVector2 = SmoothStep(parameters.P1Vector2, parameters.P2Vector2, parameters.P1Vector3.XY());
                     break;
-                case 136:
+                case 130:
                     parameters.OutVector2 = SmoothStep(parameters.P1Float, parameters.P2Float, parameters.P1Vector2);
                     break;
-                case 137:
+                case 131:
                     parameters.OutVector3 = SmoothStep(parameters.P1Vector3, parameters.P2Vector3, parameters.P1Vector4.XYZ());
                     break;
-                case 138:
+                case 132:
                     parameters.OutVector3 = SmoothStep(parameters.P1Float, parameters.P2Float, parameters.P1Vector3);
                     break;
-                case 139:
+                case 133:
                     parameters.OutVector4 = SmoothStep(parameters.P1Vector4, parameters.P2Vector4, new Vector4(parameters.P1Vector3, parameters.P1Float));
                     break;
-                case 140:
+                case 134:
                     parameters.OutVector4 = SmoothStep(parameters.P1Float, parameters.P2Float, parameters.P1Vector4);
                     break;
 
                 // Tan
-                case 141:
+                case 135:
                     parameters.OutFloat = Tan(parameters.P1Float);
                     break;
-                case 142:
+                case 136:
                     parameters.OutVector2 = Tan(parameters.P1Vector2);
                     break;
-                case 143:
+                case 137:
                     parameters.OutVector3 = Tan(parameters.P1Vector3);
                     break;
-                case 144:
+                case 138:
                     parameters.OutVector4 = Tan(parameters.P1Vector4);
                     break;
 
                 // Tanh
-                case 145:
+                case 139:
                     parameters.OutFloat = Tanh(parameters.P1Float);
                     break;
-                case 146:
+                case 140:
                     parameters.OutVector2 = Tanh(parameters.P1Vector2);
                     break;
-                case 147:
+                case 141:
                     parameters.OutVector3 = Tanh(parameters.P1Vector3);
                     break;
-                case 148:
+                case 142:
                     parameters.OutVector4 = Tanh(parameters.P1Vector4);
                     break;
 
                 // Truncate
-                case 149:
+                case 143:
                     parameters.OutFloat = Truncate(parameters.P1Float);
                     break;
-                case 150:
+                case 144:
                     parameters.OutVector2 = Truncate(parameters.P1Vector2);
                     break;
-                case 151:
+                case 145:
                     parameters.OutVector3 = Truncate(parameters.P1Vector3);
                     break;
-                case 152:
+                case 146:
                     parameters.OutVector4 = Truncate(parameters.P1Vector4);
                     break;
             }

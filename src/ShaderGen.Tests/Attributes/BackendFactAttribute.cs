@@ -40,6 +40,7 @@ namespace ShaderGen.Tests.Attributes
                     ? $"The {last} backend's tool chain is not available."
                     : $"The {string.Join(", ", missingBackends.Take(missingBackends.Count - 1))} and {last} backends' tool chains are not available.";
             }
+            set => base.Skip = value;
         }
 
         /// <summary>

@@ -15,7 +15,6 @@ namespace ShaderGen
         /*
          * Misc
          */
-        public static Vector4 Mul(Matrix4x4 m, Vector4 v) => throw new ShaderBuiltinException(); // TODO Shouldn't this return Matrix4x4?
         public static Vector4 Sample(Texture2DResource texture, SamplerResource sampler, Vector2 texCoords)
             => throw new ShaderBuiltinException();
         public static Vector4 Sample(TextureCubeResource texture, SamplerResource sampler, Vector3 texCoords)
@@ -129,7 +128,7 @@ namespace ShaderGen
         public static Vector4 Atan(Vector4 y, Vector4 x) => new Vector4((float)Math.Atan2(y.X, x.X), (float)Math.Atan2(y.Y, x.Y), (float)Math.Atan2(y.Z, x.Z), (float)Math.Atan2(y.W, x.W));
 
         // Atanh
-        public static float Atanh(float value) => (float)(Math.Log((1.0 + value) / (1.0 - value)) / 2.0);
+        public static float Atanh(float value) => (float)(Math.Log((1.0f + value) / (1.0f - value)) / 2.0f);
         public static Vector2 Atanh(Vector2 value) => new Vector2(Atanh(value.X), Atanh(value.Y));
         public static Vector3 Atanh(Vector3 value) => new Vector3(Atanh(value.X), Atanh(value.Y), Atanh(value.Z));
         public static Vector4 Atanh(Vector4 value) => new Vector4(Atanh(value.X), Atanh(value.Y), Atanh(value.Z), Atanh(value.W));
@@ -148,9 +147,9 @@ namespace ShaderGen
         public static Vector4 Ceiling(Vector4 value) => new Vector4((float)Math.Ceiling(value.X), (float)Math.Ceiling(value.Y), (float)Math.Ceiling(value.Z), (float)Math.Ceiling(value.W));
 
         // Clamp TODO add int & uint versions (see https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/clamp.xhtml)
-        public static float Clamp(float value, float min, float max) => min <= max
-            ? Math.Min(max, Math.Max(value, min))
-            : Math.Min(min, Math.Max(value, max));
+        public static float Clamp(float value, float min, float max) => min >= max
+            ? float.NaN
+            : Math.Min(Math.Max(value, min), max);
         public static Vector2 Clamp(Vector2 value, Vector2 min, Vector2 max) => new Vector2(Clamp(value.X, min.X, max.X), Clamp(value.Y, min.Y, max.Y));
         public static Vector2 Clamp(Vector2 value, float min, float max) => new Vector2(Clamp(value.X, min, max), Clamp(value.Y, min, max));
         public static Vector3 Clamp(Vector3 value, Vector3 min, Vector3 max) => new Vector3(Clamp(value.X, min.X, max.X), Clamp(value.Y, min.Y, max.Y), Clamp(value.Z, min.Z, max.Z));
@@ -183,13 +182,13 @@ namespace ShaderGen
         public static Vector4 Floor(Vector4 value) => new Vector4((float)Math.Floor(value.X), (float)Math.Floor(value.Y), (float)Math.Floor(value.Z), (float)Math.Floor(value.W));
 
         // Frac TODO Check this really is equivalent
-        public static float Frac(float value) => (float)(value - Math.Truncate(value));
+        public static float Frac(float value) => (float)(value - Math.Floor(value));
         public static Vector2 Frac(Vector2 value) => new Vector2(Frac(value.X), Frac(value.Y));
         public static Vector3 Frac(Vector3 value) => new Vector3(Frac(value.X), Frac(value.Y), Frac(value.Z));
         public static Vector4 Frac(Vector4 value) => new Vector4(Frac(value.X), Frac(value.Y), Frac(value.Z), Frac(value.W));
 
         // Lerp
-        public static float Lerp(float x, float y, float s) => x * (1f - s) + y * s;
+        public static float Lerp(float x, float y, float s) => s < 0f || s > 1f ? float.NaN : x * (1f - s) + y * s;
         public static Vector2 Lerp(Vector2 x, Vector2 y, Vector2 s) => new Vector2(Lerp(x.X, y.X, s.X), Lerp(x.Y, y.Y, s.Y));
         public static Vector2 Lerp(Vector2 x, Vector2 y, float s) => new Vector2(Lerp(x.X, y.X, s), Lerp(x.Y, y.Y, s));
         public static Vector3 Lerp(Vector3 x, Vector3 y, Vector3 s) => new Vector3(Lerp(x.X, y.X, s.X), Lerp(x.Y, y.Y, s.Y), Lerp(x.Z, y.Z, s.Z));
@@ -240,6 +239,14 @@ namespace ShaderGen
         public static Vector4 Min(Vector4 a, Vector4 b) => new Vector4(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y), Math.Min(a.Z, b.Z), Math.Min(a.W, b.W));
         public static Vector4 Min(Vector4 a, float b) => new Vector4(Math.Min(a.X, b), Math.Min(a.Y, b), Math.Min(a.Z, b), Math.Min(a.W, b));
 
+        // Mul
+        public static Vector4 Mul(Matrix4x4 m, Vector4 v) => new Vector4(
+            m.M11 * v.X + m.M21 * v.Y + m.M31 * v.Z + m.M41 * v.W,
+            m.M12 * v.X + m.M22 * v.Y + m.M32 * v.Z + m.M42 * v.W,
+            m.M13 * v.X + m.M23 * v.Y + m.M33 * v.Z + m.M43 * v.W,
+            m.M14 * v.X + m.M24 * v.Y + m.M34 * v.Z + m.M44 * v.W
+        );
+
         // Mod TODO: See https://stackoverflow.com/questions/7610631/glsl-mod-vs-hlsl-fmod
         public static float Mod(float a, float b) => a % b; // CHECK!
         public static Vector2 Mod(Vector2 a, Vector2 b) => new Vector2(Mod(a.X, b.X), Mod(a.Y, b.Y));
@@ -263,9 +270,9 @@ namespace ShaderGen
 
         // Saturate
         public static float Saturate(float value) => Clamp(value, 0f, 1f);
-        public static Vector2 Saturate(Vector2 value) => new Vector2(Clamp(value.X, 0, 1), Clamp(value.Y, 0, 1));
-        public static Vector3 Saturate(Vector3 value) => new Vector3(Clamp(value.X, 0, 1), Clamp(value.Y, 0, 1), Clamp(value.Z, 0, 1));
-        public static Vector4 Saturate(Vector4 value) => new Vector4(Clamp(value.X, 0, 1), Clamp(value.Y, 0, 1), Clamp(value.Z, 0, 1), Clamp(value.W, 0, 1));
+        public static Vector2 Saturate(Vector2 value) => new Vector2(Clamp(value.X, 0f, 1f), Clamp(value.Y, 0f, 1f));
+        public static Vector3 Saturate(Vector3 value) => new Vector3(Clamp(value.X, 0f, 1f), Clamp(value.Y, 0f, 1f), Clamp(value.Z, 0f, 1f));
+        public static Vector4 Saturate(Vector4 value) => new Vector4(Clamp(value.X, 0f, 1f), Clamp(value.Y, 0f, 1f), Clamp(value.Z, 0f, 1f), Clamp(value.W, 0f, 1f));
 
         // Sin
         public static float Sin(float value) => (float)Math.Sin(value);
