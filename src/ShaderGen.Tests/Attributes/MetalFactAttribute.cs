@@ -13,7 +13,6 @@ namespace ShaderGen.Tests.Attributes
         /// <summary>
         /// Initializes a new instance of the <see cref="MetalFactAttribute"/> class.
         /// </summary>
-        /// <param name="requireHeadless">if set to <c>true</c> requires headless graphics device.</param>
-        public MetalFactAttribute(bool requireHeadless = false) : base(requireHeadless, typeof(MetalBackend)) { }
+        public MetalFactAttribute() : base(typeof(MetalBackend)) { }
     }
 }

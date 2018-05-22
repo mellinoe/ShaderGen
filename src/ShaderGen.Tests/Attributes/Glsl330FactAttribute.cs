@@ -13,7 +13,6 @@ namespace ShaderGen.Tests.Attributes
         /// <summary>
         /// Initializes a new instance of the <see cref="Glsl330FactAttribute"/> class.
         /// </summary>
-        /// <param name="requireHeadless">if set to <c>true</c> requires headless graphics device.</param>
-        public Glsl330FactAttribute(bool requireHeadless = false) : base(requireHeadless, typeof(Glsl330Backend)) { }
+        public Glsl330FactAttribute() : base(typeof(Glsl330Backend)) { }
     }
 }

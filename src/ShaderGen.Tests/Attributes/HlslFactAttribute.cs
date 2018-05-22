@@ -15,7 +15,6 @@ namespace ShaderGen.Tests.Attributes
         /// <summary>
         /// Initializes a new instance of the <see cref="HlslFactAttribute"/> class.
         /// </summary>
-        /// <param name="requireHeadless">if set to <c>true</c> requires headless graphics device.</param>
-        public HlslFactAttribute(bool requireHeadless = false) : base(requireHeadless, typeof(HlslBackend)) { }
+        public HlslFactAttribute() : base(typeof(HlslBackend)) { }
     }
 }

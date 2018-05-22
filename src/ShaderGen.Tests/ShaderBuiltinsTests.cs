@@ -81,23 +81,23 @@ namespace ShaderGen.Tests
         }
 
 
-        [GlslEs300Fact(true, Skip = SkipReason)]
+        [GlslEs300Fact(Skip = SkipReason)]
         public void TestShaderBuiltins_GlslEs300()
             => TestShaderBuiltins(ToolChain.GlslEs300);
 
-        [Glsl330Fact(true, Skip = SkipReason)]
+        [Glsl330Fact(Skip = SkipReason)]
         public void TestShaderBuiltins_Glsl330()
             => TestShaderBuiltins(ToolChain.Glsl330);
 
-        [Glsl450Fact(true, Skip = SkipReason)]
+        [Glsl450Fact(Skip = SkipReason)]
         public void TestShaderBuiltins_Glsl450()
             => TestShaderBuiltins(ToolChain.Glsl450);
 
-        [HlslFact(true, Skip = SkipReason)]
+        [HlslFact(Skip = SkipReason)]
         public void TestShaderBuiltins_Hlsl()
             => TestShaderBuiltins(ToolChain.Hlsl);
 
-        [MetalFact(true, Skip = SkipReason)]
+        [MetalFact(Skip = SkipReason)]
         public void TestShaderBuiltins_Metal()
             => TestShaderBuiltins(ToolChain.Metal);
 
