@@ -103,6 +103,20 @@ namespace ShaderGen.Tests
 
         private void TestShaderBuiltins(ToolChain toolChain)
         {
+            // WORKAROUND - Headless detection is not reliably working on XUnit runners, these will prevent the tests failing
+            // on systems that do not support the toolchains.
+            if (!toolChain.IsAvailable)
+            {
+                _output.WriteLine($"The {toolChain} is not available!");
+                return;
+            }
+
+            if (!toolChain.HeadlessAvailable)
+            {
+                _output.WriteLine(
+                    $"The {toolChain} is not capable of creating a headless graphics device on this system!");
+                return;
+            }
 
             string csFunctionName =
                 $"{nameof(TestShaders)}.{nameof(ShaderBuiltinsComputeTest)}.{nameof(ShaderBuiltinsComputeTest.CS)}";

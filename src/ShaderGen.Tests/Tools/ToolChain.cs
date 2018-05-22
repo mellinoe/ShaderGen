@@ -268,7 +268,11 @@ namespace ShaderGen.Tests.Tools
         /// Creates a headless <see cref="GraphicsDevice" />
         /// </summary>
         /// <returns></returns>
-        public GraphicsDevice CreateHeadless() => _createHeadless();
+        public GraphicsDevice CreateHeadless() =>
+            _headlessAvailable.Value
+                ? _createHeadless()
+                : throw new InvalidOperationException(
+                    $"The {GraphicsBackend} headless graphics device is not available on this system!");
 
         /// <summary>
         /// Compiles the specified path.
