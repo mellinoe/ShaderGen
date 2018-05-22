@@ -21,6 +21,7 @@ namespace ShaderGen.Tests.Tools
     /// </summary>
     public class ToolChain
     {
+        public const int DefaultTimeout = 10000;
         private const string DefaultMetalPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metal";
         private delegate string ArgumentFormatterDelegate(string file, Stage stage, string entryPoint, string output = null);
 
@@ -253,7 +254,7 @@ namespace ShaderGen.Tests.Tools
         /// <param name="timeout">The timeout.</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public ToolResult Compile(string code, Stage stage, string entryPoint, int timeout = 3000)
+        public ToolResult Compile(string code, Stage stage, string entryPoint, int timeout = DefaultTimeout)
         {
             using (TempFile tmpFile = new TempFile())
             {
@@ -271,7 +272,7 @@ namespace ShaderGen.Tests.Tools
         /// <param name="timeout">The timeout.</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public ToolResult CompileFile(string path, Stage stage, string entryPoint, int timeout = 3000)
+        public ToolResult CompileFile(string path, Stage stage, string entryPoint, int timeout = DefaultTimeout)
         {
             string code = File.ReadAllText(path);
             return CompileFile(path, code, stage, entryPoint, timeout);
@@ -287,7 +288,7 @@ namespace ShaderGen.Tests.Tools
         /// <param name="timeout">The timeout in milliseconds.</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        private ToolResult CompileFile(string path, string code, Stage stage, string entryPoint, int timeout = 3000)
+        private ToolResult CompileFile(string path, string code, Stage stage, string entryPoint, int timeout = DefaultTimeout)
         {
             if (!IsAvailable)
                 throw new InvalidOperationException($"The {Name} tool chain is not available!");

@@ -103,8 +103,6 @@ namespace ShaderGen.Tests
 
         private void TestShaderBuiltins(ToolChain toolChain)
         {
-            // Calculate when to finish.
-            long startTicks = Stopwatch.GetTimestamp();
 
             string csFunctionName =
                 $"{nameof(TestShaders)}.{nameof(ShaderBuiltinsComputeTest)}.{nameof(ShaderBuiltinsComputeTest.CS)}";
@@ -154,7 +152,10 @@ namespace ShaderGen.Tests
             ComputeShaderParameters[] cpuParameters = new ComputeShaderParameters[ShaderBuiltinsComputeTest.Methods];
             ComputeShaderParameters[] gpuParameters = new ComputeShaderParameters[ShaderBuiltinsComputeTest.Methods];
             int loops = 0;
-            long durationTicks = 0;
+            long durationTicks;
+
+            // Set start.
+            long startTicks = Stopwatch.GetTimestamp();
 
             ShaderBuiltinsComputeTest cpuTest = new ShaderBuiltinsComputeTest();
             /*
