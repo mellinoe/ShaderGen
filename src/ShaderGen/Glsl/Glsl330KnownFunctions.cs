@@ -75,25 +75,25 @@ namespace ShaderGen.Glsl
             Dictionary<string, InvocationTranslator> v2Mappings = new Dictionary<string, InvocationTranslator>()
             {
                 { ".ctor", VectorCtor },
-                { nameof(Vector2.Abs), SimpleNameTranslator("abs") },
+                { nameof(Vector2.Abs), SimpleNameTranslator() },
                 { nameof(Vector2.Add), BinaryOpTranslator("+") },
-                { nameof(Vector2.Clamp), SimpleNameTranslator("clamp") },
+                { nameof(Vector2.Clamp), SimpleNameTranslator() },
                 // Doesn't exist! { nameof(Vector2.Cos), SimpleNameTranslator("cos") },
                 { nameof(Vector2.Distance), SimpleNameTranslator("distance") },
                 { nameof(Vector2.DistanceSquared), DistanceSquared },
                 { nameof(Vector2.Divide), BinaryOpTranslator("/") },
-                { nameof(Vector2.Dot), SimpleNameTranslator("dot") },
+                { nameof(Vector2.Dot), SimpleNameTranslator() },
                 { nameof(Vector2.Lerp), SimpleNameTranslator("mix") },
-                { nameof(Vector2.Max), SimpleNameTranslator("max") },
-                { nameof(Vector2.Min), SimpleNameTranslator("min") },
+                { nameof(Vector2.Max), SimpleNameTranslator() },
+                { nameof(Vector2.Min), SimpleNameTranslator() },
                 { nameof(Vector2.Multiply), BinaryOpTranslator("*") },
                 { nameof(Vector2.Negate), Negate },
-                { nameof(Vector2.Normalize), SimpleNameTranslator("normalize") },
-                { nameof(Vector2.Reflect), SimpleNameTranslator("reflect") },
+                { nameof(Vector2.Normalize), SimpleNameTranslator() },
+                { nameof(Vector2.Reflect), SimpleNameTranslator() },
                 // Doesn't exist! { nameof(Vector2.Sin), SimpleNameTranslator("sin") },
                 { nameof(Vector2.SquareRoot), SimpleNameTranslator("sqrt") },
                 { nameof(Vector2.Subtract), BinaryOpTranslator("-") },
-                { nameof(Vector2.Length), SimpleNameTranslator("length") },
+                { nameof(Vector2.Length), SimpleNameTranslator() },
                 { nameof(Vector2.LengthSquared), LengthSquared },
                 { nameof(Vector2.Zero), VectorStaticAccessor },
                 { nameof(Vector2.One), VectorStaticAccessor },
@@ -106,26 +106,26 @@ namespace ShaderGen.Glsl
             Dictionary<string, InvocationTranslator> v3Mappings = new Dictionary<string, InvocationTranslator>()
             {
                 { ".ctor", VectorCtor },
-                { nameof(Vector3.Abs), SimpleNameTranslator("abs") },
+                { nameof(Vector3.Abs), SimpleNameTranslator() },
                 { nameof(Vector3.Add), BinaryOpTranslator("+") },
-                { nameof(Vector3.Clamp), SimpleNameTranslator("clamp") },
+                { nameof(Vector3.Clamp), SimpleNameTranslator() },
                 // Doesn't exist! { nameof(Vector3.Cos), SimpleNameTranslator("cos") },
-                { nameof(Vector3.Cross), SimpleNameTranslator("cross") },
-                { nameof(Vector3.Distance), SimpleNameTranslator("distance") },
+                { nameof(Vector3.Cross), SimpleNameTranslator() },
+                { nameof(Vector3.Distance), SimpleNameTranslator() },
                 { nameof(Vector3.DistanceSquared), DistanceSquared },
                 { nameof(Vector3.Divide), BinaryOpTranslator("/") },
-                { nameof(Vector3.Dot), SimpleNameTranslator("dot") },
+                { nameof(Vector3.Dot), SimpleNameTranslator() },
                 { nameof(Vector3.Lerp), SimpleNameTranslator("mix") },
-                { nameof(Vector3.Max), SimpleNameTranslator("max") },
-                { nameof(Vector3.Min), SimpleNameTranslator("min") },
+                { nameof(Vector3.Max), SimpleNameTranslator() },
+                { nameof(Vector3.Min), SimpleNameTranslator() },
                 { nameof(Vector3.Multiply), BinaryOpTranslator("*") },
                 { nameof(Vector3.Negate), Negate },
-                { nameof(Vector3.Normalize), SimpleNameTranslator("normalize") },
-                { nameof(Vector3.Reflect), SimpleNameTranslator("reflect") },
+                { nameof(Vector3.Normalize), SimpleNameTranslator() },
+                { nameof(Vector3.Reflect), SimpleNameTranslator() },
                 // Doesn't exist! { nameof(Vector3.Sin), SimpleNameTranslator("sin") },
                 { nameof(Vector3.SquareRoot), SimpleNameTranslator("sqrt") },
                 { nameof(Vector3.Subtract), BinaryOpTranslator("-") },
-                { nameof(Vector3.Length), SimpleNameTranslator("length") },
+                { nameof(Vector3.Length), SimpleNameTranslator() },
                 { nameof(Vector3.LengthSquared), LengthSquared },
                 { nameof(Vector3.Zero), VectorStaticAccessor },
                 { nameof(Vector3.One), VectorStaticAccessor },
@@ -139,25 +139,25 @@ namespace ShaderGen.Glsl
             Dictionary<string, InvocationTranslator> v4Mappings = new Dictionary<string, InvocationTranslator>()
             {
                 { ".ctor", VectorCtor },
-                { nameof(Vector4.Abs), SimpleNameTranslator("abs") },
+                { nameof(Vector4.Abs), SimpleNameTranslator() },
                 { nameof(Vector4.Add), BinaryOpTranslator("+") },
-                { nameof(Vector4.Clamp), SimpleNameTranslator("clamp") },
+                { nameof(Vector4.Clamp), SimpleNameTranslator() },
                 // Doesn't exist! { nameof(Vector4.Cos), SimpleNameTranslator("cos") },
-                { nameof(Vector4.Distance), SimpleNameTranslator("distance") },
+                { nameof(Vector4.Distance), SimpleNameTranslator() },
                 { nameof(Vector4.DistanceSquared), DistanceSquared },
                 { nameof(Vector4.Divide), BinaryOpTranslator("/") },
-                { nameof(Vector4.Dot), SimpleNameTranslator("dot") },
+                { nameof(Vector4.Dot), SimpleNameTranslator() },
                 { nameof(Vector4.Lerp), SimpleNameTranslator("mix") },
-                { nameof(Vector4.Max), SimpleNameTranslator("max") },
-                { nameof(Vector4.Min), SimpleNameTranslator("min") },
+                { nameof(Vector4.Max), SimpleNameTranslator() },
+                { nameof(Vector4.Min), SimpleNameTranslator() },
                 { nameof(Vector4.Multiply), BinaryOpTranslator("*") },
                 { nameof(Vector4.Negate), Negate },
-                { nameof(Vector4.Normalize), SimpleNameTranslator("normalize") },
+                { nameof(Vector4.Normalize), SimpleNameTranslator() },
                 // Doesn't exist! { nameof(Vector4.Reflect), SimpleNameTranslator("reflect") },
                 // Doesn't exist! { nameof(Vector4.Sin), SimpleNameTranslator("sin") },
                 { nameof(Vector4.SquareRoot), SimpleNameTranslator("sqrt") },
                 { nameof(Vector4.Subtract), BinaryOpTranslator("-") },
-                { nameof(Vector4.Length), SimpleNameTranslator("length") },
+                { nameof(Vector4.Length), SimpleNameTranslator() },
                 { nameof(Vector4.LengthSquared), LengthSquared },
                 { nameof(Vector4.Zero), VectorStaticAccessor },
                 { nameof(Vector4.One), VectorStaticAccessor },
@@ -185,34 +185,34 @@ namespace ShaderGen.Glsl
             Dictionary<string, InvocationTranslator> mathfMappings = new Dictionary<string, InvocationTranslator>()
             {
                 // TODO Note cannot use nameof as MathF isn't included in this project...
-                { "Abs", SimpleNameTranslator("abs") },
-                { "Acos", SimpleNameTranslator("acos") },
-                { "Acosh", SimpleNameTranslator("acosh") },
-                { "Asin", SimpleNameTranslator("asin") },
-                { "Asinh", SimpleNameTranslator("asinh") },
-                { "Atan", SimpleNameTranslator("atan") },
+                { "Abs", SimpleNameTranslator() },
+                { "Acos", SimpleNameTranslator() },
+                { "Acosh", SimpleNameTranslator() },
+                { "Asin", SimpleNameTranslator() },
+                { "Asinh", SimpleNameTranslator() },
+                { "Atan", SimpleNameTranslator() },
                 { "Atan2", SimpleNameTranslator("atan") }, // Note atan supports both (x) and (y,x)
-                { "Atanh", SimpleNameTranslator("atanh") },
+                { "Atanh", SimpleNameTranslator() },
                 { "Cbrt", CubeRoot }, // We can calculate the 1/3rd power, which might not give exactly the same result?
                 { "Ceiling", SimpleNameTranslator("ceil") },
-                { "Cos", SimpleNameTranslator("cos") },
-                { "Cosh", SimpleNameTranslator("cosh") },
-                { "Exp", SimpleNameTranslator("exp") },
-                { "Floor", SimpleNameTranslator("floor") },
+                { "Cos", SimpleNameTranslator() },
+                { "Cosh", SimpleNameTranslator() },
+                { "Exp", SimpleNameTranslator() },
+                { "Floor", SimpleNameTranslator() },
                 // TODO IEEERemainder(Single, Single) - see https://stackoverflow.com/questions/1971645/is-math-ieeeremainderx-y-equivalent-to-xy
                 // How close is it to frac()?
                 { "Log", Log },
                 { "Log10", Log10 },
-                { "Max", SimpleNameTranslator("max") },
-                { "Min", SimpleNameTranslator("min") },
-                { "Pow", SimpleNameTranslator("pow") },
+                { "Max", SimpleNameTranslator() },
+                { "Min", SimpleNameTranslator() },
+                { "Pow", SimpleNameTranslator() },
                 { "Round", Round },
-                { "Sin", SimpleNameTranslator("sin") },
-                { "Sinh", SimpleNameTranslator("sinh") },
-                { "Sqrt", SimpleNameTranslator("sqrt") },
-                { "Tan", SimpleNameTranslator("tan") },
-                { "Tanh", SimpleNameTranslator("tanh") },
-                { "Truncate", SimpleNameTranslator("trunc") }
+                { "Sin", SimpleNameTranslator() },
+                { "Sinh", SimpleNameTranslator() },
+                { "Sqrt", SimpleNameTranslator() },
+                { "Tan", SimpleNameTranslator() },
+                { "Tanh", SimpleNameTranslator() },
+                { "Truncate", SimpleNameTranslator() }
             };
             ret.Add("System.MathF", new DictionaryTypeInvocationTranslator(mathfMappings));
 
@@ -567,13 +567,14 @@ namespace ShaderGen.Glsl
             // Divide by Log(10) = 2.30258509299405 as OpenGL doesn't suppport log10 natively
             return $"(log({parameters[0].Identifier})/2.30258509299405)";
         }
+
         private static string Round(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
             // TODO Should we use RoundEven here for safety??
             if (parameters.Length < 2)
                 return $"round({parameters[0].Identifier})";
 
-            // TODO Implement
+            // TODO Need to Implement to support MathF fully
             // Round(Single, Int32)
             // Round(Single, Int32, MidpointRounding)
             // Round(Single, MidpointRounding)

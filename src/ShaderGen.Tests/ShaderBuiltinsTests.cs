@@ -241,6 +241,8 @@ namespace ShaderGen.Tests
 
             if (failures.Any())
             {
+                _output.WriteLine($"{failures.Count} methods experienced failures out of {ShaderBuiltinsComputeTest.Methods} ({100f * failures.Count / ShaderBuiltinsComputeTest.Methods:##.##}%).  Details follow...");
+
                 string spacer1 = new string('=', 80);
                 string spacer2 = new string('-', 80);
 
@@ -263,7 +265,7 @@ namespace ShaderGen.Tests
                         _output.WriteLine(string.Empty);
 
                         int fieldFailureCount = group.Count();
-                        _output.WriteLine($"  {group.Key} failed {fieldFailureCount} times ({100f * fieldFailureCount / loops:##.##}%)");
+                        _output.WriteLine($"  {group.Key} failed {fieldFailureCount} times ({100f * fieldFailureCount / methodFailureCount:##.##}%)");
 
                         int examples = 0;
                         foreach (Tuple<float, float> tuple in group)

@@ -134,7 +134,7 @@ namespace ShaderGen
         public static Vector3 Atanh(Vector3 value) => new Vector3(Atanh(value.X), Atanh(value.Y), Atanh(value.Z));
         public static Vector4 Atanh(Vector4 value) => new Vector4(Atanh(value.X), Atanh(value.Y), Atanh(value.Z), Atanh(value.W));
 
-        // Cbrt
+        // Cbrt TODO add Matrix support
         private const double _third = 1.0 / 3.0;
         public static float Cbrt(float value) => (float)Math.Pow(value, _third);
         public static Vector2 Cbrt(Vector2 value) => new Vector2(Cbrt(value.X), Cbrt(value.Y));
