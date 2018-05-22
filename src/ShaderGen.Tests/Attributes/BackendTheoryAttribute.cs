@@ -18,6 +18,11 @@ namespace ShaderGen.Tests.Attributes
         /// </summary>
         public readonly IEnumerable<Type> Backends;
 
+        /// <summary>
+        /// If true, the test requires the ability to create a headless graphics device.
+        /// </summary>
+        public bool RequireHeadless;
+
         /// <inheritdoc />
         public override string Skip
         {
@@ -29,7 +34,7 @@ namespace ShaderGen.Tests.Attributes
                 // Get a list of all backends that are not available
                 IReadOnlyList<string> missingBackends = Backends
                     .Select(ToolChain.Get)
-                    .Where(t => t?.IsAvailable == false)
+                    .Where(t => t?.IsAvailable == false && (!RequireHeadless || t.HeadlessAvailable))
                     .Select(t => t.Name)
                     .ToArray();
 

@@ -21,7 +21,7 @@ namespace ShaderGen.Tests.Tools
     /// </summary>
     public class ToolChain
     {
-        public const int DefaultTimeout = 10000;
+        public const int DefaultTimeout = 15000;
         private const string DefaultMetalPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metal";
         private delegate string ArgumentFormatterDelegate(string file, Stage stage, string entryPoint, string output = null);
 
@@ -153,12 +153,17 @@ namespace ShaderGen.Tests.Tools
         public readonly Type BackendType;
 
         /// <summary>
-        /// Gets a value indicating whether this <see cref="ToolChain"/> is available.
+        /// Gets a value indicating whether this <see cref="ToolChain"/> is available for compilation.
         /// </summary>
         /// <value>
         ///   <see langword="true"/> if this <see cref="ToolChain"/> is available; otherwise, <see langword="false"/>.
         /// </value>
-        public bool IsAvailable => _toolPath != null && GraphicsDevice.IsBackendSupported(GraphicsBackend);
+        public bool IsAvailable => _toolPath != null;
+
+        /// <summary>
+        /// Indicates whether a headless graphics device is available.
+        /// </summary>
+        public readonly bool HeadlessAvailable;
 
         /// <summary>
         /// The tool path (currently only single executables supported).
@@ -222,6 +227,24 @@ namespace ShaderGen.Tests.Tools
             _argumentFormatter = argumentFormatter;
             GraphicsBackend = graphicsBackend;
             _preferredFileEncoding = preferredFileEncoding ?? Encoding.Default;
+
+            if (_createHeadless != null &&
+                GraphicsDevice.IsBackendSupported(GraphicsBackend))
+            {
+                try
+                {
+                    // Try to create a headless graphics device
+                    using (_createHeadless()) { }
+
+                    HeadlessAvailable = true;
+                }
+                catch
+                {
+                    HeadlessAvailable = false;
+
+                }
+            }
+            else HeadlessAvailable = false;
         }
 
         /// <summary>
