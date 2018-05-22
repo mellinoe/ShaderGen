@@ -115,23 +115,7 @@ namespace ShaderGen.Tests
             /*
              * Run shader on GPU.
              */
-            WindowCreateInfo windowCreateInfo = new WindowCreateInfo
-            {
-                X = 100,
-                Y = 100,
-                WindowWidth = 960,
-                WindowHeight = 540,
-                WindowTitle = $"Test Shader Builtins using {toolChain}",
-                WindowInitialState = WindowState.Hidden
-            };
-            Sdl2Window window = VeldridStartup.CreateWindow(ref windowCreateInfo);
-            GraphicsDeviceOptions options = new GraphicsDeviceOptions(
-                true,
-                PixelFormat.R16_UNorm,
-                true,
-                ResourceBindingModel.Improved);
-            using (GraphicsDevice graphicsDevice =
-                VeldridStartup.CreateGraphicsDevice(window, options, toolChain.GraphicsBackend))
+            using (GraphicsDevice graphicsDevice = toolChain.CreateHeadless())
             {
                 ResourceFactory factory = graphicsDevice.ResourceFactory;
                 using (DeviceBuffer inOutBuffer = factory.CreateBuffer(
@@ -161,10 +145,10 @@ namespace ShaderGen.Tests
 
                 using (CommandList commandList = factory.CreateCommandList())
                 {
-                    _output.WriteLine("Created compute pipeline.");
+                    // Ensure the headless graphics device is the backend we expect.
+                    Assert.Equal(toolChain.GraphicsBackend, graphicsDevice.BackendType);
 
-                    Assert.True(window.Exists, "The graphics device window does not exist!");
-                    window.PumpEvents();
+                    _output.WriteLine("Created compute pipeline.");
 
                     // Update parameter buffer
                     graphicsDevice.UpdateBuffer(inOutBuffer, 0, gpuParameters);
