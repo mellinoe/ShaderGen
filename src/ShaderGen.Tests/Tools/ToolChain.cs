@@ -446,10 +446,13 @@ namespace ShaderGen.Tests.Tools
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                 };
-                Process p = Process.Start(psi);
-                p.StandardOutput.ReadToEndAsync();
-                p.StandardError.ReadToEndAsync();
-                p.WaitForExit(2000);
+                using (Process p = Process.Start(psi))
+                {
+                    p.StandardOutput.ReadToEndAsync();
+                    p.StandardError.ReadToEndAsync();
+                    p.WaitForExit(2000);
+                }
+
                 return "glslangvalidator";
             }
             catch { }

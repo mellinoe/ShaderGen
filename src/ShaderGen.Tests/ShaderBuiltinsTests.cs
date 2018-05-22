@@ -273,6 +273,7 @@ namespace ShaderGen.Tests
                                     .Select(t => Tuple.Create(t.Item1, (float)t.Item2, (float)t.Item3))
                                     .Where(t =>
                                     {
+#pragma warning disable 162
                                         float a = t.Item2;
                                         float b = t.Item3;
                                         bool comparable = true;
@@ -290,6 +291,7 @@ namespace ShaderGen.Tests
                                         return !comparable ||
                                                Math.Abs(1.0f - a / b) > ToleranceRatio &&
                                                Math.Abs(a - b) > Tolerance;
+#pragma warning restore 162
                                     })
                                     .ToArray();
 
