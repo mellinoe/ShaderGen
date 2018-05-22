@@ -351,7 +351,7 @@ namespace ShaderGen.Metal
 
         private static string Discard(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"discard_fragment();";
+            return $"discard_fragment()";
         }
 
         private static string ClipToTextureCoordinates(string typeName, string methodName, InvocationParameterInfo[] parameters)

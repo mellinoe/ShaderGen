@@ -17,7 +17,10 @@ namespace ShaderGen.Glsl
                 .Replace("+", "_");
         }
 
-        protected override void WriteVersionHeader(ShaderFunction function, StringBuilder sb)
+        protected override void WriteVersionHeader(
+            ShaderFunction function,
+            ShaderFunctionAndMethodDeclarationSyntax[] orderedFunctions,
+            StringBuilder sb)
         {
             sb.AppendLine("#version 450");
             sb.AppendLine("#extension GL_ARB_separate_shader_objects : enable");

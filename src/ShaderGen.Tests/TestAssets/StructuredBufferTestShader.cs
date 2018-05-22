@@ -24,6 +24,17 @@ namespace TestShaders
             return output;
         }
 
+        [FragmentShader]
+        public Vector4 FS(VertexOutput input)
+        {
+            Vector4 ret = new Vector4(
+                StructuredInput[0].M11,
+                StructuredInput[2].M12,
+                StructuredInput[2].M13,
+                StructuredInput[3].M14);
+            return ret;
+        }
+
         public struct VertexOutput
         {
             [VertexSemantic(SemanticType.SystemPosition)]

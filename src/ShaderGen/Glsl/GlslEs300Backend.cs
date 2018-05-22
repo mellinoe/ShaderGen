@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 
@@ -17,11 +18,16 @@ namespace ShaderGen.Glsl
                 .Replace("+", "_");
         }
 
-        protected override void WriteVersionHeader(ShaderFunction function, StringBuilder sb)
+        protected override void WriteVersionHeader(
+            ShaderFunction function,
+            ShaderFunctionAndMethodDeclarationSyntax[] orderedFunctions,
+            StringBuilder sb)
         {
-            bool useVersion320 = function.UsesTexture2DMS || function.Type == ShaderFunctionType.ComputeEntryPoint;
-            // TODO: Do we also need to check:  function.UsesStructuredBuffer ?
-            bool useVersion310 = function.UsesStructuredBuffer;
+            bool anyUsesStructuredBuffer = function.UsesStructuredBuffer
+                || orderedFunctions.Any(i => i.Function.UsesStructuredBuffer);
+
+            bool useVersion320 = function.UsesTexture2DMS;
+            bool useVersion310 = anyUsesStructuredBuffer;
             string versionNumber = useVersion320 ? "320" :
                                    useVersion310 ? "310" : "300";
             string version = $"{versionNumber} es";

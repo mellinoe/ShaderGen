@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 
@@ -17,10 +18,16 @@ namespace ShaderGen.Glsl
                 .Replace("+", "_");
         }
 
-        protected override void WriteVersionHeader(ShaderFunction function, StringBuilder sb)
+        protected override void WriteVersionHeader(
+            ShaderFunction function,
+            ShaderFunctionAndMethodDeclarationSyntax[] orderedFunctions,
+            StringBuilder sb)
         {
+            bool anyUsesStructuredBuffer = function.UsesStructuredBuffer
+                || orderedFunctions.Any(i => i.Function.UsesStructuredBuffer);
+
             string version = (function.Type == ShaderFunctionType.ComputeEntryPoint
-                           || function.UsesStructuredBuffer) ? "430" : "330 core";
+                           || anyUsesStructuredBuffer) ? "430" : "330 core";
             sb.AppendLine($"#version {version}");
             sb.AppendLine();
             sb.AppendLine($"struct SamplerDummy {{ int _dummyValue; }};");
