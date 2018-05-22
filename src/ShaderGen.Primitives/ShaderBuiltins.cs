@@ -95,7 +95,7 @@ namespace ShaderGen
         public static Vector4 Abs(Vector4 value) => new Vector4(Math.Abs(value.X), Math.Abs(value.Y), Math.Abs(value.Z), Math.Abs(value.W));
 
         // Acos
-        public static float Acos(float value) => (float)Math.Asin(value);
+        public static float Acos(float value) => (float)Math.Acos(value);
         public static Vector2 Acos(Vector2 value) => new Vector2((float)Math.Acos(value.X), (float)Math.Acos(value.Y));
         public static Vector3 Acos(Vector3 value) => new Vector3((float)Math.Acos(value.X), (float)Math.Acos(value.Y), (float)Math.Acos(value.Z));
         public static Vector4 Acos(Vector4 value) => new Vector4((float)Math.Acos(value.X), (float)Math.Acos(value.Y), (float)Math.Acos(value.Z), (float)Math.Acos(value.W));
@@ -148,7 +148,9 @@ namespace ShaderGen
         public static Vector4 Ceiling(Vector4 value) => new Vector4((float)Math.Ceiling(value.X), (float)Math.Ceiling(value.Y), (float)Math.Ceiling(value.Z), (float)Math.Ceiling(value.W));
 
         // Clamp TODO add int & uint versions (see https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/clamp.xhtml)
-        public static float Clamp(float value, float min, float max) => Math.Min(max, Math.Max(value, min));
+        public static float Clamp(float value, float min, float max) => min <= max
+            ? Math.Min(max, Math.Max(value, min))
+            : Math.Min(min, Math.Max(value, max));
         public static Vector2 Clamp(Vector2 value, Vector2 min, Vector2 max) => new Vector2(Clamp(value.X, min.X, max.X), Clamp(value.Y, min.Y, max.Y));
         public static Vector2 Clamp(Vector2 value, float min, float max) => new Vector2(Clamp(value.X, min, max), Clamp(value.Y, min, max));
         public static Vector3 Clamp(Vector3 value, Vector3 min, Vector3 max) => new Vector3(Clamp(value.X, min.X, max.X), Clamp(value.Y, min.Y, max.Y), Clamp(value.Z, min.Z, max.Z));

@@ -537,7 +537,13 @@ namespace ShaderGen.Glsl
 
         private static string CubeRoot(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"pow({parameters[0].Identifier}, 1/3.0)";
+            string pType = parameters[0].FullTypeName;
+            if (pType == "System.Single" || pType == "float") // TODO Why are we getting float?
+                return $"pow({parameters[0].Identifier}, 0.333333333333333)";
+
+            GetVectorTypeInfo(pType, out string shaderType, out int elementCount);
+            return
+                $"pow({parameters[0].Identifier}, {shaderType}({string.Join(",", Enumerable.Range(0, elementCount).Select(i => "0.333333333333333"))}))";
         }
 
         private static string Log(string typeName, string methodName, InvocationParameterInfo[] parameters)
