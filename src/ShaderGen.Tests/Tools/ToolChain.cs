@@ -228,7 +228,8 @@ namespace ShaderGen.Tests.Tools
             GraphicsBackend = graphicsBackend;
             _preferredFileEncoding = preferredFileEncoding ?? Encoding.Default;
 
-            if (_createHeadless != null &&
+            if (_toolPath != null &&
+                _createHeadless != null &&
                 GraphicsDevice.IsBackendSupported(GraphicsBackend))
             {
                 try
