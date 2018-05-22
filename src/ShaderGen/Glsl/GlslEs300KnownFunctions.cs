@@ -27,7 +27,7 @@ namespace ShaderGen.Glsl
                 { nameof(ShaderBuiltins.Atanh), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Cbrt), CubeRoot }, // We can calculate the 1/3rd power, which might not give exactly the same result?
                 { nameof(ShaderBuiltins.Ceiling), SimpleNameTranslator("ceil") },
-                { nameof(ShaderBuiltins.Clamp), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Clamp), SimpleNameFloatParameterTranslator() },
                 { nameof(ShaderBuiltins.ClipToTextureCoordinates), ClipToTextureCoordinates },
                 { nameof(ShaderBuiltins.Cos), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Cosh), SimpleNameTranslator() },
@@ -52,9 +52,9 @@ namespace ShaderGen.Glsl
                 { nameof(ShaderBuiltins.Max), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Min), SimpleNameTranslator() },
                 // Potential BUG: https://stackoverflow.com/questions/7610631/glsl-mod-vs-hlsl-fmod
-                { nameof(ShaderBuiltins.Mod), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Mod), SimpleNameFloatParameterTranslator() },
                 { nameof(ShaderBuiltins.Mul), MatrixMul },
-                { nameof(ShaderBuiltins.Pow), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Pow), SimpleNameFloatParameterTranslator() },
                 { nameof(ShaderBuiltins.Round), Round },
                 { nameof(ShaderBuiltins.Sample), Sample },
                 { nameof(ShaderBuiltins.SampleComparisonLevelZero), SampleComparisonLevelZero },
@@ -91,7 +91,7 @@ namespace ShaderGen.Glsl
                 { nameof(Vector2.Normalize), SimpleNameTranslator() },
                 { nameof(Vector2.Reflect), SimpleNameTranslator() },
                 // Doesn't exist! { nameof(Vector2.Sin), SimpleNameTranslator("sin") },
-                { nameof(Vector2.SquareRoot), SimpleNameTranslator() },
+                { nameof(Vector2.SquareRoot), SimpleNameTranslator("sqrt") },
                 { nameof(Vector2.Subtract), BinaryOpTranslator("-") },
                 { nameof(Vector2.Length), SimpleNameTranslator() },
                 { nameof(Vector2.LengthSquared), LengthSquared },
@@ -115,7 +115,7 @@ namespace ShaderGen.Glsl
                 { nameof(Vector3.DistanceSquared), DistanceSquared },
                 { nameof(Vector3.Divide), BinaryOpTranslator("/") },
                 { nameof(Vector3.Dot), SimpleNameTranslator() },
-                { nameof(Vector3.Lerp), SimpleNameTranslator() },
+                { nameof(Vector3.Lerp), SimpleNameTranslator("mix") },
                 { nameof(Vector3.Max), SimpleNameTranslator() },
                 { nameof(Vector3.Min), SimpleNameTranslator() },
                 { nameof(Vector3.Multiply), BinaryOpTranslator("*") },
@@ -123,7 +123,7 @@ namespace ShaderGen.Glsl
                 { nameof(Vector3.Normalize), SimpleNameTranslator() },
                 { nameof(Vector3.Reflect), SimpleNameTranslator() },
                 // Doesn't exist! { nameof(Vector3.Sin), SimpleNameTranslator("sin") },
-                { nameof(Vector3.SquareRoot), SimpleNameTranslator() },
+                { nameof(Vector3.SquareRoot), SimpleNameTranslator("sqrt") },
                 { nameof(Vector3.Subtract), BinaryOpTranslator("-") },
                 { nameof(Vector3.Length), SimpleNameTranslator() },
                 { nameof(Vector3.LengthSquared), LengthSquared },
@@ -155,7 +155,7 @@ namespace ShaderGen.Glsl
                 { nameof(Vector4.Normalize), SimpleNameTranslator() },
                 // Doesn't exist! { nameof(Vector4.Reflect), SimpleNameTranslator("reflect") },
                 // Doesn't exist! { nameof(Vector4.Sin), SimpleNameTranslator("sin") },
-                { nameof(Vector4.SquareRoot), SimpleNameTranslator() },
+                { nameof(Vector4.SquareRoot), SimpleNameTranslator("sqrt") },
                 { nameof(Vector4.Subtract), BinaryOpTranslator("-") },
                 { nameof(Vector4.Length), SimpleNameTranslator() },
                 { nameof(Vector4.LengthSquared), LengthSquared },
@@ -205,7 +205,7 @@ namespace ShaderGen.Glsl
                 { "Log10", Log10 },
                 { "Max", SimpleNameTranslator() },
                 { "Min", SimpleNameTranslator() },
-                { "Pow", SimpleNameTranslator() },
+                { "Pow", SimpleNameFloatParameterTranslator() },
                 { "Round", Round },
                 { "Sin", SimpleNameTranslator() },
                 { "Sinh", SimpleNameTranslator() },
@@ -269,7 +269,7 @@ namespace ShaderGen.Glsl
             };
         }
 
-        private static InvocationTranslator SimpleNameFloatParameterTranslator(string nameTarget)
+        private static InvocationTranslator SimpleNameFloatParameterTranslator(string nameTarget = null)
         {
             return (type, method, parameters) =>
             {
@@ -285,7 +285,7 @@ namespace ShaderGen.Glsl
                     }
 
                 });
-                return $"{nameTarget}({string.Join(", ", castedParams)})";
+                return $"{nameTarget ?? method.ToLower()}({string.Join(", ", castedParams)})";
             };
         }
 
