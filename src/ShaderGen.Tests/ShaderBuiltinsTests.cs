@@ -25,8 +25,14 @@ namespace ShaderGen.Tests
         /// <summary>
         /// The skip reason, set to <see langword="null"/> to enable tests in class.
         /// </summary>
-        private const string SkipReason =
-            "Currently skipping automatic tests until closer implementations can be found.";
+        private const string SkipReason = null;
+        //"Currently skipping automatic tests until closer implementations can be found.";
+
+        /// <summary>
+        /// The test will fail when the GPU & CPU has any methods that fail higher than the ratio.
+        /// A value of 1.0f will never fail due to inconsistencies.
+        /// </summary>
+        private const float MaximumFailureRate = 1f;
 
         /// <summary>
         /// How close float's need to be, to be considered a match (ratio).
@@ -295,6 +301,7 @@ namespace ShaderGen.Tests
             _output.WriteLine(
                 $"Executed compute shader using {toolChain.GraphicsBackend} {loops} times in {testDuration.TotalSeconds}s.");
 
+            int notIdential = 0;
             if (failures.Any())
             {
                 _output.WriteLine($"{failures.Count} methods experienced failures out of {ShaderBuiltinsComputeTest.Methods} ({100f * failures.Count / ShaderBuiltinsComputeTest.Methods:##.##}%).  Details follow...");
@@ -302,17 +309,25 @@ namespace ShaderGen.Tests
                 string spacer1 = new string('=', 80);
                 string spacer2 = new string('-', 80);
 
+                int failed = 0;
+
                 // Output failures
                 foreach (KeyValuePair<int, List<Tuple<ComputeShaderParameters, ComputeShaderParameters,
                     IReadOnlyCollection<Tuple<string, float, float>>>>> method in failures
                     .OrderBy(kvp => kvp.Key))
                 // To order by %-age failure use - .OrderByDescending(kvp =>kvp.Value.Count))
                 {
+                    notIdential++;
                     int methodFailureCount = method.Value.Count;
                     _output.WriteLine(string.Empty);
                     _output.WriteLine(spacer1);
+                    float failureRate = 100f * methodFailureCount / loops;
+                    if (failureRate > MaximumFailureRate)
+                        failed++;
+
                     _output.WriteLine(
-                        $"Method {method.Key} failed {methodFailureCount} times ({100f * methodFailureCount / loops:##.##}%).");
+                        $"Method {method.Key} failed {methodFailureCount} times ({failureRate:##.##}%).");
+
 
                     foreach (IGrouping<string, Tuple<string, float, float>> group in method.Value.SelectMany(t => t.Item3)
                         .ToLookup(f => f.Item1).OrderByDescending(g => g.Count()))
@@ -337,10 +352,13 @@ namespace ShaderGen.Tests
                     }
                 }
 
-                Assert.False(true, "GPU and CPU results were not identical!");
+                Assert.False(failed < 1, $"{failed} methods had a failure rate higher than {MaximumFailureRate * 100:##.##}%!");
             }
 
-            _output.WriteLine("CPU & CPU results were identical for all methods over all iterations!");
+            _output.WriteLine(string.Empty);
+            _output.WriteLine(notIdential < 1
+                ? "CPU & CPU results were identical for all methods over all iterations!"
+                : $"CPU & GPU results did not match for {notIdential} methods!");
         }
 
         public static IReadOnlyCollection<Tuple<string, object, object>> DeepCompareObjectFields<T>(T a, T b)
