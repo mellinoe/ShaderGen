@@ -10,6 +10,10 @@ namespace ShaderGen.Tests.Attributes
     /// <seealso cref="Xunit.TheoryAttribute" />
     public sealed class MetalTheoryAttribute : BackendTheoryAttribute
     {
-        public MetalTheoryAttribute() : base(typeof(MetalBackend)) { }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MetalTheoryAttribute"/> class.
+        /// </summary>
+        /// <param name="requireHeadless">if set to <c>true</c> requires headless graphics device.</param>
+        public MetalTheoryAttribute(bool requireHeadless = false) : base(requireHeadless, typeof(MetalBackend)) { }
     }
 }

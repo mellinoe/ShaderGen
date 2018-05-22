@@ -21,7 +21,7 @@ namespace ShaderGen.Tests.Attributes
         /// <summary>
         /// If true, the test requires the ability to create a headless graphics device.
         /// </summary>
-        public bool RequireHeadless;
+        public readonly bool RequireHeadless;
 
         /// <inheritdoc />
         public override string Skip
@@ -49,9 +49,10 @@ namespace ShaderGen.Tests.Attributes
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BackendFactAttribute"/> class.
+        /// Initializes a new instance of the <see cref="BackendFactAttribute" /> class.
         /// </summary>
+        /// <param name="requireHeadless">if set to <c>true</c> requires headless graphics device.</param>
         /// <param name="backends">The backends required.</param>
-        public BackendFactAttribute(params Type[] backends) => Backends = backends;
+        public BackendFactAttribute(bool requireHeadless = false, params Type[] backends) => Backends = backends;
     }
 }

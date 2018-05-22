@@ -10,6 +10,10 @@ namespace ShaderGen.Tests.Attributes
     /// <seealso cref="Xunit.TheoryAttribute" />
     public sealed class Glsl330TheoryAttribute : BackendTheoryAttribute
     {
-        public Glsl330TheoryAttribute() : base(typeof(Glsl330Backend)) { }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Glsl330TheoryAttribute"/> class.
+        /// </summary>
+        /// <param name="requireHeadless">if set to <c>true</c> requires headless graphics device.</param>
+        public Glsl330TheoryAttribute(bool requireHeadless = false) : base(requireHeadless, typeof(Glsl330Backend)) { }
     }
 }

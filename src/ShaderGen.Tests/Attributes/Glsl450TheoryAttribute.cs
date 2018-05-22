@@ -10,6 +10,6 @@ namespace ShaderGen.Tests.Attributes
     /// <seealso cref="Xunit.TheoryAttribute" />
     public sealed class Glsl450TheoryAttribute : BackendTheoryAttribute
     {
-        public Glsl450TheoryAttribute() : base(typeof(Glsl450Backend)) { }
+        public Glsl450TheoryAttribute(bool requireHeadless = false) : base(requireHeadless, typeof(Glsl450Backend)) { }
     }
 }

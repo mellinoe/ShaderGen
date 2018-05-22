@@ -21,7 +21,7 @@ namespace ShaderGen.Tests.Attributes
         /// <summary>
         /// If true, the test requires the ability to create a headless graphics device.
         /// </summary>
-        public bool RequireHeadless;
+        public readonly bool RequireHeadless;
 
         /// <inheritdoc />
         public override string Skip
@@ -49,9 +49,10 @@ namespace ShaderGen.Tests.Attributes
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BackendTheoryAttribute"/> class.
+        /// Initializes a new instance of the <see cref="BackendTheoryAttribute" /> class.
         /// </summary>
+        /// <param name="requireHeadless">if set to <c>true</c> [require headless].</param>
         /// <param name="backends">The backends required.</param>
-        public BackendTheoryAttribute(params Type[] backends) => Backends = backends;
+        public BackendTheoryAttribute(bool requireHeadless = false, params Type[] backends) => Backends = backends;
     }
 }

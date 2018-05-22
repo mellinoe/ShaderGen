@@ -10,6 +10,10 @@ namespace ShaderGen.Tests.Attributes
     /// <seealso cref="Xunit.FactAttribute" />
     public sealed class Glsl330FactAttribute : BackendFactAttribute
     {
-        public Glsl330FactAttribute() : base(typeof(Glsl330Backend)) { }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Glsl330FactAttribute"/> class.
+        /// </summary>
+        /// <param name="requireHeadless">if set to <c>true</c> requires headless graphics device.</param>
+        public Glsl330FactAttribute(bool requireHeadless = false) : base(requireHeadless, typeof(Glsl330Backend)) { }
     }
 }

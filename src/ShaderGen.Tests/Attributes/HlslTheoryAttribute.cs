@@ -10,6 +10,10 @@ namespace ShaderGen.Tests.Attributes
     /// <seealso cref="Xunit.TheoryAttribute" />
     public sealed class HlslTheoryAttribute : BackendTheoryAttribute
     {
-        public HlslTheoryAttribute() : base(typeof(HlslBackend)) { }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HlslTheoryAttribute"/> class.
+        /// </summary>
+        /// <param name="requireHeadless">if set to <c>true</c> requires headless graphics device.</param>
+        public HlslTheoryAttribute(bool requireHeadless = false) : base(requireHeadless, typeof(HlslBackend)) { }
     }
 }
