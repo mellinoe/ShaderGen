@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
 using System.Runtime.InteropServices;
+using System.Threading;
 using ShaderGen.Glsl;
 using ShaderGen.Hlsl;
 using ShaderGen.Tests.Tools;
@@ -22,14 +23,14 @@ namespace ShaderGen.Tests
             => GetCompilation(CSharpSyntaxTree.ParseText(code));
 
         public static Compilation GetCompilation(params SyntaxTree[] syntaxTrees)
-            => GetCompilation((IEnumerable<SyntaxTree>) syntaxTrees);
+            => GetCompilation((IEnumerable<SyntaxTree>)syntaxTrees);
 
         public static Compilation GetCompilation(IEnumerable<SyntaxTree> syntaxTrees)
         {
             CSharpCompilation compilation = CSharpCompilation.Create(
                 "TestAssembly",
                 syntaxTrees,
-                GetProjectReferences(),
+                ProjectReferences,
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
             return compilation;
         }
@@ -50,7 +51,7 @@ namespace ShaderGen.Tests
 
         private static IEnumerable<SyntaxTree> GetSyntaxTrees()
         {
-            foreach (string sourceItem in GetCompileItems())
+            foreach (string sourceItem in Directory.EnumerateFiles(ProjectBasePath, "*.cs", SearchOption.AllDirectories).ToArray())
             {
                 using (FileStream fs = File.OpenRead(sourceItem))
                 {
@@ -60,71 +61,74 @@ namespace ShaderGen.Tests
             }
         }
 
-        private static IEnumerable<MetadataReference> GetProjectReferences()
-        {
-            string[] referenceItems = GetReferenceItems();
-            string[] packageDirs = GetPackageDirs();
-            foreach (string refItem in referenceItems)
-            {
-                MetadataReference reference = GetFirstReference(refItem, packageDirs);
-                if (reference == null)
+        private static readonly Lazy<IReadOnlyList<string>> _projectReferencePaths
+            = new Lazy<IReadOnlyList<string>>(
+                () =>
                 {
-                    throw new InvalidOperationException("Unable to find reference: " + refItem);
-                }
+                    // Get all paths from References.txt
+                    string[] paths = File.ReadAllLines(Path.Combine(ProjectBasePath, "References.txt"))
+                        .Select(l => l.Trim())
+                        .ToArray();
 
-                yield return reference;
-            }
-        }
 
-        private static MetadataReference GetFirstReference(string path, string[] packageDirs)
-        {
-            foreach (string packageDir in packageDirs)
-            {
-                string transformed = path.Replace("{nupkgdir}", packageDir);
-                transformed = transformed.Replace("{appcontextbasedirectory}", AppContext.BaseDirectory);
-                if (File.Exists(transformed))
-                {
-                    using (FileStream fs = File.OpenRead(transformed))
+                    List<string> dirs = new List<string>
                     {
-                        var result = MetadataReference.CreateFromStream(fs, filePath: transformed);
-                        return result;
+                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget",
+                            "packages")
+                    };
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                        dirs.Add(@"C:\Program Files\dotnet\sdk\NuGetFallbackFolder");
+                    else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                        dirs.Add("/usr/local/share/dotnet/sdk/NuGetFallbackFolder");
+                    else
+                        dirs.Add("/usr/share/dotnet/sdk/NuGetFallbackFolder");
+
+                    IReadOnlyCollection<string> packageDirs = dirs.Where(Directory.Exists).ToArray();
+
+                    for (int index = 0; index < paths.Length; index++)
+                    {
+                        string path = paths[index];
+                        bool found = false;
+                        foreach (string packageDir in packageDirs)
+                        {
+                            string transformed = path.Replace("{nupkgdir}", packageDir);
+                            transformed = transformed.Replace("{appcontextbasedirectory}", AppContext.BaseDirectory);
+                            if (File.Exists(transformed))
+                            {
+                                found = true;
+                                paths[index] = transformed;
+                                break;
+                            }
+                        }
+
+                        if (!found)
+                            throw new InvalidOperationException($"Unable to find reference \"{path}\".");
                     }
-                }
-            }
 
-            return null;
-        }
+                    return paths;
+                },
+                LazyThreadSafetyMode.ExecutionAndPublication);
 
-        private static string[] GetCompileItems()
-        {
-            return Directory.EnumerateFiles(ProjectBasePath, "*.cs", SearchOption.AllDirectories).ToArray();
-        }
+        public static IReadOnlyList<string> ProjectReferencePaths => _projectReferencePaths.Value;
 
-        private static string[] GetReferenceItems()
-        {
-            string[] lines = File.ReadAllLines(Path.Combine(ProjectBasePath, "References.txt"));
-            return lines.Select(l => l.Trim()).ToArray(); ;
-        }
+        private static readonly Lazy<IReadOnlyList<MetadataReference>> _projectReferences
+            = new Lazy<IReadOnlyList<MetadataReference>>(
+                () =>
+                {
+                    IReadOnlyList<string> paths = _projectReferencePaths.Value;
+                    MetadataReference[] references = new MetadataReference[paths.Count];
+                    for (int index = 0; index < paths.Count; index++)
+                    {
+                        string path = paths[index];
+                        using (FileStream fs = File.OpenRead(path))
+                            references[index] = MetadataReference.CreateFromStream(fs, filePath: path);
+                    }
 
-        public static string[] GetPackageDirs()
-        {
-            List<string> dirs = new List<string>();
-            dirs.Add(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages"));
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                dirs.Add(@"C:\Program Files\dotnet\sdk\NuGetFallbackFolder");
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                dirs.Add("/usr/local/share/dotnet/sdk/NuGetFallbackFolder");
-            }
-            else
-            {
-                dirs.Add("/usr/share/dotnet/sdk/NuGetFallbackFolder");
-            }
+                    return references;
+                },
+                LazyThreadSafetyMode.ExecutionAndPublication);
 
-            return dirs.ToArray();
-        }
+        public static IReadOnlyList<MetadataReference> ProjectReferences => _projectReferences.Value;
 
         public static LanguageBackend[] GetAllBackends(Compilation compilation, ToolFeatures features = ToolFeatures.Transpilation)
             => ToolChain.Requires(features, false).Select(t => t.CreateBackend(compilation))
