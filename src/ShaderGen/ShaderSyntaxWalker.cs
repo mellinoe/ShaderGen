@@ -16,7 +16,7 @@ namespace ShaderGen
         private readonly LanguageBackend[] _backends;
         private readonly ShaderSetInfo _shaderSet;
 
-        private Dictionary<int, int> _setCounts = new Dictionary<int, int>();
+        private readonly Dictionary<int, int> _setCounts = new Dictionary<int, int>();
 
         public ShaderSyntaxWalker(Compilation compilation, LanguageBackend[] backends, ShaderSetInfo ss)
             : base(SyntaxWalkerDepth.Token)
@@ -266,7 +266,9 @@ namespace ShaderGen
         private TypeReference ParseElementType(VariableDeclaratorSyntax vds)
         {
             FieldDeclarationSyntax fieldDecl = (FieldDeclarationSyntax)vds.Parent.Parent;
-            GenericNameSyntax gns = (GenericNameSyntax)fieldDecl.Declaration.Type;
+            TypeSyntax fieldType = fieldDecl.Declaration.Type;
+            while (fieldType is QualifiedNameSyntax qns) fieldType = qns.Right;
+            GenericNameSyntax gns = (GenericNameSyntax)fieldType;
             TypeSyntax type = gns.TypeArgumentList.Arguments[0];
             string fullName = GetModel(vds).GetFullTypeName(type);
             return new TypeReference(fullName, GetModel(vds).GetTypeInfo(type).Type);
