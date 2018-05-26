@@ -255,7 +255,7 @@ namespace ShaderGen.Tests.Tools
         /// <exception cref="ShaderGen.Tests.Tools.RequiredToolFeatureMissingException"></exception>
         public static IReadOnlyCollection<ToolChain> Requires(ToolFeatures requiredFeatures, bool throwOnFail,
             params GraphicsBackend[] graphicsBackends)
-            => Requires(requiredFeatures, throwOnFail, (IEnumerable<GraphicsBackend>) graphicsBackends);
+            => Requires(requiredFeatures, throwOnFail, (IEnumerable<GraphicsBackend>)graphicsBackends);
 
         /// <summary>
         /// Gets the first tool chain (if any) with all the specified features.
@@ -275,7 +275,7 @@ namespace ShaderGen.Tests.Tools
         /// <returns></returns>
         /// <exception cref="ShaderGen.Tests.Tools.RequiredToolFeatureMissingException"></exception>
         public static IReadOnlyCollection<ToolChain> Requires(
-            ToolFeatures requiredFeatures, 
+            ToolFeatures requiredFeatures,
             bool throwOnFail,
             IEnumerable<GraphicsBackend> graphicsBackends)
         {
@@ -332,6 +332,7 @@ namespace ShaderGen.Tests.Tools
         private readonly Func<GraphicsDevice> _createHeadless;
 
         /// <summary>
+        /// TODO For future expansion, will need to review signature of function.
         /// Function to create a headless graphics device.
         /// </summary>
         private readonly Func<GraphicsDevice> _createWindowed;
@@ -400,13 +401,13 @@ namespace ShaderGen.Tests.Tools
 
                 features |= ToolFeatures.Compilation;
             }
-            if (createHeadless != null && 
+            if (createHeadless != null &&
                 GraphicsDevice.IsBackendSupported(graphicsBackend))
             {
                 try
                 {
                     // Try to create a headless graphics device
-                    using (_createHeadless()) { }
+                    using (createHeadless()) { }
                     _createHeadless = createHeadless;
                     features |= ToolFeatures.HeadlessGraphicsDevice;
                 }
@@ -415,13 +416,14 @@ namespace ShaderGen.Tests.Tools
                 }
             }
 
-            if (createWindowed != null && 
+            // TODO For future expansion, will need to review signature of function.
+            if (createWindowed != null &&
                 GraphicsDevice.IsBackendSupported(graphicsBackend))
             {
                 try
                 {
                     // Try to create a headless graphics device
-                    using (_createHeadless()) { }
+                    using (createWindowed()) { }
                     _createWindowed = createWindowed;
                     features |= ToolFeatures.WindowedGraphicsDevice;
                 }
@@ -572,7 +574,7 @@ namespace ShaderGen.Tests.Tools
                         SearchOption.AllDirectories)
                     // TODO This seems particularly broad brush, perhaps use Path.DirectorySeparatorChar+"arm"?
                     .OrderBy(f => f.Contains("arm") ? 1 : 0)
-                    .FirstOrDefault(), 
+                    .FirstOrDefault(),
             LazyThreadSafetyMode.ExecutionAndPublication);
 
         private static CompileResult FxcCompile(string code, Stage stage, string entryPoint)
