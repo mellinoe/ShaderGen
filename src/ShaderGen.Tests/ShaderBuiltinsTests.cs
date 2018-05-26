@@ -24,8 +24,7 @@ namespace ShaderGen.Tests
         /// <summary>
         /// The skip reason, set to <see langword="null"/> to enable tests in class.
         /// </summary>
-        private const string SkipReason = null;
-        //"Currently skipping automatic tests until closer implementations can be found.";
+        private const string SkipReason = "Currently skipping automatic tests until closer implementations can be found.";
 
         /// <summary>
         /// The test will fail when the GPU & CPU has any methods that fail higher than the ratio.
