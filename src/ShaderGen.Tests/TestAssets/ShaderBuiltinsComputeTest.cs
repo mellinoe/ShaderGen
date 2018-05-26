@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using ShaderGen;
 using TestShaders;
 using static ShaderGen.ShaderBuiltins;
-using static ShaderGen.Builtins;
 
 namespace TestShaders
 {

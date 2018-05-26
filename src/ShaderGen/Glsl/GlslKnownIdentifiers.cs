@@ -13,10 +13,10 @@ namespace ShaderGen.Glsl
 
             Dictionary<string, string> builtinMappings = new Dictionary<string, string>()
             {
-                { nameof(Builtins.E), "2.71828182845905" },
-                { nameof(Builtins.PI), "3.14159265358979" }
+                { nameof(ShaderBuiltins.E), "2.71828182845905" },
+                { nameof(ShaderBuiltins.PI), "3.14159265358979" }
             };
-            ret.Add("ShaderGen.Builtins", builtinMappings);
+            ret.Add("ShaderGen.ShaderBuiltins", builtinMappings);
 
             Dictionary<string, string> v2Mappings = new Dictionary<string, string>()
             {

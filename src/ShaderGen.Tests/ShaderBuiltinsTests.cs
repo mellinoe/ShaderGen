@@ -6,12 +6,9 @@ using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Text;
 using ShaderGen.Tests.Tools;
 using TestShaders;
 using Veldrid;
@@ -109,11 +106,10 @@ namespace ShaderGen.Tests
                 throw new RequiredToolFeatureMissingException(
                     $"The {toolChain} does not support creating a headless graphics device!");
 
-            string csFunctionName = "ComputeShader.CS";
-            IReadOnlyCollection<MethodInfo> methods = typeof(ShaderBuiltins)
-                .GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Static);
+            string csFunctionName =
+                $"{nameof(TestShaders)}.{nameof(ShaderBuiltinsComputeTest)}.{nameof(ShaderBuiltinsComputeTest.CS)}";
+            Compilation compilation = TestUtil.GetCompilation();
 
-            Compilation compilation = CreateMethodTestCompilation(methods);
             LanguageBackend backend = toolChain.CreateBackend(compilation);
 
             /*
@@ -368,29 +364,6 @@ namespace ShaderGen.Tests
             _output.WriteLine(notIdential < 1
                 ? "CPU & CPU results were identical for all methods over all iterations!"
                 : $"CPU & GPU results did not match for {notIdential} methods!");
-        }
-
-        public Compilation CreateMethodTestCompilation(IReadOnlyCollection<MethodInfo> methods)
-        {
-            Dictionary<Type, List<string>> fields = new Dictionary<Type, List<string>>();
-
-            StringBuilder codeBuilder = new StringBuilder();
-            codeBuilder.Append(Resource.SBSP1);
-            codeBuilder.Append(methods.Count);
-            codeBuilder.Append(Resource.SBSP2);
-
-            /*
-             * Output test cases
-             */
-
-            codeBuilder.Append(Resource.SBSP3);
-
-            /*
-             * Output test fields
-             */
-            codeBuilder.Append(Resource.SBSP4);
-
-            return TestUtil.GetCompilation(codeBuilder.ToString());
         }
 
         public static IReadOnlyCollection<Tuple<string, object, object>> DeepCompareObjectFields<T>(T a, T b)
