@@ -9,7 +9,6 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using ShaderGen.Tests.Attributes;
 using ShaderGen.Tests.Tools;
 using TestShaders;
 using Veldrid;
@@ -81,42 +80,31 @@ namespace ShaderGen.Tests
         }
 
 
-        [GlslEs300Fact(Skip = SkipReason)]
+        [SkippableFact(typeof(RequiredToolFeatureMissingException), Skip = SkipReason)]
         public void TestShaderBuiltins_GlslEs300()
             => TestShaderBuiltins(ToolChain.GlslEs300);
 
-        [Glsl330Fact(Skip = SkipReason)]
+        [SkippableFact(typeof(RequiredToolFeatureMissingException), Skip = SkipReason)]
         public void TestShaderBuiltins_Glsl330()
             => TestShaderBuiltins(ToolChain.Glsl330);
 
-        [Glsl450Fact(Skip = SkipReason)]
+        [SkippableFact(typeof(RequiredToolFeatureMissingException), Skip = SkipReason)]
         public void TestShaderBuiltins_Glsl450()
             => TestShaderBuiltins(ToolChain.Glsl450);
 
-        [HlslFact(Skip = SkipReason)]
+        [SkippableFact(typeof(RequiredToolFeatureMissingException), Skip = SkipReason)]
         public void TestShaderBuiltins_Hlsl()
-            => TestShaderBuiltins(ToolChain.Hlsl);
+            => TestShaderBuiltins(ToolChain.Direct3D11);
 
-        [MetalFact(Skip = SkipReason)]
+        [SkippableFact(typeof(RequiredToolFeatureMissingException), Skip = SkipReason)]
         public void TestShaderBuiltins_Metal()
             => TestShaderBuiltins(ToolChain.Metal);
 
         private void TestShaderBuiltins(ToolChain toolChain)
         {
-            // WORKAROUND - Headless detection is not reliably working on XUnit runners, these will prevent the tests failing
-            // on systems that do not support the toolchains.
-            if (!toolChain.IsAvailable)
-            {
-                _output.WriteLine($"The {toolChain} is not available!");
-                return;
-            }
-
-            if (!toolChain.HeadlessAvailable)
-            {
-                _output.WriteLine(
-                    $"The {toolChain} is not capable of creating a headless graphics device on this system!");
-                return;
-            }
+            if (!toolChain.Features.HasFlag(ToolFeatures.ToHeadless))
+                throw new RequiredToolFeatureMissingException(
+                    $"The {toolChain} does not support creating a headless graphics device!");
 
             string csFunctionName =
                 $"{nameof(TestShaders)}.{nameof(ShaderBuiltinsComputeTest)}.{nameof(ShaderBuiltinsComputeTest.CS)}";
@@ -141,7 +129,7 @@ namespace ShaderGen.Tests
             GeneratedShaderSet set = generationResult.GetOutput(backend).Single();
             _output.WriteLine($"Generated shader set for {toolChain.Name} backend.");
 
-            ToolResult compilationResult =
+            CompileResult compilationResult =
                 toolChain.Compile(set.ComputeShaderCode, Stage.Compute, set.ComputeFunction.Name);
             if (compilationResult.HasError)
             {

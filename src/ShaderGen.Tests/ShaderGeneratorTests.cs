@@ -8,8 +8,8 @@ using System.Text;
 using ShaderGen.Glsl;
 using ShaderGen.Hlsl;
 using ShaderGen.Metal;
-using ShaderGen.Tests.Attributes;
 using ShaderGen.Tests.Tools;
+using Veldrid;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -80,10 +80,11 @@ namespace ShaderGen.Tests
             "TestShaders.ComplexCompute.CS"
         };
 
-        private void TestEndToEnd(Type backendType, string vsName, string fsName, string csName = null)
-        {
+        private void TestCompile(GraphicsBackend graphicsBackend, string vsName, string fsName, string csName = null)
+        { 
             Compilation compilation = TestUtil.GetTestProjectCompilation();
-            ToolChain toolChain = ToolChain.Get(backendType);
+            ToolChain toolChain = ToolChain.Require(ToolFeatures.ToCompiled, graphicsBackend).Single();
+
             LanguageBackend backend = toolChain.CreateBackend(compilation);
             ShaderGenerator sg = new ShaderGenerator(compilation, backend, vsName, fsName, csName);
 
@@ -94,7 +95,7 @@ namespace ShaderGen.Tests
             GeneratedShaderSet set = sets[0];
             ShaderModel shaderModel = set.Model;
 
-            List<ToolResult> results = new List<ToolResult>();
+            List<CompileResult> results = new List<CompileResult>();
             if (!string.IsNullOrWhiteSpace(vsName))
             {
                 ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
@@ -117,41 +118,40 @@ namespace ShaderGen.Tests
 
             // Collate results
             StringBuilder builder = new StringBuilder();
-            foreach (ToolResult result in results)
+            foreach (CompileResult result in results)
                 if (result.HasError)
                     builder.AppendLine(result.ToString());
 
             Assert.True(builder.Length < 1, builder.ToString());
         }
 
-        [HlslTheory]
+        [SkippableTheory(typeof(RequiredToolFeatureMissingException))]
         [MemberData(nameof(ShaderSets))]
-        public void HlslEndToEnd(string vsName, string fsName) => TestEndToEnd(typeof(HlslBackend), vsName, fsName);
+        public void HlslCompile(string vsName, string fsName) => TestCompile(GraphicsBackend.Direct3D11, vsName, fsName);
 
-        [Glsl330Theory]
+        [SkippableTheory(typeof(RequiredToolFeatureMissingException))]
         [MemberData(nameof(ShaderSets))]
-        public void Glsl330EndToEnd(string vsName, string fsName) => TestEndToEnd(typeof(Glsl330Backend), vsName, fsName);
+        public void Glsl330Compile(string vsName, string fsName) => TestCompile(GraphicsBackend.OpenGL, vsName, fsName);
 
-        [GlslEs300Theory]
+        [SkippableTheory(typeof(RequiredToolFeatureMissingException))]
         [MemberData(nameof(ShaderSets))]
-        public void GlslEs300EndToEnd(string vsName, string fsName) => TestEndToEnd(typeof(GlslEs300Backend), vsName, fsName);
+        public void GlslEs300Compile(string vsName, string fsName) => TestCompile(GraphicsBackend.OpenGLES, vsName, fsName);
 
-        [Glsl450Theory]
+        [SkippableTheory(typeof(RequiredToolFeatureMissingException))]
         [MemberData(nameof(ShaderSets))]
-        public void Glsl450EndToEnd(string vsName, string fsName) => TestEndToEnd(typeof(Glsl450Backend), vsName, fsName);
+        public void Glsl450Compile(string vsName, string fsName) => TestCompile(GraphicsBackend.Vulkan, vsName, fsName);
 
-        [MetalTheory]
+        [SkippableTheory(typeof(RequiredToolFeatureMissingException))]
         [MemberData(nameof(ShaderSets))]
-        public void MetalEndToEnd(string vsName, string fsName) => TestEndToEnd(typeof(MetalBackend), vsName, fsName);
+        public void MetalCompile(string vsName, string fsName) => TestCompile(GraphicsBackend.Metal, vsName, fsName);
 
-        [Fact]
-        public void AllSetsEndToEnd()
+        [SkippableFact(typeof(RequiredToolFeatureMissingException))]
+        public void AllSetsCompile()
         {
             Compilation compilation = TestUtil.GetTestProjectCompilation();
 
-            // Get backends for every toolchain that is available
-            LanguageBackend[] backends = ToolChain.All
-                .Where(t => t.IsAvailable)
+            // Get all available tool chains.
+            LanguageBackend[] backends = ToolChain.Require(ToolFeatures.ToCompiled, false)
                 .Select(t => t.CreateBackend(compilation))
                 .ToArray();
 
@@ -174,7 +174,7 @@ namespace ShaderGen.Tests
                     _output.WriteLine(string.Empty);
                     _output.WriteLine(spacer2);
                     _output.WriteLine(string.Empty);
-                    ToolResult result;
+                    CompileResult result;
 
                     if (set.VertexShaderCode != null)
                     {

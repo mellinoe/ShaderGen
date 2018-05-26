@@ -9,13 +9,8 @@ namespace ShaderGen.Tests.Tools
     /// <summary>
     /// The result of a compilation tool execution.
     /// </summary>
-    public class ToolResult
+    public class CompileResult
     {
-        /// <summary>
-        /// The tool chain used.
-        /// </summary>
-        public readonly ToolChain ToolChain;
-
         /// <summary>
         /// The shader code passed to the tool.
         /// </summary>
@@ -42,17 +37,15 @@ namespace ShaderGen.Tests.Tools
         public readonly byte[] CompiledOutput;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ToolResult" /> class.
+        /// Initializes a new instance of the <see cref="CompileResult" /> class.
         /// </summary>
-        /// <param name="toolChain">The tool chain.</param>
         /// <param name="code">The code.</param>
         /// <param name="exitCode">The exit code.</param>
         /// <param name="stdOut">The standard out.</param>
         /// <param name="stdError">The standard error.</param>
         /// <param name="outputBytes">The output bytes.</param>
-        public ToolResult(ToolChain toolChain, string code, int exitCode, string stdOut, string stdError, byte[] outputBytes)
+        public CompileResult(string code, int exitCode, string stdOut, string stdError, byte[] outputBytes)
         {
-            ToolChain = toolChain;
             Code = code ?? string.Empty;
             ExitCode = exitCode;
             StdOut = stdOut;
@@ -80,7 +73,7 @@ namespace ShaderGen.Tests.Tools
              * Build informative error message
              */
             StringBuilder builder = new StringBuilder()
-                .Append($"{ToolChain.Name} compilation ")
+                .Append($"Compilation ")
                 .Append(HasError ? $"failed with exit code {ExitCode}." : "suceeded.");
 
             if (!string.IsNullOrWhiteSpace(StdOut))

@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
+using System.Linq;
 using ShaderGen.Hlsl;
-using ShaderGen.Tests.Attributes;
 using ShaderGen.Tests.Tools;
 using TestShaders;
 using Xunit;
@@ -53,11 +53,15 @@ namespace ShaderGen.Tests
             Assert.Equal(SemanticType.TextureCoordinate, fsInput.Fields[1].SemanticType);
         }
 
-        [HlslFact]
+        [SkippableFact(typeof(RequiredToolFeatureMissingException))]
         public void PartialFiles()
         {
+            ToolChain toolChain = ToolChain.Require(ToolFeatures.ToCompiled, false).FirstOrDefault();
+            if (toolChain == null)
+                throw new RequiredToolFeatureMissingException("No tool chain supporting compilation was found!");
+
             Compilation compilation = TestUtil.GetTestProjectCompilation();
-            HlslBackend backend = new HlslBackend(compilation);
+            LanguageBackend backend = toolChain.CreateBackend(compilation);
             ShaderGenerator sg = new ShaderGenerator(compilation, backend, "TestShaders.PartialVertex.VertexShaderFunc");
 
             ShaderGenerationResult genResult = sg.GenerateShaders();
@@ -66,7 +70,7 @@ namespace ShaderGen.Tests
             GeneratedShaderSet set = sets[0];
             ShaderModel shaderModel = set.Model;
             string vsCode = set.VertexShaderCode;
-            ToolResult result = ToolChain.Hlsl.Compile(vsCode, Stage.Vertex, "VertexShaderFunc");
+            CompileResult result = toolChain.Compile(vsCode, Stage.Vertex, "VertexShaderFunc");
             Assert.False(result.HasError, result.ToString());
         }
 

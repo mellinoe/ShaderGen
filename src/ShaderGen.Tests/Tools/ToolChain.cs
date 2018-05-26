@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -7,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ShaderGen.Glsl;
 using ShaderGen.Hlsl;
 using ShaderGen.Metal;
@@ -21,24 +23,41 @@ namespace ShaderGen.Tests.Tools
     /// </summary>
     public class ToolChain
     {
+        /// <summary>
+        /// The default timeout in ms to allow for a tool to run.
+        /// </summary>
         public const int DefaultTimeout = 15000;
+
+        /// <summary>
+        /// Compiles and validates code in one step.
+        /// </summary>
+        /// <param name="code">The code.</param>
+        /// <param name="stage">The compilation stage.</param>
+        /// <param name="entryPoint">The entry point.</param>
+        /// <returns></returns>
+        private delegate CompileResult CompileDelegate(string code, Stage stage, string entryPoint);
+
+        private const string WindowsKitsFolder = @"C:\Program Files (x86)\Windows Kits";
+        private const string VulkanSdkEnvVar = "VULKAN_SDK";
         private const string DefaultMetalPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metal";
-        private delegate string ArgumentFormatterDelegate(string file, Stage stage, string entryPoint, string output = null);
+
 
         /// <summary>
         /// All the currently available tools by <see cref="LanguageBackend">Backend</see> <see cref="Type"/>.
         /// </summary>
-        private static readonly IReadOnlyDictionary<Type, ToolChain> _toolChainsByBackendType;
+        private static readonly Dictionary<Type, ToolChain> _toolChainsByBackendType
+            = new Dictionary<Type, ToolChain>();
 
         /// <summary>
         /// All the currently available tools by <see cref="GraphicsBackend"/>.
         /// </summary>
-        private static readonly IReadOnlyDictionary<GraphicsBackend, ToolChain> _toolChainsByGraphicsBackend;
+        private static readonly Dictionary<GraphicsBackend, ToolChain> _toolChainsByGraphicsBackend
+            = new Dictionary<GraphicsBackend, ToolChain>();
 
         /// <summary>
         /// The HLSL tool chain.
         /// </summary>
-        public static readonly ToolChain Hlsl;
+        public static readonly ToolChain Direct3D11;
 
         /// <summary>
         /// The GLSL es300 tool chain.
@@ -66,7 +85,7 @@ namespace ShaderGen.Tests.Tools
         /// <value>
         /// All.
         /// </value>
-        public static IEnumerable<ToolChain> All => _toolChainsByBackendType.Values;
+        public static IEnumerable<ToolChain> All => _toolChainsByGraphicsBackend.Values;
 
         /// <summary>
         /// Gets all known backend types.
@@ -81,32 +100,40 @@ namespace ShaderGen.Tests.Tools
         /// </summary>
         static ToolChain()
         {
-            List<ToolChain> tools = new List<ToolChain>();
-
-            string fxcExe = FindFxcPath();
-            Hlsl = new ToolChain(typeof(HlslBackend), GraphicsBackend.Direct3D11, c => new HlslBackend(c), CreateHeadlessD3D, fxcExe, FxcArguments);
-            tools.Add(Hlsl);
-
-            string glslvExe = FindGlslvPath();
-
-            string NonVulkan(string f, Stage s, string e, string o) => GlsvArguments(f, s, e, false, o);
-            GlslEs300 = new ToolChain(typeof(GlslEs300Backend), GraphicsBackend.OpenGLES, c => new GlslEs300Backend(c), () => CreateHeadlessGL(GraphicsBackend.OpenGLES), glslvExe, NonVulkan);
-            Glsl330 = new ToolChain(typeof(Glsl330Backend), GraphicsBackend.OpenGL, c => new Glsl330Backend(c),
-                () => CreateHeadlessGL(GraphicsBackend.OpenGL), glslvExe, NonVulkan);
-            Glsl450 = new ToolChain(typeof(Glsl450Backend), GraphicsBackend.Vulkan, c => new Glsl450Backend(c), CreateHeadlessVulkan, glslvExe, (f, s, e, o) => GlsvArguments(f, s, e, true, o));
-            tools.Add(GlslEs300);
-            tools.Add(Glsl330);
-            tools.Add(Glsl450);
-
-            string metalPath = FindMetalPath();
-            Metal = new ToolChain(typeof(MetalBackend), GraphicsBackend.Metal, c => new MetalBackend(c),
-                CreateHeadlessMetal, metalPath,
-                MetalArguments, Encoding.UTF8);
-            tools.Add(Metal);
-
-            // Set lookup dictionarys
-            _toolChainsByBackendType = tools.ToDictionary(t => t.BackendType);
-            _toolChainsByGraphicsBackend = tools.ToDictionary(t => t.GraphicsBackend);
+            Direct3D11 = new ToolChain(
+                GraphicsBackend.Direct3D11,
+                typeof(HlslBackend),
+                c => new HlslBackend(c),
+                _fxcPath.Value != null ? FxcCompile : (CompileDelegate)null,
+                CreateHeadlessD3D, null);
+            GlslEs300 = new ToolChain(
+                GraphicsBackend.OpenGLES,
+                typeof(GlslEs300Backend),
+                c => new GlslEs300Backend(c),
+                _glslvPath.Value != null ? GLCompile : (CompileDelegate)null,
+                () => CreateHeadlessGL(GraphicsBackend.OpenGLES),
+                null);
+            Glsl330 = new ToolChain(
+                GraphicsBackend.OpenGL,
+                typeof(Glsl330Backend),
+                c => new Glsl330Backend(c),
+                _glslvPath.Value != null ? GLCompile : (CompileDelegate)null,
+                () => CreateHeadlessGL(GraphicsBackend.OpenGL),
+                null);
+            Glsl450 = new ToolChain(
+                GraphicsBackend.Vulkan,
+                typeof(Glsl450Backend),
+                c => new Glsl450Backend(c),
+                _glslvPath.Value != null ? VulkanCompile : (CompileDelegate)null,
+                CreateHeadlessVulkan,
+                null);
+            Metal = new ToolChain(
+                GraphicsBackend.Metal,
+                typeof(MetalBackend),
+                c => new MetalBackend(c),
+                _metalPath.Value != null ? MetalCompile : (CompileDelegate)null,
+                CreateHeadlessMetal,
+                null);
         }
 
         /// <summary>
@@ -115,7 +142,9 @@ namespace ShaderGen.Tests.Tools
         /// <param name="backendType">Type of the backend.</param>
         /// <returns>A <see cref="ToolChain"/> if available; otherwise <see langword="null"/>.</returns>
         public static ToolChain Get(Type backendType) =>
-            _toolChainsByBackendType.TryGetValue(backendType, out ToolChain toolChain) ? toolChain : null;
+            _toolChainsByBackendType.TryGetValue(backendType, out ToolChain toolChain)
+                ? toolChain
+                : null;
 
         /// <summary>
         /// Gets the <see cref="ToolChain" /> for the specified backend.
@@ -124,8 +153,8 @@ namespace ShaderGen.Tests.Tools
         /// <returns>
         /// A <see cref="ToolChain" /> if available; otherwise <see langword="null" />.
         /// </returns>
-        public static ToolChain Get(LanguageBackend backend) =>
-            _toolChainsByBackendType.TryGetValue(backend.GetType(), out ToolChain toolChain) ? toolChain : null;
+        public static ToolChain Get(LanguageBackend backend) => backend != null ? Get(backend.GetType()) : null;
+
 
         /// <summary>
         /// Gets the <see cref="ToolChain" /> for the specified <see cref="GraphicsBackend"/>.
@@ -135,7 +164,96 @@ namespace ShaderGen.Tests.Tools
         /// A <see cref="ToolChain" /> if available; otherwise <see langword="null" />.
         /// </returns>
         public static ToolChain Get(GraphicsBackend graphicsBackend) =>
-            _toolChainsByGraphicsBackend.TryGetValue(graphicsBackend, out ToolChain toolChain) ? toolChain : null;
+            _toolChainsByGraphicsBackend.TryGetValue(graphicsBackend, out ToolChain toolChain)
+                ? toolChain
+                : null;
+
+        /// <summary>
+        /// Gets all the backends, ensuring they have the required features.
+        /// </summary>
+        /// <param name="backends">The backends required (leave empty to get all).</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public static IReadOnlyCollection<ToolChain> Require(params GraphicsBackend[] backends)
+            => Require(ToolFeatures.All, true, backends);
+
+        /// <summary>
+        /// Gets all the backends, ensuring they have the required features.
+        /// </summary>
+        /// <param name="requiredFeatures">The required features.</param>
+        /// <param name="backends">The backends required (leave empty to get all).</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public static IReadOnlyCollection<ToolChain> Require(ToolFeatures requiredFeatures = ToolFeatures.All,
+            params GraphicsBackend[] backends)
+            => Require(requiredFeatures, true, backends);
+
+        /// <summary>
+        /// Gets all the backends, ensuring they have the required features.
+        /// </summary>
+        /// <param name="requiredFeatures">The required features.</param>
+        /// <param name="throwOnFail">if set to <c>true</c> throws an error if any of the <paramref name="backends" />
+        /// do not have the <paramref name="requiredFeatures">required features</paramref>.</param>
+        /// <param name="backends">The backends required (leave empty to get all).</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public static IReadOnlyCollection<ToolChain> Require(ToolFeatures requiredFeatures, bool throwOnFail, params GraphicsBackend[] backends)
+        {
+            if (backends.Length < 1)
+                backends = _toolChainsByGraphicsBackend.Keys.ToArray();
+
+            List<string> missingBackends = new List<string>(backends.Length);
+            List<ToolChain> found = new List<ToolChain>(backends.Length);
+            foreach (GraphicsBackend backend in backends)
+            {
+                ToolChain toolChain = Get(backend);
+                if (toolChain == null)
+                {
+                    missingBackends.Add($"{backend} backend does not have a tool chain");
+                    continue;
+                }
+
+                if (!toolChain.Features.HasFlag(requiredFeatures))
+                {
+                    missingBackends.Add($"{backend} tool chain does not have the required {~toolChain.Features & requiredFeatures} feature(s)");
+                    continue;
+                }
+
+                found.Add(toolChain);
+            }
+
+            if (throwOnFail && missingBackends.Count > 0)
+            {
+                string last = missingBackends.LastOrDefault();
+                throw new RequiredToolFeatureMissingException(
+                    missingBackends.Count < 2
+                        ? $"The {last}."
+                        : $"The {string.Join(", ", missingBackends.Take(missingBackends.Count - 1))} and {last}.");
+            }
+
+            found.TrimExcess();
+            return found.AsReadOnly();
+        }
+
+        /// <summary>
+        /// The compilation function.
+        /// </summary>
+        private readonly CompileDelegate _compileFunction;
+
+        /// <summary>
+        /// The function to create a <see cref="LanguageBackend"/>.
+        /// </summary>
+        private readonly Func<Compilation, LanguageBackend> _createBackend;
+
+        /// <summary>
+        /// Function to create a headless graphics device.
+        /// </summary>
+        private readonly Func<GraphicsDevice> _createHeadless;
+
+        /// <summary>
+        /// Function to create a headless graphics device.
+        /// </summary>
+        private readonly Func<GraphicsDevice> _createWindowed;
 
         /// <summary>
         /// The graphics backend.
@@ -153,100 +271,89 @@ namespace ShaderGen.Tests.Tools
         public readonly Type BackendType;
 
         /// <summary>
-        /// Gets a value indicating whether this <see cref="ToolChain"/> is available for compilation.
+        /// Gets a value indicating which <see cref="ToolFeatures"/> are available.
         /// </summary>
-        /// <value>
-        ///   <see langword="true"/> if this <see cref="ToolChain"/> is available; otherwise, <see langword="false"/>.
-        /// </value>
-        public bool IsAvailable => _toolPath != null;
-
-        private readonly Lazy<bool> _headlessAvailable;
-
-        /// <summary>
-        /// Indicates whether a headless graphics device is available.
-        /// </summary>
-        public bool HeadlessAvailable => _headlessAvailable.Value;
-
-        /// <summary>
-        /// The tool path (currently only single executables supported).
-        /// </summary>
-        private readonly string _toolPath;
-
-        /// <summary>
-        /// The argument formatter.
-        /// </summary>
-        private readonly ArgumentFormatterDelegate _argumentFormatter;
-
-        /// <summary>
-        /// The preferred file encoding for the tool.
-        /// </summary>
-        private readonly Encoding _preferredFileEncoding;
-
-        /// <summary>
-        /// The function to create a <see cref="LanguageBackend"/>.
-        /// </summary>
-        private readonly Func<Compilation, LanguageBackend> _createBackend;
-
-        /// <summary>
-        /// Function to create a headless graphics device.
-        /// </summary>
-        private readonly Func<GraphicsDevice> _createHeadless;
+        public readonly ToolFeatures Features;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ToolChain" /> class.  For now tool chains are single tools, but this
         /// could be easily extended to support multiple steps.
         /// </summary>
-        /// <param name="backendType">Type of the backend.</param>
         /// <param name="graphicsBackend">The graphics backend.</param>
+        /// <param name="backendType">Type of the backend.</param>
         /// <param name="createBackend">The function to create the backend.</param>
+        /// <param name="compileFunction">The compile function.</param>
         /// <param name="createHeadless">The function to create a headless graphics device.</param>
-        /// <param name="toolPath">The tool path.</param>
-        /// <param name="argumentFormatter">The argument formatter.</param>
-        /// <param name="preferredFileEncoding">The preferred file encoding.</param>
+        /// <param name="createWindowed">The create windowed.</param>
         /// <exception cref="ArgumentOutOfRangeException">backendType</exception>
-        private ToolChain(
+        private ToolChain(GraphicsBackend graphicsBackend,
             Type backendType,
-            GraphicsBackend graphicsBackend,
             Func<Compilation, LanguageBackend> createBackend,
+            CompileDelegate compileFunction,
             Func<GraphicsDevice> createHeadless,
-            string toolPath,
-            ArgumentFormatterDelegate argumentFormatter,
-            Encoding preferredFileEncoding = default(Encoding))
+            Func<GraphicsDevice> createWindowed)
         {
             if (!backendType.IsSubclassOf(typeof(LanguageBackend)))
                 throw new ArgumentOutOfRangeException(nameof(backendType),
                     $"{backendType.Name} is not a descendent of {nameof(LanguageBackend)}.");
 
+            BackendType = backendType;
+
             // Calculate name (strip 'Backend' if present).
             Name = backendType.Name;
             if (Name.EndsWith("Backend", StringComparison.InvariantCultureIgnoreCase))
                 Name = Name.Substring(0, Name.Length - 7);
-
-            BackendType = backendType;
-            _createBackend = createBackend;
-            _createHeadless = createHeadless;
-            _toolPath = string.IsNullOrWhiteSpace(toolPath) ? null : toolPath;
-            _argumentFormatter = argumentFormatter;
             GraphicsBackend = graphicsBackend;
-            _preferredFileEncoding = preferredFileEncoding ?? Encoding.Default;
-            _headlessAvailable = new Lazy<bool>(() =>
-            {
-                if (_createHeadless == null ||
-                    !GraphicsDevice.IsBackendSupported(GraphicsBackend))
-                    return false;
 
+            ToolFeatures features = ToolFeatures.None;
+
+            if (createBackend != null)
+            {
+                _createBackend = createBackend;
+                features |= ToolFeatures.Transpilation;
+            }
+
+            if (compileFunction != null)
+            {
+                _compileFunction = compileFunction;
+
+                features |= ToolFeatures.Compilation;
+            }
+            if (createHeadless != null && 
+                GraphicsDevice.IsBackendSupported(graphicsBackend))
+            {
                 try
                 {
                     // Try to create a headless graphics device
                     using (_createHeadless()) { }
-
-                    return true;
+                    _createHeadless = createHeadless;
+                    features |= ToolFeatures.HeadlessGraphicsDevice;
                 }
                 catch
                 {
                 }
-                return false;
-            });
+            }
+
+            if (createWindowed != null && 
+                GraphicsDevice.IsBackendSupported(graphicsBackend))
+            {
+                try
+                {
+                    // Try to create a headless graphics device
+                    using (_createHeadless()) { }
+                    _createWindowed = createWindowed;
+                    features |= ToolFeatures.WindowedGraphicsDevice;
+                }
+                catch
+                {
+                }
+            }
+
+            Features = features;
+
+            // Add to lookup dictionaries.
+            _toolChainsByGraphicsBackend.Add(graphicsBackend, this);
+            _toolChainsByBackendType.Add(backendType, this);
         }
 
         /// <summary>
@@ -269,7 +376,7 @@ namespace ShaderGen.Tests.Tools
         /// </summary>
         /// <returns></returns>
         public GraphicsDevice CreateHeadless() =>
-            _headlessAvailable.Value
+            _createHeadless != null
                 ? _createHeadless()
                 : throw new InvalidOperationException(
                     $"The {GraphicsBackend} headless graphics device is not available on this system!");
@@ -280,55 +387,38 @@ namespace ShaderGen.Tests.Tools
         /// <param name="code">The shader code.</param>
         /// <param name="stage">The stage.</param>
         /// <param name="entryPoint">The entry point.</param>
-        /// <param name="timeout">The timeout.</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public ToolResult Compile(string code, Stage stage, string entryPoint, int timeout = DefaultTimeout)
-        {
-            using (TempFile tmpFile = new TempFile())
-            {
-                File.WriteAllText(tmpFile, code, _preferredFileEncoding);
-                return CompileFile(tmpFile, code, stage, entryPoint, timeout);
-            }
-        }
+        public CompileResult Compile(string code, Stage stage, string entryPoint) =>
+            _compileFunction != null
+                ? _compileFunction(code, stage, entryPoint)
+                : throw new InvalidOperationException(
+                    $"The {GraphicsBackend} tool chain does not support compilation!");
+
 
         /// <summary>
-        /// Compiles the specified path.
+        /// Executes a compile tool.
         /// </summary>
-        /// <param name="path">The path.</param>
-        /// <param name="stage">The stage.</param>
-        /// <param name="entryPoint">The entry point.</param>
-        /// <param name="timeout">The timeout.</param>
-        /// <returns></returns>
-        /// <exception cref="InvalidOperationException"></exception>
-        public ToolResult CompileFile(string path, Stage stage, string entryPoint, int timeout = DefaultTimeout)
-        {
-            string code = File.ReadAllText(path);
-            return CompileFile(path, code, stage, entryPoint, timeout);
-        }
-
-        /// <summary>
-        /// Compiles the specified path.
-        /// </summary>
-        /// <param name="path">The path.</param>
+        /// <param name="toolPath">The tool path.</param>
+        /// <param name="arguments">The arguments.</param>
         /// <param name="code">The code.</param>
-        /// <param name="stage">The stage.</param>
-        /// <param name="entryPoint">The entry point.</param>
-        /// <param name="timeout">The timeout in milliseconds.</param>
+        /// <param name="encoding">The encoding.</param>
+        /// <param name="outputPath">The output path.</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        private ToolResult CompileFile(string path, string code, Stage stage, string entryPoint, int timeout = DefaultTimeout)
+        private static CompileResult Execute(
+            string toolPath,
+            string arguments,
+            string code,
+            string outputPath = null,
+            Encoding encoding = default(Encoding))
         {
-            if (!IsAvailable)
-                throw new InvalidOperationException($"The {Name} tool chain is not available!");
-
-            using (TempFile tempFile = new TempFile())
             using (Process process = new Process())
             {
                 process.StartInfo = new ProcessStartInfo
                 {
-                    FileName = _toolPath,
-                    Arguments = _argumentFormatter(path, stage, entryPoint, tempFile),
+                    FileName = toolPath,
+                    Arguments = arguments,
                     CreateNoWindow = true,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -365,22 +455,22 @@ namespace ShaderGen.Tests.Tools
                     process.BeginErrorReadLine();
 
                     int exitCode;
-                    if (!process.WaitForExit(timeout) || !outputWaitHandle.WaitOne(timeout) ||
-                        !errorWaitHandle.WaitOne(timeout))
+                    if (!process.WaitForExit(DefaultTimeout) || !outputWaitHandle.WaitOne(DefaultTimeout) ||
+                        !errorWaitHandle.WaitOne(DefaultTimeout))
                     {
                         if (output.Length > 0) output.AppendLine("TIMED OUT!").AppendLine();
-                        error.AppendLine($"Timed out calling: \"{_toolPath}\" {process.StartInfo.Arguments}");
+                        error.AppendLine($"Timed out calling: \"{toolPath}\" {process.StartInfo.Arguments}");
                         exitCode = int.MinValue;
                     }
                     else
                         exitCode = process.ExitCode;
 
                     // Get compiled output (if any), otherwise use the source code.
-                    byte[] outputBytes = File.ReadAllBytes(tempFile);
-                    if (outputBytes.Length < 1)
-                        outputBytes = _preferredFileEncoding.GetBytes(code);
+                    byte[] outputBytes = !string.IsNullOrWhiteSpace(outputPath)
+                        ? File.ReadAllBytes(outputPath)
+                        : (encoding ?? Encoding.Default).GetBytes(code);
 
-                    return new ToolResult(this, code, exitCode, output.ToString(), error.ToString(), outputBytes);
+                    return new CompileResult(code, exitCode, output.ToString(), error.ToString(), outputBytes);
                 }
             }
         }
@@ -389,130 +479,124 @@ namespace ShaderGen.Tests.Tools
         /*
          * FXC Tool
          */
-        private static string FindFxcPath()
+        /// <summary>
+        /// The FXC path.
+        /// </summary>
+        private static readonly Lazy<string> _fxcPath = new Lazy<string>(
+            () => !Directory.Exists(WindowsKitsFolder)
+                ? null
+                : Directory.EnumerateFiles(
+                        WindowsKitsFolder,
+                        "fxc.exe",
+                        SearchOption.AllDirectories)
+                    // TODO This seems particularly broad brush, perhaps use Path.DirectorySeparatorChar+"arm"?
+                    .OrderBy(f => f.Contains("arm") ? 1 : 0)
+                    .FirstOrDefault(), 
+            LazyThreadSafetyMode.ExecutionAndPublication);
+
+        private static CompileResult FxcCompile(string code, Stage stage, string entryPoint)
         {
-            const string windowsKitsFolder = @"C:\Program Files (x86)\Windows Kits";
-            string path = null;
-            if (Directory.Exists(windowsKitsFolder))
+            using (TempFile inputFile = new TempFile())
+            using (TempFile outputFile = new TempFile())
             {
-                IEnumerable<string> paths = Directory.EnumerateFiles(
-                    windowsKitsFolder,
-                    "fxc.exe",
-                    SearchOption.AllDirectories);
-                path = paths.FirstOrDefault(s => !s.Contains("arm"));
-            }
+                File.WriteAllText(inputFile, code);
 
-            return path;
-        }
-
-        private static string FxcArguments(string file, Stage stage, string entryPoint, string output)
-        {
-            StringBuilder args = new StringBuilder();
-            args.Append("/T ");
-            switch (stage)
-            {
-                case Stage.Vertex:
-                    args.Append("vs_5_0");
-                    break;
-                case Stage.Fragment:
-                    args.Append("ps_5_0");
-                    break;
-                case Stage.Compute:
-                    args.Append("cs_5_0");
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(stage), stage, null);
-            }
-
-            args.Append($" /E \"{entryPoint}\"");
-            if (output != null)
-                args.Append($" /Fo \"{output}\"");
-
-            args.Append($" \"{file}\"");
-            return args.ToString();
-        }
-
-        /*
-         * GLSLangValidator tool
-         */
-        private static string FindGlslvPath()
-        {
-            // First, try to launch from the current environment.
-            try
-            {
-                ProcessStartInfo psi = new ProcessStartInfo()
+                StringBuilder args = new StringBuilder();
+                args.Append("/T ");
+                switch (stage)
                 {
-                    FileName = "glslangvalidator",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                };
-                using (Process p = Process.Start(psi))
-                {
-                    p.StandardOutput.ReadToEndAsync();
-                    p.StandardError.ReadToEndAsync();
-                    p.WaitForExit(2000);
+                    case Stage.Vertex:
+                        args.Append("vs_5_0");
+                        break;
+                    case Stage.Fragment:
+                        args.Append("ps_5_0");
+                        break;
+                    case Stage.Compute:
+                        args.Append("cs_5_0");
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(stage), stage, null);
                 }
 
-                return "glslangvalidator";
+                args.Append($" /E \"{entryPoint}\" /Fo \"{outputFile.FilePath}\" \"{inputFile.FilePath}\"");
+
+                return Execute(_fxcPath.Value, args.ToString(), code, outputFile);
             }
-            catch { }
-
-            // Check if the Vulkan SDK is installed, and use the compiler bundled there.
-            const string VulkanSdkEnvVar = "VULKAN_SDK";
-            string vulkanSdkPath = Environment.GetEnvironmentVariable(VulkanSdkEnvVar);
-            if (vulkanSdkPath == null) return null;
-
-            string exeExtension = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : string.Empty;
-            string exePath = Path.Combine(vulkanSdkPath, "bin", "glslangvalidator" + exeExtension);
-            return File.Exists(exePath) ? exePath : null;
         }
 
-        private static string GlsvArguments(string file, Stage stage, string entrypoint, bool vulkanSemantics, string output)
-        {
-            StringBuilder args = new StringBuilder();
-            args.Append("-S ");
-            switch (stage)
-            {
-                case Stage.Vertex:
-                    args.Append("vert");
-                    break;
-                case Stage.Fragment:
-                    args.Append("frag");
-                    break;
-                case Stage.Compute:
-                    args.Append("comp");
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(stage), stage, null);
-            }
-
-            if (vulkanSemantics)
-            {
-                args.Append(" -V");
-
-                // Only support file output for Vulkan
-                if (output != null)
-                    args.Append($" -o \"{output}\"");
-            }
-
-            args.Append($" \"{file}\"");
-            return args.ToString();
-        }
+        private static GraphicsDevice CreateHeadlessD3D() =>
+            GraphicsDevice.CreateD3D11(
+                new GraphicsDeviceOptions(
+                    true,
+                    PixelFormat.R16_UNorm,
+                    true,
+                    ResourceBindingModel.Improved));
 
         /*
-         * Metal tool
+         * Open GL
          */
-        private static string FindMetalPath() => File.Exists(DefaultMetalPath) ? DefaultMetalPath : null;
+        private static readonly Lazy<string> _glslvPath = new Lazy<string>(
+            () =>
+            {
+                // First, try to launch from the current environment.
+                try
+                {
+                    ProcessStartInfo psi = new ProcessStartInfo()
+                    {
+                        FileName = "glslangvalidator",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                    };
+                    using (Process p = Process.Start(psi))
+                    {
+                        p.StandardOutput.ReadToEndAsync();
+                        p.StandardError.ReadToEndAsync();
+                        p.WaitForExit(2000);
+                    }
 
-        private static string MetalArguments(string file, Stage stage, string entrypoint, string output)
+                    return "glslangvalidator";
+                }
+                catch
+                {
+                }
+
+                // Check if the Vulkan SDK is installed, and use the compiler bundled there.
+                string vulkanSdkPath = Environment.GetEnvironmentVariable(VulkanSdkEnvVar);
+                if (vulkanSdkPath == null) return null;
+
+                string exeExtension = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : string.Empty;
+                string exePath = Path.Combine(vulkanSdkPath, "bin", "glslangvalidator" + exeExtension);
+                return File.Exists(exePath) ? exePath : null;
+            },
+            LazyThreadSafetyMode.ExecutionAndPublication);
+
+        private static CompileResult GLCompile(string code, Stage stage, string entryPoint)
         {
-            StringBuilder args = new StringBuilder();
-            args.Append("-x metal ");
-            args.Append("-mmacosx-version-min=10.12 ");
-            args.Append($" -o ");
-            args.Append(output != null ? $"\"outputFile\"" : " -o /dev/null");
-            args.Append($" \"{file}\"");
-            return args.ToString();
+            using (TempFile inputFile = new TempFile())
+            {
+                File.WriteAllText(inputFile, code);
+
+                StringBuilder args = new StringBuilder();
+                args.Append("-S ");
+                switch (stage)
+                {
+                    case Stage.Vertex:
+                        args.Append("vert");
+                        break;
+                    case Stage.Fragment:
+                        args.Append("frag");
+                        break;
+                    case Stage.Compute:
+                        args.Append("comp");
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(stage), stage, null);
+                }
+
+                args.Append($" \"{inputFile.FilePath}\"");
+
+                return Execute(_glslvPath.Value, args.ToString(), code);
+            }
         }
 
         private static GraphicsDevice CreateHeadlessGL(GraphicsBackend backend)
@@ -535,6 +619,38 @@ namespace ShaderGen.Tests.Tools
             return VeldridStartup.CreateDefaultOpenGLGraphicsDevice(options, window, backend);
         }
 
+        /*
+         * Vulkan
+         */
+        private static CompileResult VulkanCompile(string code, Stage stage, string entryPoint)
+        {
+            using (TempFile inputFile = new TempFile())
+            using (TempFile outputFile = new TempFile())
+            {
+                File.WriteAllText(inputFile, code);
+
+                StringBuilder args = new StringBuilder();
+                args.Append("-S ");
+                switch (stage)
+                {
+                    case Stage.Vertex:
+                        args.Append("vert");
+                        break;
+                    case Stage.Fragment:
+                        args.Append("frag");
+                        break;
+                    case Stage.Compute:
+                        args.Append("comp");
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(stage), stage, null);
+                }
+                args.Append($" -V -o \"{outputFile.FilePath}\" \"{inputFile.FilePath}\"");
+
+                return Execute(_glslvPath.Value, args.ToString(), code, outputFile);
+            }
+        }
+
         private static GraphicsDevice CreateHeadlessVulkan() =>
             GraphicsDevice.CreateVulkan(
                 new GraphicsDeviceOptions(
@@ -543,13 +659,26 @@ namespace ShaderGen.Tests.Tools
                     true,
                     ResourceBindingModel.Improved));
 
-        private static GraphicsDevice CreateHeadlessD3D() =>
-            GraphicsDevice.CreateD3D11(
-                new GraphicsDeviceOptions(
-                    true,
-                    PixelFormat.R16_UNorm,
-                    true,
-                    ResourceBindingModel.Improved));
+        /*
+         * Metal tool
+         */
+        private static readonly Lazy<string> _metalPath = new Lazy<string>(
+            () => File.Exists(DefaultMetalPath) ? DefaultMetalPath : null,
+            LazyThreadSafetyMode.ExecutionAndPublication);
+
+
+        private static CompileResult MetalCompile(string code, Stage stage, string entryPoint)
+        {
+            using (TempFile inputFile = new TempFile())
+            using (TempFile outputFile = new TempFile())
+            {
+                File.WriteAllText(inputFile, code, Encoding.UTF8);
+
+                string args = $"-x metal -mmacosx-version-min=10.12 -o \"{outputFile.FilePath}\" \"{inputFile.FilePath}\"";
+
+                return Execute(_metalPath.Value, args.ToString(), code, outputFile, Encoding.UTF8);
+            }
+        }
 
         private static GraphicsDevice CreateHeadlessMetal() =>
             GraphicsDevice.CreateMetal(
@@ -558,5 +687,10 @@ namespace ShaderGen.Tests.Tools
                     PixelFormat.R16_UNorm,
                     true,
                     ResourceBindingModel.Improved));
+    }
+
+    public class RequiredToolFeatureMissingException : Exception
+    {
+        public RequiredToolFeatureMissingException(string message) : base(message) { }
     }
 }

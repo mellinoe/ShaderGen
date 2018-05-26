@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
+using System.Linq;
 using ShaderGen.Hlsl;
-using ShaderGen.Tests.Attributes;
 using ShaderGen.Tests.Tools;
 using Xunit;
 
@@ -9,11 +9,15 @@ namespace ShaderGen.Tests
 {
     public static class ShaderSetDiscovererTests
     {
-        [HlslFact]
+        [SkippableFact(typeof(RequiredToolFeatureMissingException))]
         public static void ShaderSetAutoDiscovery()
         {
+            ToolChain toolChain = ToolChain.Require(ToolFeatures.ToCompiled, false).FirstOrDefault();
+            if (toolChain == null)
+                throw new RequiredToolFeatureMissingException("No tool chain supporting compilation was found!");
+
             Compilation compilation = TestUtil.GetTestProjectCompilation();
-            HlslBackend backend = new HlslBackend(compilation);
+            LanguageBackend backend = toolChain.CreateBackend(compilation);
             ShaderGenerator sg = new ShaderGenerator(compilation, backend);
             ShaderGenerationResult generationResult = sg.GenerateShaders();
             IReadOnlyList<GeneratedShaderSet> hlslSets = generationResult.GetOutput(backend);
@@ -21,10 +25,10 @@ namespace ShaderGen.Tests
             GeneratedShaderSet set = hlslSets[0];
             Assert.Equal("VertexAndFragment", set.Name);
 
-            ToolResult result = ToolChain.Hlsl.Compile(set.VertexShaderCode, Stage.Vertex, "VS");
+            CompileResult result = toolChain.Compile(set.VertexShaderCode, Stage.Vertex, "VS");
             Assert.False(result.HasError, result.ToString());
 
-            result = ToolChain.Hlsl.Compile(set.FragmentShaderCode, Stage.Fragment, "FS");
+            result = toolChain.Compile(set.FragmentShaderCode, Stage.Fragment, "FS");
             Assert.False(result.HasError, result.ToString());
         }
     }
