@@ -10,7 +10,7 @@ namespace ShaderGen.Tests
         [Fact]
         private void TestProcessor_UsersArgs()
         {
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            Compilation compilation = TestUtil.GetCompilation();
             HlslBackend backend = new HlslBackend(compilation);
             TestProcessor processor = new TestProcessor();
             ShaderGenerator sg = new ShaderGenerator(

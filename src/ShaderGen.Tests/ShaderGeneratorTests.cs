@@ -82,8 +82,8 @@ namespace ShaderGen.Tests
 
         private void TestCompile(GraphicsBackend graphicsBackend, string vsName, string fsName, string csName = null)
         { 
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
-            ToolChain toolChain = ToolChain.Require(ToolFeatures.ToCompiled, graphicsBackend).Single();
+            Compilation compilation = TestUtil.GetCompilation();
+            ToolChain toolChain = ToolChain.Require(ToolFeatures.ToCompiled, graphicsBackend);
 
             LanguageBackend backend = toolChain.CreateBackend(compilation);
             ShaderGenerator sg = new ShaderGenerator(compilation, backend, vsName, fsName, csName);
@@ -148,12 +148,10 @@ namespace ShaderGen.Tests
         [SkippableFact(typeof(RequiredToolFeatureMissingException))]
         public void AllSetsCompile()
         {
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            Compilation compilation = TestUtil.GetCompilation();
 
             // Get all available tool chains.
-            LanguageBackend[] backends = ToolChain.Require(ToolFeatures.ToCompiled, false)
-                .Select(t => t.CreateBackend(compilation))
-                .ToArray();
+            LanguageBackend[] backends = TestUtil.GetAllBackends(compilation, ToolFeatures.ToCompiled);
 
             ShaderGenerator sg = new ShaderGenerator(compilation, backends);
             ShaderGenerationResult generationResult = sg.GenerateShaders();
@@ -241,7 +239,7 @@ namespace ShaderGen.Tests
         [MemberData(nameof(ErrorSets))]
         public void ExpectedException(string vsName, string fsName)
         {
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            Compilation compilation = TestUtil.GetCompilation();
             Glsl330Backend backend = new Glsl330Backend(compilation);
             ShaderGenerator sg = new ShaderGenerator(compilation, backend, vsName, fsName);
 

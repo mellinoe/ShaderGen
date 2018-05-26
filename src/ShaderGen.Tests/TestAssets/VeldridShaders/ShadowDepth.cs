@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 using ShaderGen;
-using static ShaderGen.ShaderBuiltins;
+using static ShaderGen.Builtins;
 
 namespace TestShaders.VeldridShaders
 {

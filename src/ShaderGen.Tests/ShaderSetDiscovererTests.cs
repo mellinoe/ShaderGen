@@ -12,11 +12,11 @@ namespace ShaderGen.Tests
         [SkippableFact(typeof(RequiredToolFeatureMissingException))]
         public static void ShaderSetAutoDiscovery()
         {
-            ToolChain toolChain = ToolChain.Require(ToolFeatures.ToCompiled, false).FirstOrDefault();
+            ToolChain toolChain = ToolChain.Get(ToolFeatures.ToCompiled);
             if (toolChain == null)
                 throw new RequiredToolFeatureMissingException("No tool chain supporting compilation was found!");
 
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            Compilation compilation = TestUtil.GetCompilation();
             LanguageBackend backend = toolChain.CreateBackend(compilation);
             ShaderGenerator sg = new ShaderGenerator(compilation, backend);
             ShaderGenerationResult generationResult = sg.GenerateShaders();

@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using static ShaderGen.ShaderBuiltins;
+using static ShaderGen.Builtins;
 
 namespace TestShaders.VeldridShaders
 {

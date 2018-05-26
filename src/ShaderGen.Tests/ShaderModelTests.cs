@@ -14,7 +14,7 @@ namespace ShaderGen.Tests
         public void TestVertexShader_ShaderModel()
         {
             string functionName = "TestShaders.TestVertexShader.VS";
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            Compilation compilation = TestUtil.GetCompilation();
             HlslBackend backend = new HlslBackend(compilation);
             ShaderGenerator sg = new ShaderGenerator(compilation, backend, functionName);
             ShaderGenerationResult genResult = sg.GenerateShaders();
@@ -35,7 +35,7 @@ namespace ShaderGen.Tests
         public void TestVertexShader_VertexSemantics()
         {
             string functionName = "TestShaders.TestVertexShader.VS";
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            Compilation compilation = TestUtil.GetCompilation();
             HlslBackend backend = new HlslBackend(compilation);
             ShaderGenerator sg = new ShaderGenerator(compilation, backend, functionName);
             ShaderGenerationResult genResult = sg.GenerateShaders();
@@ -56,11 +56,11 @@ namespace ShaderGen.Tests
         [SkippableFact(typeof(RequiredToolFeatureMissingException))]
         public void PartialFiles()
         {
-            ToolChain toolChain = ToolChain.Require(ToolFeatures.ToCompiled, false).FirstOrDefault();
+            ToolChain toolChain = ToolChain.Get(ToolFeatures.ToCompiled);
             if (toolChain == null)
                 throw new RequiredToolFeatureMissingException("No tool chain supporting compilation was found!");
 
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            Compilation compilation = TestUtil.GetCompilation();
             LanguageBackend backend = toolChain.CreateBackend(compilation);
             ShaderGenerator sg = new ShaderGenerator(compilation, backend, "TestShaders.PartialVertex.VertexShaderFunc");
 
@@ -77,7 +77,7 @@ namespace ShaderGen.Tests
         [Fact]
         public void PointLightsInfo_CorrectSize()
         {
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            Compilation compilation = TestUtil.GetCompilation();
             HlslBackend backend = new HlslBackend(compilation);
             ShaderGenerator sg = new ShaderGenerator(compilation, backend, "TestShaders.PointLightTestShaders.VS");
 
@@ -94,7 +94,7 @@ namespace ShaderGen.Tests
         [Fact]
         public void MultipleResourceSets_CorrectlyParsed()
         {
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            Compilation compilation = TestUtil.GetCompilation();
             HlslBackend backend = new HlslBackend(compilation);
             ShaderGenerator sg = new ShaderGenerator(compilation, backend, "TestShaders.MultipleResourceSets.VS");
 
@@ -139,7 +139,7 @@ namespace ShaderGen.Tests
         [Fact]
         public void ResourcesUsedInStages()
         {
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            Compilation compilation = TestUtil.GetCompilation();
             HlslBackend backend = new HlslBackend(compilation);
             ShaderGenerator sg = new ShaderGenerator(
                 compilation, backend, "TestShaders.UsedResourcesShaders.VS", "TestShaders.UsedResourcesShaders.FS");
@@ -167,7 +167,7 @@ namespace ShaderGen.Tests
         [Fact]
         public void StructureSizes()
         {
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            Compilation compilation = TestUtil.GetCompilation();
             HlslBackend backend = new HlslBackend(compilation);
             ShaderGenerator sg = new ShaderGenerator(compilation, backend, "TestShaders.StructureSizeTests.VS");
 

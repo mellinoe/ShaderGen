@@ -16,61 +16,66 @@ namespace ShaderGen.Glsl
         {
             Dictionary<string, TypeInvocationTranslator> ret = new Dictionary<string, TypeInvocationTranslator>();
 
-            Dictionary<string, InvocationTranslator> builtinMappings = new Dictionary<string, InvocationTranslator>()
+            Dictionary<string, InvocationTranslator> shaderBuiltinMappings = new Dictionary<string, InvocationTranslator>()
             {
-                { nameof(ShaderBuiltins.Abs), SimpleNameTranslator() },
-                { nameof(ShaderBuiltins.Acos), SimpleNameTranslator() },
-                { nameof(ShaderBuiltins.Acosh), SimpleNameTranslator() },
-                { nameof(ShaderBuiltins.Asin), SimpleNameTranslator() },
-                { nameof(ShaderBuiltins.Asinh), SimpleNameTranslator() },
-                { nameof(ShaderBuiltins.Atan), SimpleNameTranslator() },// Note atan supports both (x) and (y,x)
-                { nameof(ShaderBuiltins.Atanh), SimpleNameTranslator() },
-                { nameof(ShaderBuiltins.Cbrt), CubeRoot }, // We can calculate the 1/3rd power, which might not give exactly the same result?
-                { nameof(ShaderBuiltins.Ceiling), SimpleNameTranslator("ceil") },
-                { nameof(ShaderBuiltins.Clamp), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.ClipToTextureCoordinates), ClipToTextureCoordinates },
-                { nameof(ShaderBuiltins.Cos), SimpleNameTranslator() },
-                { nameof(ShaderBuiltins.Cosh), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Ddx), SimpleNameTranslator("dFdx") },
                 { nameof(ShaderBuiltins.DdxFine), SimpleNameTranslator("dFdxFine") },
                 { nameof(ShaderBuiltins.Ddy), SimpleNameTranslator("dFdy") },
                 { nameof(ShaderBuiltins.DdyFine), SimpleNameTranslator("dFdyFine") },
                 { nameof(ShaderBuiltins.Discard), Discard },
                 { nameof(ShaderBuiltins.DispatchThreadID), DispatchThreadID },
-                { nameof(ShaderBuiltins.Exp), SimpleNameTranslator() },
-                { nameof(ShaderBuiltins.Floor), SimpleNameTranslator() },
-                { nameof(ShaderBuiltins.Frac), SimpleNameTranslator("fract") },
                 { nameof(ShaderBuiltins.GroupThreadID), GroupThreadID },
                 { nameof(ShaderBuiltins.InstanceID), InstanceID },
                 { nameof(ShaderBuiltins.InterlockedAdd), InterlockedAdd },
                 { nameof(ShaderBuiltins.IsFrontFace), IsFrontFace },
-                { nameof(ShaderBuiltins.Lerp), SimpleNameTranslator("mix") },
                 { nameof(ShaderBuiltins.Load), Load },
-                { nameof(ShaderBuiltins.Log), Log },
-                { nameof(ShaderBuiltins.Log2), SimpleNameTranslator() },
-                { nameof(ShaderBuiltins.Log10), Log10 },
-                { nameof(ShaderBuiltins.Max), SimpleNameTranslator() },
-                { nameof(ShaderBuiltins.Min), SimpleNameTranslator() },
-                // Potential BUG: https://stackoverflow.com/questions/7610631/glsl-mod-vs-hlsl-fmod
-                { nameof(ShaderBuiltins.Mod), SimpleNameTranslator() },
-                { nameof(ShaderBuiltins.Mul), MatrixMul },
-                { nameof(ShaderBuiltins.Pow), SimpleNameTranslator() },
-                { nameof(ShaderBuiltins.Round), Round },
                 { nameof(ShaderBuiltins.Sample), Sample },
                 { nameof(ShaderBuiltins.SampleComparisonLevelZero), SampleComparisonLevelZero },
                 { nameof(ShaderBuiltins.SampleGrad), SampleGrad },
-                { nameof(ShaderBuiltins.Saturate), Saturate },
-                { nameof(ShaderBuiltins.Sin), SimpleNameTranslator() },
-                { nameof(ShaderBuiltins.Sinh), SimpleNameTranslator() },
-                { nameof(ShaderBuiltins.SmoothStep), SimpleNameTranslator() },
-                { nameof(ShaderBuiltins.Sqrt), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Store), Store },
-                { nameof(ShaderBuiltins.Tan), SimpleNameTranslator() },
-                { nameof(ShaderBuiltins.Tanh), SimpleNameTranslator() },
-                { nameof(ShaderBuiltins.Truncate), SimpleNameTranslator("trunc") },
                 { nameof(ShaderBuiltins.VertexID), VertexID }
             };
-            ret.Add("ShaderGen.ShaderBuiltins", new DictionaryTypeInvocationTranslator(builtinMappings));
+            ret.Add("ShaderGen.ShaderBuiltins", new DictionaryTypeInvocationTranslator(shaderBuiltinMappings));
+
+            Dictionary<string, InvocationTranslator> builtinMappings = new Dictionary<string, InvocationTranslator>()
+            {
+                { nameof(Builtins.Abs), SimpleNameTranslator() },
+                { nameof(Builtins.Acos), SimpleNameTranslator() },
+                { nameof(Builtins.Acosh), SimpleNameTranslator() },
+                { nameof(Builtins.Asin), SimpleNameTranslator() },
+                { nameof(Builtins.Asinh), SimpleNameTranslator() },
+                { nameof(Builtins.Atan), SimpleNameTranslator() },// Note atan supports both (x) and (y,x)
+                { nameof(Builtins.Atanh), SimpleNameTranslator() },
+                { nameof(Builtins.Cbrt), CubeRoot }, // We can calculate the 1/3rd power, which might not give exactly the same result?
+                { nameof(Builtins.Ceiling), SimpleNameTranslator("ceil") },
+                { nameof(Builtins.Clamp), SimpleNameTranslator() },
+                { nameof(Builtins.Cos), SimpleNameTranslator() },
+                { nameof(Builtins.Cosh), SimpleNameTranslator() },
+                { nameof(Builtins.Exp), SimpleNameTranslator() },
+                { nameof(Builtins.Floor), SimpleNameTranslator() },
+                { nameof(Builtins.Frac), SimpleNameTranslator("fract") },
+                { nameof(Builtins.Lerp), SimpleNameTranslator("mix") },
+                { nameof(Builtins.Log), Log },
+                { nameof(Builtins.Log2), SimpleNameTranslator() },
+                { nameof(Builtins.Log10), Log10 },
+                { nameof(Builtins.Max), SimpleNameTranslator() },
+                { nameof(Builtins.Min), SimpleNameTranslator() },
+                // Potential BUG: https://stackoverflow.com/questions/7610631/glsl-mod-vs-hlsl-fmod
+                { nameof(Builtins.Mod), SimpleNameTranslator() },
+                { nameof(Builtins.Mul), MatrixMul },
+                { nameof(Builtins.Pow), SimpleNameTranslator() },
+                { nameof(Builtins.Round), Round },
+                { nameof(Builtins.Saturate), Saturate },
+                { nameof(Builtins.Sin), SimpleNameTranslator() },
+                { nameof(Builtins.Sinh), SimpleNameTranslator() },
+                { nameof(Builtins.SmoothStep), SimpleNameTranslator() },
+                { nameof(Builtins.Sqrt), SimpleNameTranslator() },
+                { nameof(Builtins.Tan), SimpleNameTranslator() },
+                { nameof(Builtins.Tanh), SimpleNameTranslator() },
+                { nameof(Builtins.Truncate), SimpleNameTranslator("trunc") }
+            };
+            ret.Add("ShaderGen.Builtins", new DictionaryTypeInvocationTranslator(builtinMappings));
 
             Dictionary<string, InvocationTranslator> v2Mappings = new Dictionary<string, InvocationTranslator>()
             {

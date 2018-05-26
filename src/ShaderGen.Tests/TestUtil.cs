@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.Text;
 using System.Runtime.InteropServices;
 using ShaderGen.Glsl;
 using ShaderGen.Hlsl;
+using ShaderGen.Tests.Tools;
 
 namespace ShaderGen.Tests
 {
@@ -15,15 +16,24 @@ namespace ShaderGen.Tests
     {
         private static readonly string ProjectBasePath = Path.Combine(AppContext.BaseDirectory, "TestAssets");
 
-        public static Compilation GetTestProjectCompilation()
+        public static Compilation GetCompilation()
+            => GetCompilation(GetSyntaxTrees());
+        public static Compilation GetCompilation(string code)
+            => GetCompilation(CSharpSyntaxTree.ParseText(code));
+
+        public static Compilation GetCompilation(params SyntaxTree[] syntaxTrees)
+            => GetCompilation((IEnumerable<SyntaxTree>) syntaxTrees);
+
+        public static Compilation GetCompilation(IEnumerable<SyntaxTree> syntaxTrees)
         {
             CSharpCompilation compilation = CSharpCompilation.Create(
                 "TestAssembly",
-                syntaxTrees: GetSyntaxTrees(),
-                references: GetProjectReferences(),
-                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+                syntaxTrees,
+                GetProjectReferences(),
+                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
             return compilation;
         }
+
 
         public static SyntaxTree GetSyntaxTree(Compilation compilation, string name)
         {
@@ -116,32 +126,8 @@ namespace ShaderGen.Tests
             return dirs.ToArray();
         }
 
-        public static LanguageBackend[] GetAllBackends(Compilation compilation)
-        {
-            return new LanguageBackend[]
-            {
-                new HlslBackend(compilation),
-                new Glsl330Backend(compilation),
-                new Glsl450Backend(compilation)
-            };
-        }
-    }
-
-    public class TempFile : IDisposable
-    {
-        public readonly string FilePath;
-
-        public TempFile() : this(Path.GetTempFileName()) { }
-        public TempFile(string path)
-        {
-            FilePath = path;
-        }
-
-        public static implicit operator string(TempFile tf) => tf.FilePath;
-
-        public void Dispose()
-        {
-            File.Delete(FilePath);
-        }
+        public static LanguageBackend[] GetAllBackends(Compilation compilation, ToolFeatures features = ToolFeatures.Transpilation)
+            => ToolChain.Requires(features, false).Select(t => t.CreateBackend(compilation))
+                .ToArray();
     }
 }

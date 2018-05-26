@@ -8,7 +8,7 @@ namespace ShaderGen.Tests
         [Fact]
         public void MissingSemantic_ThrowsShaderGenerationException()
         {
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            Compilation compilation = TestUtil.GetCompilation();
             foreach (LanguageBackend backend in TestUtil.GetAllBackends(compilation))
             {
                 ShaderGenerator sg = new ShaderGenerator(compilation, backend, "TestShaders.MissingInputSemantics.VS");

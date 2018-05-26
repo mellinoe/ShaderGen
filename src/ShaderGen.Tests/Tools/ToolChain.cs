@@ -169,38 +169,118 @@ namespace ShaderGen.Tests.Tools
                 : null;
 
         /// <summary>
-        /// Gets all the backends, ensuring they have the required features.
+        /// Gets the graphicsBackends, ensuring it has the required features.
         /// </summary>
-        /// <param name="backends">The backends required (leave empty to get all).</param>
+        /// <param name="graphicsBackend">The graphics backend.</param>
         /// <returns></returns>
-        /// <exception cref="InvalidOperationException"></exception>
-        public static IReadOnlyCollection<ToolChain> Require(params GraphicsBackend[] backends)
-            => Require(ToolFeatures.All, true, backends);
+        /// <exception cref="ShaderGen.Tests.Tools.RequiredToolFeatureMissingException"></exception>
+        public static ToolChain Require(
+            GraphicsBackend graphicsBackend) =>
+            Requires(ToolFeatures.All, true, graphicsBackend).SingleOrDefault();
 
         /// <summary>
-        /// Gets all the backends, ensuring they have the required features.
+        /// Gets the graphicsBackends, ensuring it has the required features.
         /// </summary>
         /// <param name="requiredFeatures">The required features.</param>
-        /// <param name="backends">The backends required (leave empty to get all).</param>
+        /// <param name="graphicsBackend">The graphics backend.</param>
         /// <returns></returns>
-        /// <exception cref="InvalidOperationException"></exception>
-        public static IReadOnlyCollection<ToolChain> Require(ToolFeatures requiredFeatures = ToolFeatures.All,
-            params GraphicsBackend[] backends)
-            => Require(requiredFeatures, true, backends);
+        /// <exception cref="ShaderGen.Tests.Tools.RequiredToolFeatureMissingException"></exception>
+        public static ToolChain Require(
+            ToolFeatures requiredFeatures,
+            GraphicsBackend graphicsBackend) =>
+            Requires(requiredFeatures, true, graphicsBackend).SingleOrDefault();
 
         /// <summary>
-        /// Gets all the backends, ensuring they have the required features.
+        /// Gets the graphicsBackends, ensuring it has the required features.
         /// </summary>
         /// <param name="requiredFeatures">The required features.</param>
-        /// <param name="throwOnFail">if set to <c>true</c> throws an error if any of the <paramref name="backends" />
+        /// <param name="throwOnFail">if set to <c>true</c> throws an error if any of the <paramref name="graphicsBackends" />
         /// do not have the <paramref name="requiredFeatures">required features</paramref>.</param>
-        /// <param name="backends">The backends required (leave empty to get all).</param>
+        /// <param name="graphicsBackend">The graphics backend.</param>
         /// <returns></returns>
-        /// <exception cref="InvalidOperationException"></exception>
-        public static IReadOnlyCollection<ToolChain> Require(ToolFeatures requiredFeatures, bool throwOnFail, params GraphicsBackend[] backends)
+        /// <exception cref="ShaderGen.Tests.Tools.RequiredToolFeatureMissingException"></exception>
+        public static ToolChain Require(
+            ToolFeatures requiredFeatures,
+            bool throwOnFail,
+            GraphicsBackend graphicsBackend) =>
+            Requires(requiredFeatures, throwOnFail, graphicsBackend).SingleOrDefault();
+
+        /// <summary>
+        /// Gets all the graphicsBackends, ensuring they have the required features.
+        /// </summary>
+        /// <param name="graphicsBackends">The graphicsBackends required (leave empty to get all).</param>
+        /// <returns></returns>
+        /// <exception cref="ShaderGen.Tests.Tools.RequiredToolFeatureMissingException"></exception>
+        public static IReadOnlyCollection<ToolChain> Requires(params GraphicsBackend[] graphicsBackends)
+            => Requires(ToolFeatures.All, true, (IEnumerable<GraphicsBackend>)graphicsBackends);
+
+        /// <summary>
+        /// Gets all the graphicsBackends, ensuring they have the required features.
+        /// </summary>
+        /// <param name="graphicsBackends">The graphicsBackends required (leave empty to get all).</param>
+        /// <returns></returns>
+        /// <exception cref="ShaderGen.Tests.Tools.RequiredToolFeatureMissingException"></exception>
+        public static IReadOnlyCollection<ToolChain> Requires(IEnumerable<GraphicsBackend> graphicsBackends)
+            => Requires(ToolFeatures.All, true, graphicsBackends);
+
+        /// <summary>
+        /// Gets all the graphicsBackends, ensuring they have the required features.
+        /// </summary>
+        /// <param name="requiredFeatures">The required features.</param>
+        /// <param name="graphicsBackends">The graphicsBackends required (leave empty to get all).</param>
+        /// <returns></returns>
+        /// <exception cref="ShaderGen.Tests.Tools.RequiredToolFeatureMissingException"></exception>
+        public static IReadOnlyCollection<ToolChain> Requires(ToolFeatures requiredFeatures,
+            params GraphicsBackend[] graphicsBackends)
+            => Requires(requiredFeatures, true, (IEnumerable<GraphicsBackend>)graphicsBackends);
+
+        /// <summary>
+        /// Gets all the graphicsBackends, ensuring they have the required features.
+        /// </summary>
+        /// <param name="requiredFeatures">The required features.</param>
+        /// <param name="graphicsBackends">The graphicsBackends required (leave empty to get all).</param>
+        /// <returns></returns>
+        /// <exception cref="ShaderGen.Tests.Tools.RequiredToolFeatureMissingException"></exception>
+        public static IReadOnlyCollection<ToolChain> Requires(ToolFeatures requiredFeatures, IEnumerable<GraphicsBackend> graphicsBackends)
+            => Requires(requiredFeatures, true, graphicsBackends);
+
+        /// <summary>
+        /// Gets all the graphicsBackends, ensuring they have the required features.
+        /// </summary>
+        /// <param name="requiredFeatures">The required features.</param>
+        /// <param name="throwOnFail">if set to <c>true</c> throws an error if any of the <paramref name="graphicsBackends" />
+        /// do not have the <paramref name="requiredFeatures">required features</paramref>.</param>
+        /// <param name="graphicsBackends">The graphicsBackends required (leave empty to get all).</param>
+        /// <returns></returns>
+        /// <exception cref="ShaderGen.Tests.Tools.RequiredToolFeatureMissingException"></exception>
+        public static IReadOnlyCollection<ToolChain> Requires(ToolFeatures requiredFeatures, bool throwOnFail,
+            params GraphicsBackend[] graphicsBackends)
+            => Requires(requiredFeatures, throwOnFail, (IEnumerable<GraphicsBackend>) graphicsBackends);
+
+        /// <summary>
+        /// Gets the first tool chain (if any) with all the specified features.
+        /// </summary>
+        /// <param name="features">The features.</param>
+        /// <returns></returns>
+        public static ToolChain Get(ToolFeatures features) =>
+            Requires(features, false).FirstOrDefault();
+
+        /// <summary>
+        /// Gets all the graphicsBackends, ensuring they have the required features.
+        /// </summary>
+        /// <param name="requiredFeatures">The required features.</param>
+        /// <param name="throwOnFail">if set to <c>true</c> throws an error if any of the <paramref name="graphicsBackends" />
+        /// do not have the <paramref name="requiredFeatures">required features</paramref>.</param>
+        /// <param name="graphicsBackends">The graphics graphicsBackends.</param>
+        /// <returns></returns>
+        /// <exception cref="ShaderGen.Tests.Tools.RequiredToolFeatureMissingException"></exception>
+        public static IReadOnlyCollection<ToolChain> Requires(
+            ToolFeatures requiredFeatures, 
+            bool throwOnFail,
+            IEnumerable<GraphicsBackend> graphicsBackends)
         {
-            if (backends.Length < 1)
-                backends = _toolChainsByGraphicsBackend.Keys.ToArray();
+            GraphicsBackend[] backends = (graphicsBackends ?? _toolChainsByGraphicsBackend.Keys).ToArray();
+            if (backends.Length < 1) backends = _toolChainsByGraphicsBackend.Keys.ToArray();
 
             List<string> missingBackends = new List<string>(backends.Length);
             List<ToolChain> found = new List<ToolChain>(backends.Length);
@@ -215,7 +295,8 @@ namespace ShaderGen.Tests.Tools
 
                 if (!toolChain.Features.HasFlag(requiredFeatures))
                 {
-                    missingBackends.Add($"{backend} tool chain does not have the required {~toolChain.Features & requiredFeatures} feature(s)");
+                    missingBackends.Add(
+                        $"{backend} tool chain does not have the required {~toolChain.Features & requiredFeatures} feature(s)");
                     continue;
                 }
 
