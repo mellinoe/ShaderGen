@@ -401,7 +401,11 @@ namespace ShaderGen.Tests.Tools
 
                 features |= ToolFeatures.Compilation;
             }
-            if (createHeadless != null &&
+
+            // Don't allow creation of graphics devices on CI Servers.
+            bool onCiServer = Environment.GetEnvironmentVariable("CI")?.ToLowerInvariant() == "true";
+            if (!onCiServer &&
+                createHeadless != null &&
                 GraphicsDevice.IsBackendSupported(graphicsBackend))
             {
                 try
@@ -417,7 +421,8 @@ namespace ShaderGen.Tests.Tools
             }
 
             // TODO For future expansion, will need to review signature of function.
-            if (createWindowed != null &&
+            if (!onCiServer &&
+                createWindowed != null &&
                 GraphicsDevice.IsBackendSupported(graphicsBackend))
             {
                 try
