@@ -14,7 +14,9 @@ namespace ShaderGen.Tests
         {
             ToolChain toolChain = ToolChain.Get(ToolFeatures.ToCompiled);
             if (toolChain == null)
+            {
                 throw new RequiredToolFeatureMissingException("No tool chain supporting compilation was found!");
+            }
 
             Compilation compilation = TestUtil.GetCompilation();
             LanguageBackend backend = toolChain.CreateBackend(compilation);

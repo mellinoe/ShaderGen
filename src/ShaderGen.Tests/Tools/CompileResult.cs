@@ -77,9 +77,14 @@ namespace ShaderGen.Tests.Tools
                 .Append(HasError ? $"failed with exit code {ExitCode}." : "suceeded.");
 
             if (!string.IsNullOrWhiteSpace(StdOut))
+            {
                 builder.AppendLine().AppendLine("Output: ").Append(StdOut);
+            }
+
             if (!string.IsNullOrWhiteSpace(StdError))
+            {
                 builder.AppendLine().AppendLine("Error: ").Append(StdError);
+            }
 
             builder.AppendLine().AppendLine("Shader Code:");
             int lines = 0;

@@ -267,7 +267,11 @@ namespace ShaderGen
         {
             FieldDeclarationSyntax fieldDecl = (FieldDeclarationSyntax)vds.Parent.Parent;
             TypeSyntax fieldType = fieldDecl.Declaration.Type;
-            while (fieldType is QualifiedNameSyntax qns) fieldType = qns.Right;
+            while (fieldType is QualifiedNameSyntax qns)
+            {
+                fieldType = qns.Right;
+            }
+
             GenericNameSyntax gns = (GenericNameSyntax)fieldType;
             TypeSyntax type = gns.TypeArgumentList.Arguments[0];
             string fullName = GetModel(vds).GetFullTypeName(type);

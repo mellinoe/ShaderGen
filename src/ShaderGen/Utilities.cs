@@ -242,7 +242,9 @@ namespace ShaderGen
                 returnTypeReference = new TypeReference(GetFullTypeName(typeSymbol, out _), typeSymbol);
             }
             else
+            {
                 throw new ArgumentOutOfRangeException(nameof(node), "Unsupported BaseMethodDeclarationSyntax type.");
+            }
 
             UInt3 computeGroupCounts = new UInt3();
             bool isFragmentShader = false, isComputeShader = false;

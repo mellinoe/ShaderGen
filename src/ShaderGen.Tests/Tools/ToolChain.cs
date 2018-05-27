@@ -280,7 +280,10 @@ namespace ShaderGen.Tests.Tools
             IEnumerable<GraphicsBackend> graphicsBackends)
         {
             GraphicsBackend[] backends = (graphicsBackends ?? _toolChainsByGraphicsBackend.Keys).ToArray();
-            if (backends.Length < 1) backends = _toolChainsByGraphicsBackend.Keys.ToArray();
+            if (backends.Length < 1)
+            {
+                backends = _toolChainsByGraphicsBackend.Keys.ToArray();
+            }
 
             List<string> missingBackends = new List<string>(backends.Length);
             List<ToolChain> found = new List<ToolChain>(backends.Length);
@@ -376,15 +379,20 @@ namespace ShaderGen.Tests.Tools
             Func<GraphicsDevice> createWindowed)
         {
             if (!backendType.IsSubclassOf(typeof(LanguageBackend)))
+            {
                 throw new ArgumentOutOfRangeException(nameof(backendType),
                     $"{backendType.Name} is not a descendent of {nameof(LanguageBackend)}.");
+            }
 
             BackendType = backendType;
 
             // Calculate name (strip 'Backend' if present).
             Name = backendType.Name;
             if (Name.EndsWith("Backend", StringComparison.InvariantCultureIgnoreCase))
+            {
                 Name = Name.Substring(0, Name.Length - 7);
+            }
+
             GraphicsBackend = graphicsBackend;
 
             ToolFeatures features = ToolFeatures.None;
@@ -524,16 +532,24 @@ namespace ShaderGen.Tests.Tools
                     process.OutputDataReceived += (sender, e) =>
                     {
                         if (e.Data == null)
+                        {
                             outputWaitHandle.Set();
+                        }
                         else
+                        {
                             output.AppendLine(e.Data);
+                        }
                     };
                     process.ErrorDataReceived += (sender, e) =>
                     {
                         if (e.Data == null)
+                        {
                             errorWaitHandle.Set();
+                        }
                         else
+                        {
                             error.AppendLine(e.Data);
+                        }
                     };
                     // ReSharper restore AccessToDisposedClosure
 
@@ -546,12 +562,18 @@ namespace ShaderGen.Tests.Tools
                     if (!process.WaitForExit(DefaultTimeout) || !outputWaitHandle.WaitOne(DefaultTimeout) ||
                         !errorWaitHandle.WaitOne(DefaultTimeout))
                     {
-                        if (output.Length > 0) output.AppendLine("TIMED OUT!").AppendLine();
+                        if (output.Length > 0)
+                        {
+                            output.AppendLine("TIMED OUT!").AppendLine();
+                        }
+
                         error.AppendLine($"Timed out calling: \"{toolPath}\" {process.StartInfo.Arguments}");
                         exitCode = int.MinValue;
                     }
                     else
+                    {
                         exitCode = process.ExitCode;
+                    }
 
                     // Get compiled output (if any), otherwise use the source code.
                     byte[] outputBytes = !string.IsNullOrWhiteSpace(outputPath)
@@ -650,7 +672,10 @@ namespace ShaderGen.Tests.Tools
 
                 // Check if the Vulkan SDK is installed, and use the compiler bundled there.
                 string vulkanSdkPath = Environment.GetEnvironmentVariable(VulkanSdkEnvVar);
-                if (vulkanSdkPath == null) return null;
+                if (vulkanSdkPath == null)
+                {
+                    return null;
+                }
 
                 string exeExtension = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : string.Empty;
                 string exePath = Path.Combine(vulkanSdkPath, "bin", "glslangvalidator" + exeExtension);

@@ -301,7 +301,11 @@ namespace ShaderGen
              * return t * t * (3.0 - 2.0 * t);
              * Results are undefined if min ≥ max.
             */
-            if (min >= max) return float.NaN;
+            if (min >= max)
+            {
+                return float.NaN;
+            }
+
             float t = Saturate((x - min) / (max - min));
             return t * t * (3f - 2f * t);
         }

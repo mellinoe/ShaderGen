@@ -51,7 +51,9 @@ namespace ShaderGen
         {
             // Check if we already know this type
             if (s_cachedSizes.TryGetValue(typeSymbol, out AlignmentInfo alignmentInfo))
+            {
                 return alignmentInfo;
+            }
 
             string symbolFullName = typeSymbol.GetFullMetadataName();
 
@@ -73,7 +75,10 @@ namespace ShaderGen
             {
                 string enumBaseType = ((INamedTypeSymbol)typeSymbol).EnumUnderlyingType.GetFullMetadataName();
                 if (!s_knownSizes.TryGetValue(enumBaseType, out int enumSize))
+                {
                     throw new ShaderGenerationException($"Unknown enum base type: {enumBaseType}");
+                }
+
                 alignmentInfo = new AlignmentInfo(enumSize, enumSize, enumSize, specificShaderAlignment ?? enumSize);
                 s_cachedSizes.TryAdd(typeSymbol, alignmentInfo);
                 return alignmentInfo;
@@ -81,7 +86,9 @@ namespace ShaderGen
 
             // NOTE This check only works for known types accessible to ShaderGen, but it will pick up most non-blittable types.
             if (BlittableHelper.IsBlittable(symbolFullName) == false)
+            {
                 throw new ShaderGenerationException($"Cannot use the {symbolFullName} type in a shader as it is not a blittable type.");
+            }
 
             // Unknown type, get the instance fields.
             ITypeSymbol[] fields = typeSymbol.GetMembers()
@@ -90,7 +97,9 @@ namespace ShaderGen
                 .ToArray();
 
             if (fields.Length == 0)
+            {
                 throw new ShaderGenerationException($"No fields on type {symbolFullName}, cannot assess size of structure.");
+            }
 
             int csharpSize = 0;
             int shaderSize = 0;

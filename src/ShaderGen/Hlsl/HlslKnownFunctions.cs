@@ -523,7 +523,10 @@ namespace ShaderGen.Hlsl
         {
             string v = value.ToString("0.0###########");
             if (typeName == "System.Single" || typeName == "float") // TODO Why are we getting float?
+            {
                 return v;
+            }
+
             GetVectorTypeInfo(typeName, out string shaderType, out int elementCount);
             return $"{shaderType}({string.Join(",", Enumerable.Range(0, elementCount).Select(i => v))})";
         }
@@ -537,14 +540,23 @@ namespace ShaderGen.Hlsl
         private static string Log(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
             if (parameters.Length < 2)
+            {
                 return $"log({parameters[0].Identifier})";
+            }
 
             // TODO Get computed constant value for parameter 2 rather than simple string
             string param2 = parameters[1].Identifier;
             if (float.TryParse(param2, out float @base))
             {
-                if (Math.Abs(@base - 2f) < float.Epsilon) return $"log2({parameters[0].Identifier})";
-                if (Math.Abs(@base - Math.E) < float.Epsilon) return $"log({parameters[0].Identifier})";
+                if (Math.Abs(@base - 2f) < float.Epsilon)
+                {
+                    return $"log2({parameters[0].Identifier})";
+                }
+
+                if (Math.Abs(@base - Math.E) < float.Epsilon)
+                {
+                    return $"log({parameters[0].Identifier})";
+                }
             }
 
             return $"(log({parameters[0].Identifier})/log({parameters[1].Identifier}))";
@@ -554,7 +566,9 @@ namespace ShaderGen.Hlsl
         {
             // TODO Should we use RoundEven here for safety??
             if (parameters.Length < 2)
+            {
                 return $"round({parameters[0].Identifier})";
+            }
 
             // TODO Need to Implement to support MathF fully
             // Round(Single, Int32)

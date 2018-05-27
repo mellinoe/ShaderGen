@@ -43,9 +43,14 @@ namespace ShaderGen
         {
 
             if (languages == null)
+            {
                 throw new ArgumentNullException(nameof(languages));
+            }
+
             if (languages.Length < 1)
+            {
                 throw new ArgumentException("At least one LanguageBackend must be provided.");
+            }
 
             _compilation = compilation ?? throw new ArgumentNullException(nameof(compilation));
             _languages = languages.ToArray();
@@ -58,7 +63,9 @@ namespace ShaderGen
             {
                 ShaderSetDiscoverer ssd = new ShaderSetDiscoverer();
                 foreach (SyntaxTree tree in _compilation.SyntaxTrees)
+                {
                     ssd.Visit(tree.GetRoot());
+                }
 
                 _shaderSets = ssd.GetShaderSets();
                 return;
@@ -70,14 +77,18 @@ namespace ShaderGen
             TypeAndMethodName vertex = null;
             if (!string.IsNullOrWhiteSpace(vertexFunctionName)
                 && !TypeAndMethodName.Get(vertexFunctionName, out vertex))
+            {
                 throw new ShaderGenerationException(
                     $"The name passed to {nameof(vertexFunctionName)} must be a fully-qualified type and method.");
+            }
 
             TypeAndMethodName fragment = null;
             if (!string.IsNullOrWhiteSpace(fragmentFunctionName)
                 && !TypeAndMethodName.Get(fragmentFunctionName, out fragment))
+            {
                 throw new ShaderGenerationException(
                     $"The name passed to {nameof(fragmentFunctionName)} must be a fully-qualified type and method.");
+            }
 
             if (vertex != null || fragment != null)
             {
@@ -85,14 +96,20 @@ namespace ShaderGen
                 string setName = string.Empty;
 
                 if (vertex != null)
+                {
                     setName = vertexFunctionName;
+                }
 
                 if (fragment != null)
                 {
                     if (setName == string.Empty)
+                    {
                         setName = fragmentFunctionName;
+                    }
                     else
+                    {
                         setName += "+" + fragmentFunctionName;
+                    }
                 }
 
                 shaderSets.Add(new ShaderSetInfo(setName, vertex, fragment));
@@ -101,11 +118,15 @@ namespace ShaderGen
             TypeAndMethodName compute = null;
             if (!string.IsNullOrWhiteSpace(computeFunctionName)
                 && !TypeAndMethodName.Get(computeFunctionName, out compute))
+            {
                 throw new ShaderGenerationException(
                     $"The name passed to {nameof(computeFunctionName)} must be a fully-qualified type and method.");
+            }
 
             if (compute != null)
+            {
                 shaderSets.Add(new ShaderSetInfo(computeFunctionName, compute));
+            }
 
             _shaderSets = shaderSets.ToArray();
         }

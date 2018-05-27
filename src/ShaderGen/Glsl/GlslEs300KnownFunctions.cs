@@ -561,7 +561,9 @@ namespace ShaderGen.Glsl
         {
             string pType = parameters[0].FullTypeName;
             if (pType == "System.Single" || pType == "float") // TODO Why are we getting float?
+            {
                 return $"pow({parameters[0].Identifier}, 0.333333333333333)";
+            }
 
             GetVectorTypeInfo(pType, out string shaderType, out int elementCount);
             return
@@ -571,14 +573,23 @@ namespace ShaderGen.Glsl
         private static string Log(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
             if (parameters.Length < 2)
+            {
                 return $"log({parameters[0].Identifier})";
+            }
 
             // TODO Get computed constant value for parameter 2 rather than simple string
             string param2 = parameters[1].Identifier;
             if (float.TryParse(param2, out float @base))
             {
-                if (Math.Abs(@base - 2f) < float.Epsilon) return $"log2({parameters[0].Identifier})";
-                if (Math.Abs(@base - Math.E) < float.Epsilon) return $"log({parameters[0].Identifier})";
+                if (Math.Abs(@base - 2f) < float.Epsilon)
+                {
+                    return $"log2({parameters[0].Identifier})";
+                }
+
+                if (Math.Abs(@base - Math.E) < float.Epsilon)
+                {
+                    return $"log({parameters[0].Identifier})";
+                }
             }
 
             return $"(log({parameters[0].Identifier})/log({parameters[1].Identifier}))";
@@ -594,7 +605,9 @@ namespace ShaderGen.Glsl
         {
             // TODO Should we use RoundEven here for safety??
             if (parameters.Length < 2)
+            {
                 return $"round({parameters[0].Identifier})";
+            }
 
             // TODO Need to Implement to support MathF fully
             // Round(Single, Int32)

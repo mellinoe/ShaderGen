@@ -77,11 +77,17 @@ namespace ShaderGen.Tests
                             "packages")
                     };
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
                         dirs.Add(@"C:\Program Files\dotnet\sdk\NuGetFallbackFolder");
+                    }
                     else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                    {
                         dirs.Add("/usr/local/share/dotnet/sdk/NuGetFallbackFolder");
+                    }
                     else
+                    {
                         dirs.Add("/usr/share/dotnet/sdk/NuGetFallbackFolder");
+                    }
 
                     IReadOnlyCollection<string> packageDirs = dirs.Where(Directory.Exists).ToArray();
 
@@ -102,7 +108,9 @@ namespace ShaderGen.Tests
                         }
 
                         if (!found)
+                        {
                             throw new InvalidOperationException($"Unable to find reference \"{path}\".");
+                        }
                     }
 
                     return paths;
@@ -121,7 +129,9 @@ namespace ShaderGen.Tests
                     {
                         string path = paths[index];
                         using (FileStream fs = File.OpenRead(path))
+                        {
                             references[index] = MetadataReference.CreateFromStream(fs, filePath: path);
+                        }
                     }
 
                     return references;

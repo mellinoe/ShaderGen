@@ -62,7 +62,7 @@ namespace ShaderGen.Tests
             yield return new object[] { null, "TestShaders.ExpressionBodiedMethods.ExpressionBodyWithReturn" };
             yield return new object[] { null, "TestShaders.ExpressionBodiedMethods.ExpressionBodyWithoutReturn" };
             yield return new object[] { "TestShaders.StructuredBufferTestShader.VS", null };
-            yield return new object[] { null, "TestShaders.StructuredBufferTestShader.FS"};
+            yield return new object[] { null, "TestShaders.StructuredBufferTestShader.FS" };
             yield return new object[] { null, "TestShaders.DepthTextureSamplerFragment.FS" };
             yield return new object[] { null, "TestShaders.Enums.FS" };
             yield return new object[] { "TestShaders.VertexWithStructuredBuffer.VS", null };
@@ -81,7 +81,7 @@ namespace ShaderGen.Tests
         };
 
         private void TestCompile(GraphicsBackend graphicsBackend, string vsName, string fsName, string csName = null)
-        { 
+        {
             Compilation compilation = TestUtil.GetCompilation();
             ToolChain toolChain = ToolChain.Require(ToolFeatures.ToCompiled, graphicsBackend);
 
@@ -119,8 +119,12 @@ namespace ShaderGen.Tests
             // Collate results
             StringBuilder builder = new StringBuilder();
             foreach (CompileResult result in results)
+            {
                 if (result.HasError)
+                {
                     builder.AppendLine(result.ToString());
+                }
+            }
 
             Assert.True(builder.Length < 1, builder.ToString());
         }
@@ -184,7 +188,9 @@ namespace ShaderGen.Tests
                             failed = true;
                         }
                         else
+                        {
                             _output.WriteLine($"Compiled Vertex Shader from set \"{set.Name}\"!");
+                        }
                     }
 
                     if (set.FragmentFunction != null)
@@ -197,7 +203,9 @@ namespace ShaderGen.Tests
                             failed = true;
                         }
                         else
+                        {
                             _output.WriteLine($"Compiled Fragment Shader from set \"{set.Name}\"!");
+                        }
                     }
 
                     if (set.ComputeFunction != null)
@@ -207,7 +215,9 @@ namespace ShaderGen.Tests
                         {
                             string fullname = set.ComputeFunction.DeclaringType + "." + set.ComputeFunction.Name + "_";
                             if (s_glslesSkippedShaders.Contains(fullname))
+                            {
                                 continue;
+                            }
                         }
 
                         result = toolChain.Compile(set.ComputeShaderCode, Stage.Compute, set.ComputeFunction.Name);
@@ -218,7 +228,9 @@ namespace ShaderGen.Tests
                             failed = true;
                         }
                         else
+                        {
                             _output.WriteLine($"Compiled Compute Shader from set \"{set.Name}\"!");
+                        }
                     }
                 }
 

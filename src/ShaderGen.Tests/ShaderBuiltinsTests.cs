@@ -102,8 +102,10 @@ namespace ShaderGen.Tests
         private void TestShaderBuiltins(ToolChain toolChain)
         {
             if (!toolChain.Features.HasFlag(ToolFeatures.ToHeadless))
+            {
                 throw new RequiredToolFeatureMissingException(
                     $"The {toolChain} does not support creating a headless graphics device!");
+            }
 
             string csFunctionName =
                 $"{nameof(TestShaders)}.{nameof(ShaderBuiltinsComputeTest)}.{nameof(ShaderBuiltinsComputeTest.CS)}";
@@ -137,7 +139,9 @@ namespace ShaderGen.Tests
                 Assert.True(false);
             }
             else
+            {
                 _output.WriteLine($"Compiled Compute Shader from set \"{set.Name}\"!");
+            }
 
             Assert.NotNull(compilationResult.CompiledOutput);
 
@@ -242,7 +246,10 @@ namespace ShaderGen.Tests
                             MappedResourceView<ComputeShaderParameters> map =
                                 graphicsDevice.Map<ComputeShaderParameters>(stagingBuffer, MapMode.Read);
                             for (int i = 0; i < gpuParameters.Length; i++)
+                            {
                                 gpuParameters[i] = map[i];
+                            }
+
                             graphicsDevice.Unmap(stagingBuffer);
                         }
 
@@ -266,12 +273,20 @@ namespace ShaderGen.Tests
                                         bool comparable = true;
                                         if (float.IsNaN(a) || float.IsNaN(b))
                                         {
-                                            if (IgnoreNan) return false;
+                                            if (IgnoreNan)
+                                            {
+                                                return false;
+                                            }
+
                                             comparable = false;
                                         }
                                         if (float.IsInfinity(a) || float.IsInfinity(b))
                                         {
-                                            if (IgnoreInfinity) return false;
+                                            if (IgnoreInfinity)
+                                            {
+                                                return false;
+                                            }
+
                                             comparable = false;
                                         }
 
@@ -282,12 +297,18 @@ namespace ShaderGen.Tests
                                     })
                                     .ToArray();
 
-                            if (deepCompareObjectFields.Count < 1) continue;
+                            if (deepCompareObjectFields.Count < 1)
+                            {
+                                continue;
+                            }
 
                             if (!failures.TryGetValue(method, out var methodList))
+                            {
                                 failures.Add(method, methodList =
                                     new List<Tuple<ComputeShaderParameters, ComputeShaderParameters,
                                         IReadOnlyCollection<Tuple<string, float, float>>>>());
+                            }
+
                             methodList.Add(
                                 new Tuple<ComputeShaderParameters, ComputeShaderParameters,
                                     IReadOnlyCollection<Tuple<string, float, float>>>(
@@ -327,7 +348,9 @@ namespace ShaderGen.Tests
                     _output.WriteLine(spacer1);
                     float failureRate = 100f * methodFailureCount / loops;
                     if (failureRate > MaximumFailureRate)
+                    {
                         failed++;
+                    }
 
                     _output.WriteLine(
                         $"Method {method.Key} failed {methodFailureCount} times ({failureRate:##.##}%).");
@@ -388,11 +411,16 @@ namespace ShaderGen.Tests
                 aValue = tuple.Item3;
                 bValue = tuple.Item4;
 
-                if (Equals(aValue, bValue)) continue;
+                if (Equals(aValue, bValue))
+                {
+                    continue;
+                }
 
                 // Get fields (cached)
                 if (!childFieldInfos.TryGetValue(currentType, out IReadOnlyCollection<FieldInfo> childFields))
+                {
                     childFieldInfos.Add(currentType, childFields = currentType.GetFields().Where(f => !f.IsStatic).ToArray());
+                }
 
                 if (childFields.Count < 1)
                 {
@@ -408,7 +436,10 @@ namespace ShaderGen.Tests
                     object bMemberValue = childField.GetValue(bValue);
 
                     // Short cut equality
-                    if (Equals(aMemberValue, bMemberValue)) continue;
+                    if (Equals(aMemberValue, bMemberValue))
+                    {
+                        continue;
+                    }
 
                     string fullName = string.IsNullOrWhiteSpace(tuple.Item1)
                         ? childField.Name
@@ -444,6 +475,7 @@ namespace ShaderGen.Tests
             byte[] buffer = null;
             ref byte asRefByte = ref Unsafe.As<T, byte>(ref result);
             fixed (byte* ptr = &asRefByte)
+            {
                 while (pi < size)
                 {
                     int b = pi % 4;
@@ -456,8 +488,22 @@ namespace ShaderGen.Tests
 
                     *(ptr + pi++) = buffer[b];
                 }
+            }
 
             return result;
+        }
+
+        public static unsafe T GenFloats<T>() where T : struct
+        {
+            Random random = _randomGenerators.Value;
+            int floatCount = Unsafe.SizeOf<T>() / sizeof(float);
+            float* floats = stackalloc float[floatCount];
+            for (int i = 0; i < floatCount; i++)
+            {
+                floats[i] = (float)(random.NextDouble() * FloatRange * 2f) - FloatRange;
+            }
+
+            return Unsafe.Read<T>(floats);
         }
 
         private class ShaderSetProcessor : IShaderSetProcessor

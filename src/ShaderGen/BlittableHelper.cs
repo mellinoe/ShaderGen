@@ -32,7 +32,9 @@ namespace ShaderGen
         public static bool IsBlittable(this Type type)
         {
             while (type.IsArray)
+            {
                 type = type.GetElementType();
+            }
 
             try
             {
