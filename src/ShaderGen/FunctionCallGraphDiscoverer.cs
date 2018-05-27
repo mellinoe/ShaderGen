@@ -155,11 +155,6 @@ namespace ShaderGen
 
             public override void VisitInvocationExpression(InvocationExpressionSyntax node)
             {
-                //if (node.ToFullString().Contains("RandomInUnitSphere"))
-                //{
-                //
-                //}
-
                 if (node.Expression is IdentifierNameSyntax ins)
                 {
                     SymbolInfo symbolInfo = _discoverer.Compilation.GetSemanticModel(node.SyntaxTree).GetSymbolInfo(ins);

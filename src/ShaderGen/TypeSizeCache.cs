@@ -97,10 +97,10 @@ namespace ShaderGen
             int csharpAlignment = 0;
             int shaderAlignment = 0;
 
-            // Calculate size of struct from it's fields alignment infos
+            // Calculate size of struct from its fields alignment infos
             foreach (ITypeSymbol fieldType in fields)
             {
-                // Determine if type is blittblae
+                // Determine if type is blittable
                 alignmentInfo = Analyze(fieldType);
                 csharpAlignment = Math.Max(csharpAlignment, alignmentInfo.CSharpAlignment);
                 csharpSize += alignmentInfo.CSharpSize + csharpSize % alignmentInfo.CSharpAlignment;

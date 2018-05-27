@@ -8,9 +8,9 @@ namespace ShaderGen
         /*
          * Constants
          */
-        public static float PI = (float)Math.PI;
+        public const float PI = (float)Math.PI;
 
-        public static float E = (float)Math.E;
+        public const float E = (float)Math.E;
 
         /*
          * Misc
