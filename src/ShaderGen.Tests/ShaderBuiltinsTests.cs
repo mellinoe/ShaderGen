@@ -48,9 +48,16 @@ namespace ShaderGen.Tests
         private const int FailureExamples = 3;
 
         /// <summary>
-        /// The range of valid input float values (+/- this value).
+        /// Controls the minimum mantissa when generating a floating point number (how 'small' it can go)
         /// </summary>
-        private static readonly float FloatRange = 10000f;
+        /// <remarks>To test all valid floats this should be set to -126.</remarks>
+        private static readonly int MinMantissa = -3;
+
+        /// <summary>
+        /// Controls the maximum mantissa when generating a floating point number (how 'big' it can go)
+        /// </summary>
+        /// <remarks>To test all valid floats this should be set to 128.</remarks>
+        private static readonly int MaxMantissa = 3;
 
         /// <summary>
         /// Will ignore failures if either value is <see cref="float.NaN"/>.
@@ -147,11 +154,13 @@ namespace ShaderGen.Tests
 
             int sizeOfParametersStruct = Unsafe.SizeOf<ComputeShaderParameters>();
 
+
+
             // Create failure data structure, first by method #, then by field name.
-            Dictionary<int, List<Tuple<ComputeShaderParameters, ComputeShaderParameters,
-                IReadOnlyCollection<Tuple<string, float, float>>>>> failures
-                = new Dictionary<int, List<Tuple<ComputeShaderParameters, ComputeShaderParameters,
-                    IReadOnlyCollection<Tuple<string, float, float>>>>>();
+            Dictionary<int, List<(ComputeShaderParameters cpu, ComputeShaderParameters gp,
+                IReadOnlyCollection<(string fieldName, float cpuValue, float gpuValue)> differences)>> failures
+                = new Dictionary<int, List<(ComputeShaderParameters cpu, ComputeShaderParameters gp,
+                    IReadOnlyCollection<(string fieldName, float cpuValue, float gpuValue)> differences)>>();
 
             // We need two copies, one for the CPU & one for GPU
             ComputeShaderParameters[] cpuParameters = new ComputeShaderParameters[ShaderBuiltinsComputeTest.Methods];
@@ -209,7 +218,7 @@ namespace ShaderGen.Tests
                         Parallel.For(
                             0,
                             ShaderBuiltinsComputeTest.Methods,
-                            i => cpuParameters[i] = gpuParameters[i] = FillRandomFloats<ComputeShaderParameters>());
+                            i => cpuParameters[i] = gpuParameters[i] = TestUtil.FillRandomFloats<ComputeShaderParameters>(MinMantissa, MaxMantissa));
 
                         /*
                          * Run shader on CPU in parallel
@@ -262,40 +271,45 @@ namespace ShaderGen.Tests
                             ComputeShaderParameters gpu = gpuParameters[method];
 
                             // Filter results based on tolerances.
-                            IReadOnlyCollection<Tuple<string, float, float>> deepCompareObjectFields =
-                                DeepCompareObjectFields(cpu, gpu)
-                                    .Select(t => Tuple.Create(t.Item1, (float)t.Item2, (float)t.Item3))
-                                    .Where(t =>
-                                    {
+                            IReadOnlyCollection<(string fieldName, float cpuValue, float gpuValue)>
+                                deepCompareObjectFields = TestUtil.DeepCompareObjectFields(cpu, gpu)
+                                        .Select<(string fieldName, object aValue, object bValue), (string fieldName,
+                                            float cpuValue, float gpuValue)>(
+                                            t => (t.fieldName, (float)t.aValue, (float)t.bValue))
+                                        .Where(t =>
+                                        {
 #pragma warning disable 162
-                                        float a = t.Item2;
-                                        float b = t.Item3;
-                                        bool comparable = true;
-                                        if (float.IsNaN(a) || float.IsNaN(b))
-                                        {
-                                            if (IgnoreNan)
+                                            // ReSharper disable ConditionIsAlwaysTrueOrFalse
+                                            float a = t.cpuValue;
+                                            float b = t.gpuValue;
+                                            bool comparable = true;
+                                            if (float.IsNaN(a) || float.IsNaN(b))
                                             {
-                                                return false;
+                                                if (IgnoreNan)
+                                                {
+                                                    return false;
+                                                }
+
+                                                comparable = false;
                                             }
 
-                                            comparable = false;
-                                        }
-                                        if (float.IsInfinity(a) || float.IsInfinity(b))
-                                        {
-                                            if (IgnoreInfinity)
+                                            if (float.IsInfinity(a) || float.IsInfinity(b))
                                             {
-                                                return false;
+                                                if (IgnoreInfinity)
+                                                {
+                                                    return false;
+                                                }
+
+                                                comparable = false;
                                             }
 
-                                            comparable = false;
-                                        }
-
-                                        return !comparable ||
-                                               Math.Abs(1.0f - a / b) > ToleranceRatio &&
-                                               Math.Abs(a - b) > Tolerance;
+                                            return !comparable ||
+                                                   Math.Abs(1.0f - a / b) > ToleranceRatio &&
+                                                   Math.Abs(a - b) > Tolerance;
 #pragma warning restore 162
-                                    })
-                                    .ToArray();
+                                            // ReSharper restore ConditionIsAlwaysTrueOrFalse
+                                        })
+                                        .ToArray();
 
                             if (deepCompareObjectFields.Count < 1)
                             {
@@ -304,15 +318,13 @@ namespace ShaderGen.Tests
 
                             if (!failures.TryGetValue(method, out var methodList))
                             {
-                                failures.Add(method, methodList =
-                                    new List<Tuple<ComputeShaderParameters, ComputeShaderParameters,
-                                        IReadOnlyCollection<Tuple<string, float, float>>>>());
+                                failures.Add(method,
+                                    methodList =
+                                        new List<(ComputeShaderParameters cpu, ComputeShaderParameters gp,
+                                            IReadOnlyCollection<(string fieldName, float cpuValue, float gpuValue)>)>());
                             }
 
-                            methodList.Add(
-                                new Tuple<ComputeShaderParameters, ComputeShaderParameters,
-                                    IReadOnlyCollection<Tuple<string, float, float>>>(
-                                    cpu, gpu, deepCompareObjectFields));
+                            methodList.Add((cpu, gpu, deepCompareObjectFields));
                         }
 
                         // Continue until we have done enough loops, or run out of time.
@@ -337,9 +349,7 @@ namespace ShaderGen.Tests
                 int failed = 0;
 
                 // Output failures
-                foreach (KeyValuePair<int, List<Tuple<ComputeShaderParameters, ComputeShaderParameters,
-                    IReadOnlyCollection<Tuple<string, float, float>>>>> method in failures
-                    .OrderBy(kvp => kvp.Key))
+                foreach (var method in failures.OrderBy(kvp => kvp.Key))
                 // To order by %-age failure use - .OrderByDescending(kvp =>kvp.Value.Count))
                 {
                     notIdential++;
@@ -356,8 +366,7 @@ namespace ShaderGen.Tests
                         $"Method {method.Key} failed {methodFailureCount} times ({failureRate:##.##}%).");
 
 
-                    foreach (IGrouping<string, Tuple<string, float, float>> group in method.Value.SelectMany(t => t.Item3)
-                        .ToLookup(f => f.Item1).OrderByDescending(g => g.Count()))
+                    foreach (var group in method.Value.SelectMany(t => t.differences).ToLookup(f => f.fieldName).OrderByDescending(g => g.Count()))
                     {
                         _output.WriteLine(spacer2);
                         _output.WriteLine(string.Empty);
@@ -366,7 +375,7 @@ namespace ShaderGen.Tests
                         _output.WriteLine($"  {group.Key} failed {fieldFailureCount} times ({100f * fieldFailureCount / methodFailureCount:##.##}%)");
 
                         int examples = 0;
-                        foreach (Tuple<string, float, float> tuple in group)
+                        foreach (var tuple in group)
                         {
                             if (examples++ > FailureExamples)
                             {
@@ -374,7 +383,7 @@ namespace ShaderGen.Tests
                                 break;
                             }
 
-                            _output.WriteLine($"    {tuple.Item2,13} != {tuple.Item3}");
+                            _output.WriteLine($"    {tuple.cpuValue,13} != {tuple.gpuValue}");
                         }
                     }
                 }
@@ -388,93 +397,6 @@ namespace ShaderGen.Tests
                 : $"CPU & GPU results did not match for {notIdential} methods!");
         }
 
-        public static IReadOnlyCollection<Tuple<string, object, object>> DeepCompareObjectFields<T>(T a, T b)
-        {
-            // Creat failures list
-            List<Tuple<string, object, object>> failures = new List<Tuple<string, object, object>>();
-
-            // Get dictionary of fields by field name and type
-            Dictionary<Type, IReadOnlyCollection<FieldInfo>> childFieldInfos =
-                new Dictionary<Type, IReadOnlyCollection<FieldInfo>>();
-
-            Type currentType = typeof(T);
-            object aValue = a;
-            object bValue = b;
-            Stack<Tuple<string, Type, object, object>> stack = new Stack<Tuple<string, Type, object, object>>();
-            stack.Push(Tuple.Create(string.Empty, currentType, aValue, bValue));
-
-            while (stack.Count > 0)
-            {
-                // Pop top of stack.
-                Tuple<string, Type, object, object> tuple = stack.Pop();
-                currentType = tuple.Item2;
-                aValue = tuple.Item3;
-                bValue = tuple.Item4;
-
-                if (Equals(aValue, bValue))
-                {
-                    continue;
-                }
-
-                // Get fields (cached)
-                if (!childFieldInfos.TryGetValue(currentType, out IReadOnlyCollection<FieldInfo> childFields))
-                {
-                    childFieldInfos.Add(currentType, childFields = currentType.GetFields().Where(f => !f.IsStatic).ToArray());
-                }
-
-                if (childFields.Count < 1)
-                {
-                    // No child fields, we have an inequality
-                    string fullName = tuple.Item1;
-                    failures.Add(Tuple.Create(fullName, aValue, bValue));
-                    continue;
-                }
-
-                foreach (FieldInfo childField in childFields)
-                {
-                    object aMemberValue = childField.GetValue(aValue);
-                    object bMemberValue = childField.GetValue(bValue);
-
-                    // Short cut equality
-                    if (Equals(aMemberValue, bMemberValue))
-                    {
-                        continue;
-                    }
-
-                    string fullName = string.IsNullOrWhiteSpace(tuple.Item1)
-                        ? childField.Name
-                        : $"{tuple.Item1}.{childField.Name}";
-                    stack.Push(Tuple.Create(fullName, childField.FieldType, aMemberValue, bMemberValue));
-                }
-            }
-
-            return failures.AsReadOnly();
-        }
-
-
-        /// <summary>
-        /// The random number generators for each thread.
-        /// </summary>
-        private static readonly ThreadLocal<Random> _randomGenerators =
-            new ThreadLocal<Random>(() => new Random());
-
-        /// <summary>
-        /// Fills a struct with Random floats.
-        /// </summary>
-        /// <typeparam name="T">The random type</typeparam>
-        /// <returns></returns>
-        public static unsafe T FillRandomFloats<T>() where T : struct
-        {
-            Random random = _randomGenerators.Value;
-            int floatCount = Unsafe.SizeOf<T>() / sizeof(float);
-            float* floats = stackalloc float[floatCount];
-            for (int i = 0; i < floatCount; i++)
-            {
-                floats[i] = (float)(random.NextDouble() * FloatRange * 2f) - FloatRange;
-            }
-
-            return Unsafe.Read<T>(floats);
-        }
 
         private class ShaderSetProcessor : IShaderSetProcessor
         {
