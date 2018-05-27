@@ -209,7 +209,7 @@ namespace ShaderGen.Tests
                         Parallel.For(
                             0,
                             ShaderBuiltinsComputeTest.Methods,
-                            i => cpuParameters[i] = gpuParameters[i] = GetRandom<ComputeShaderParameters>());
+                            i => cpuParameters[i] = gpuParameters[i] = FillRandomFloats<ComputeShaderParameters>());
 
                         /*
                          * Run shader on CPU in parallel
@@ -459,41 +459,11 @@ namespace ShaderGen.Tests
             new ThreadLocal<Random>(() => new Random());
 
         /// <summary>
-        /// Create a type with random data.
+        /// Fills a struct with Random floats.
         /// </summary>
         /// <typeparam name="T">The random type</typeparam>
-        /// <param name="size">The optional number of bytes to fill.</param>
         /// <returns></returns>
-        public unsafe T GetRandom<T>(int size = default(int))
-        {
-            Random random = _randomGenerators.Value;
-            size = Math.Min(Unsafe.SizeOf<T>(), size < 1 ? Int32.MaxValue : size);
-            T result = Activator.CreateInstance<T>();
-            int pi = 0;
-
-            // Grab pointer to struct
-            byte[] buffer = null;
-            ref byte asRefByte = ref Unsafe.As<T, byte>(ref result);
-            fixed (byte* ptr = &asRefByte)
-            {
-                while (pi < size)
-                {
-                    int b = pi % 4;
-                    if (b == 0)
-                    {
-                        // Update random number in buffer every 4 bytes
-                        float f = (float)(random.NextDouble() * FloatRange * 2f) - FloatRange;
-                        buffer = BitConverter.GetBytes(f);
-                    }
-
-                    *(ptr + pi++) = buffer[b];
-                }
-            }
-
-            return result;
-        }
-
-        public static unsafe T GenFloats<T>() where T : struct
+        public static unsafe T FillRandomFloats<T>() where T : struct
         {
             Random random = _randomGenerators.Value;
             int floatCount = Unsafe.SizeOf<T>() / sizeof(float);
