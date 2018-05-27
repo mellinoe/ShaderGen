@@ -24,7 +24,7 @@ namespace ShaderGen.Tests
         /// <summary>
         /// The skip reason, set to <see langword="null"/> to enable tests in class.
         /// </summary>
-        private const string SkipReason = "Currently skipping automatic tests until closer implementations can be found.";
+        private const string SkipReason = null; // "Currently skipping automatic tests until closer implementations can be found.";
 
         /// <summary>
         /// The test will fail when the GPU & CPU has any methods that fail higher than the ratio.
@@ -438,7 +438,6 @@ namespace ShaderGen.Tests
             Random random = _randomGenerators.Value;
             size = Math.Min(Unsafe.SizeOf<T>(), size < 1 ? Int32.MaxValue : size);
             T result = Activator.CreateInstance<T>();
-            // This buffer holds a random number
             int pi = 0;
 
             // Grab pointer to struct
