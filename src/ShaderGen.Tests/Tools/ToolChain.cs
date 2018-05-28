@@ -575,10 +575,34 @@ namespace ShaderGen.Tests.Tools
                         exitCode = process.ExitCode;
                     }
 
-                    // Get compiled output (if any), otherwise use the source code.
-                    byte[] outputBytes = !string.IsNullOrWhiteSpace(outputPath)
-                        ? File.ReadAllBytes(outputPath)
-                        : (encoding ?? Encoding.Default).GetBytes(code);
+                    // Get compiled output (if any).
+                    byte[] outputBytes;
+                    if (string.IsNullOrWhiteSpace(outputPath))
+                    {
+                        // No output expected, just encode the existing code into bytes.
+                        outputBytes = (encoding ?? Encoding.Default).GetBytes(code);
+                    }
+                    else
+                    {
+                        if (File.Exists(outputPath))
+                        {
+                            try
+                            {
+                                // Attemp to read output file
+                                outputBytes = File.ReadAllBytes(outputPath);
+                            }
+                            catch (Exception e)
+                            {
+                                outputBytes = Array.Empty<byte>();
+                                error.AppendLine($"Failed to read the output file, \"{outputPath}\": {e.Message}");
+                            }
+                        }
+                        else
+                        {
+                            outputBytes = Array.Empty<byte>();
+                            error.AppendLine($"The output file \"{outputPath}\" was not found!");
+                        }
+                    }
 
                     return new CompileResult(code, exitCode, output.ToString(), error.ToString(), outputBytes);
                 }
