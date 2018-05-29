@@ -23,7 +23,7 @@ namespace ShaderGen.Metal
                 {nameof(ShaderBuiltins.Acosh), SimpleNameTranslator()},
                 {nameof(ShaderBuiltins.Asin), SimpleNameTranslator()},
                 {nameof(ShaderBuiltins.Asinh), SimpleNameTranslator()},
-                {nameof(ShaderBuiltins.Atan), SimpleNameTranslator()}, // Note atan supports both (x) and (y,x)
+                {nameof(ShaderBuiltins.Atan), Atan}, // Note atan supports both (x) and (y,x)
                 {nameof(ShaderBuiltins.Atanh), SimpleNameTranslator()},
                 {nameof(ShaderBuiltins.Cbrt), CubeRoot}, // We can calculate the 1/3rd power, which might not give exactly the same result?
                 {nameof(ShaderBuiltins.Ceiling), SimpleNameTranslator("ceil")},
@@ -54,7 +54,7 @@ namespace ShaderGen.Metal
                 // Potential BUG: https://stackoverflow.com/questions/7610631/glsl-mod-vs-hlsl-fmod
                 {nameof(ShaderBuiltins.Mod), SimpleNameTranslator("fmod")},
                 {nameof(ShaderBuiltins.Mul), MatrixMul},
-                {nameof(ShaderBuiltins.Pow), SimpleNameTranslator()},
+                {nameof(ShaderBuiltins.Pow), Pow},
                 {nameof(ShaderBuiltins.Round), Round},
                 {nameof(ShaderBuiltins.Sample), Sample},
                 {nameof(ShaderBuiltins.SampleComparisonLevelZero), SampleComparisonLevelZero},
@@ -190,8 +190,8 @@ namespace ShaderGen.Metal
                 { "Acosh", SimpleNameTranslator() },
                 { "Asin", SimpleNameTranslator() },
                 { "Asinh", SimpleNameTranslator() },
-                { "Atan", SimpleNameTranslator() },
-                { "Atan2", SimpleNameTranslator("atan") }, // Note atan supports both (x) and (y,x)
+                { "Atan", Atan },
+                { "Atan2", Atan }, // Note atan supports both (x) and (y,x)
                 { "Atanh", SimpleNameTranslator() },
                 { "Cbrt", CubeRoot }, // We can calculate the 1/3rd power, which might not give exactly the same result?
                 { "Ceiling", SimpleNameTranslator("ceil") },
@@ -205,7 +205,7 @@ namespace ShaderGen.Metal
                 { "Log10", Log10 },
                 { "Max", SimpleNameTranslator() },
                 { "Min", SimpleNameTranslator() },
-                { "Pow", SimpleNameTranslator() },
+                { "Pow", Pow },
                 { "Round", Round },
                 { "Sin", SimpleNameTranslator() },
                 { "Sinh", SimpleNameTranslator() },
@@ -239,18 +239,6 @@ namespace ShaderGen.Metal
             else
             {
                 return SimpleNameTranslator("clamp")(typeName, methodName, parameters);
-            }
-        }
-
-        private static string Pow(string typeName, string methodName, InvocationParameterInfo[] parameters)
-        {
-            if (parameters[0].FullTypeName == "float" || typeName == "System.MathF")
-            {
-                return $"pow({parameters[0].Identifier}, (float){parameters[1].Identifier})";
-            }
-            else
-            {
-                return SimpleNameTranslator("pow")(typeName, methodName, parameters);
             }
         }
 
@@ -674,6 +662,30 @@ namespace ShaderGen.Metal
             // Round(Single, Int32, MidpointRounding)
             // Round(Single, MidpointRounding)
             throw new NotImplementedException();
+        }
+
+        private static string Atan(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            if (parameters.Length < 2)
+            {
+                return $"atan({InvocationParameterInfo.GetInvocationParameterList(parameters)})";
+            }
+
+            return parameters[0].FullTypeName == "float" 
+                ? $"atan2({parameters[0].Identifier}, (float){parameters[1].Identifier})" 
+                : $"atan2({InvocationParameterInfo.GetInvocationParameterList(parameters)})";
+        }
+
+        private static string Pow(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            if (parameters.Length < 2)
+            {
+                return $"pow({InvocationParameterInfo.GetInvocationParameterList(parameters)})";
+            }
+
+            return parameters[0].FullTypeName == "float"
+                ? $"pow({parameters[0].Identifier}, (float){parameters[1].Identifier})"
+                : $"pow({InvocationParameterInfo.GetInvocationParameterList(parameters)})";
         }
     }
 }
