@@ -40,7 +40,7 @@ namespace ShaderGen.Tests.Tools
         private const string WindowsKitsFolder = @"C:\Program Files (x86)\Windows Kits";
         private const string VulkanSdkEnvVar = "VULKAN_SDK";
         private const string DefaultMetalPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metal";
-
+        private const string DefaultMetallibPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metallib";
 
         /// <summary>
         /// All the currently available tools by <see cref="LanguageBackend">Backend</see> <see cref="Type"/>.
@@ -803,17 +803,30 @@ namespace ShaderGen.Tests.Tools
             () => File.Exists(DefaultMetalPath) ? DefaultMetalPath : null,
             LazyThreadSafetyMode.ExecutionAndPublication);
 
+        /*
+         * Metallib tool
+         */
+        private static readonly Lazy<string> _metallibPath = new Lazy<string>(
+            () => File.Exists(DefaultMetallibPath) ? DefaultMetallibPath : null,
+            LazyThreadSafetyMode.ExecutionAndPublication);
 
         private static CompileResult MetalCompile(string code, Stage stage, string entryPoint)
         {
             using (TempFile inputFile = new TempFile())
+            using (TempFile metalOutputFile = new TempFile())
             using (TempFile outputFile = new TempFile())
             {
                 File.WriteAllText(inputFile, code, Encoding.UTF8);
 
-                string args = $"-x metal -mmacosx-version-min=10.12 -o \"{outputFile.FilePath}\" \"{inputFile.FilePath}\"";
+                string metalArgs = $"-x metal -mmacosx-version-min=10.12 -o \"{metalOutputFile.FilePath}\" \"{inputFile.FilePath}\"";
+                CompileResult bitcodeResult = Execute(_metalPath.Value, metalArgs, code, metalOutputFile, Encoding.UTF8);
+                if (bitcodeResult.HasError)
+                {
+                    return bitcodeResult;
+                }
 
-                return Execute(_metalPath.Value, args.ToString(), code, outputFile, Encoding.UTF8);
+                string metallibArgs = $"{metalOutputFile.FilePath} -o {outputFile.FilePath}";
+                return Execute(_metallibPath.Value, metallibArgs, null, outputFile.FilePath);
             }
         }
 
