@@ -671,9 +671,9 @@ namespace ShaderGen.Metal
                 return $"atan({InvocationParameterInfo.GetInvocationParameterList(parameters)})";
             }
 
-            return parameters[0].FullTypeName == "float" 
-                ? $"atan2({parameters[0].Identifier}, (float){parameters[1].Identifier})" 
-                : $"atan2({InvocationParameterInfo.GetInvocationParameterList(parameters)})";
+            return parameters[0].FullTypeName.Contains("Vector")
+                ? $"atan2({InvocationParameterInfo.GetInvocationParameterList(parameters)})"
+                : $"atan2({parameters[0].Identifier}, (float){parameters[1].Identifier})" ;
         }
 
         private static string Pow(string typeName, string methodName, InvocationParameterInfo[] parameters)
@@ -683,9 +683,9 @@ namespace ShaderGen.Metal
                 return $"pow({InvocationParameterInfo.GetInvocationParameterList(parameters)})";
             }
 
-            return parameters[0].FullTypeName == "float"
-                ? $"pow({parameters[0].Identifier}, (float){parameters[1].Identifier})"
-                : $"pow({InvocationParameterInfo.GetInvocationParameterList(parameters)})";
+            return parameters[0].FullTypeName.Contains("Vector")
+                ? $"pow({InvocationParameterInfo.GetInvocationParameterList(parameters)})"
+                : $"pow({parameters[0].Identifier}, (float){parameters[1].Identifier})";
         }
     }
 }
