@@ -177,6 +177,12 @@ namespace ShaderGen.Tests
              */
             using (GraphicsDevice graphicsDevice = toolChain.CreateHeadless())
             {
+                if (!graphicsDevice.Features.ComputeShader)
+                {
+                    throw new RequiredToolFeatureMissingException(
+                        $"The {graphicsDevice.BackendType} backend does not support compute shaders!");
+                }
+
                 ResourceFactory factory = graphicsDevice.ResourceFactory;
                 using (DeviceBuffer inOutBuffer = factory.CreateBuffer(
                     new BufferDescription(
