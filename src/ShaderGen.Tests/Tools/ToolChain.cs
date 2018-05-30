@@ -826,7 +826,7 @@ namespace ShaderGen.Tests.Tools
                 }
 
                 string metallibArgs = $"{metalOutputFile.FilePath} -o {outputFile.FilePath}";
-                return Execute(_metallibPath.Value, metallibArgs, null, outputFile.FilePath);
+                return Execute(_metallibPath.Value, metallibArgs, code, outputFile.FilePath);
             }
         }
 
