@@ -33,7 +33,7 @@ namespace ShaderGen
 
         private SemanticModel GetModel(SyntaxNode node) => _compilation.GetSemanticModel(node.SyntaxTree);
 
-        public MethodProcessResult VisitFunction(MethodDeclarationSyntax node)
+        public MethodProcessResult VisitFunction(BaseMethodDeclarationSyntax node)
         {
             _containingTypeName = Utilities.GetFullNestedTypePrefix((SyntaxNode)node.Body ?? node.ExpressionBody, out bool _);
             StringBuilder sb = new StringBuilder();
@@ -197,9 +197,10 @@ namespace ShaderGen
         {
             string returnType = _backend.CSharpToShaderType(_shaderFunction.ReturnType.Name);
             string fullDeclType = _backend.CSharpToShaderType(_shaderFunction.DeclaringType);
+            string shaderFunctionName = _shaderFunction.Name.Replace(".", "0_");
             string funcName = _shaderFunction.IsEntryPoint
-                ? _shaderFunction.Name
-                : fullDeclType + "_" + _shaderFunction.Name;
+                ? shaderFunctionName
+                : fullDeclType + "_" + shaderFunctionName;
             return $"{returnType} {funcName}({GetParameterDeclList()})";
         }
 
@@ -447,7 +448,7 @@ namespace ShaderGen
             string fullName = Utilities.GetFullName(symbolInfo);
 
             InvocationParameterInfo[] parameters = GetParameterInfos(node.ArgumentList);
-            return _backend.FormatInvocation(_setName, fullName, "ctor", parameters);
+            return _backend.FormatInvocation(_setName, fullName, ".ctor", parameters);
         }
 
         private string GetDiscardedVariableType(ISymbol symbol)
@@ -648,7 +649,7 @@ namespace ShaderGen
 
             SemanticModel semanticModel = _compilation.GetSemanticModel(node.Type.SyntaxTree);
             string varType = semanticModel.GetFullTypeName(node.Type);
-            string mappedType = _backend.CSharpToShaderType(new TypeReference(varType, semanticModel.GetTypeInfo(node.Type)));
+            string mappedType = _backend.CSharpToShaderType(new TypeReference(varType, semanticModel.GetTypeInfo(node.Type).Type));
 
             sb.Append(mappedType);
             sb.Append(' ');

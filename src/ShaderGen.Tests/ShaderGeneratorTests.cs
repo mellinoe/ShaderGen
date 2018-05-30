@@ -1,15 +1,29 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System;
+using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Text;
 using ShaderGen.Glsl;
 using ShaderGen.Hlsl;
 using ShaderGen.Metal;
+using ShaderGen.Tests.Tools;
+using Veldrid;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace ShaderGen.Tests
 {
     public class ShaderGeneratorTests
     {
+        private readonly ITestOutputHelper _output;
+
+        public ShaderGeneratorTests(ITestOutputHelper output)
+        {
+            _output = output;
+        }
+
         public static IEnumerable<object[]> ShaderSets()
         {
             yield return new object[] { "TestShaders.TestVertexShader.VS", null };
@@ -48,7 +62,7 @@ namespace ShaderGen.Tests
             yield return new object[] { null, "TestShaders.ExpressionBodiedMethods.ExpressionBodyWithReturn" };
             yield return new object[] { null, "TestShaders.ExpressionBodiedMethods.ExpressionBodyWithoutReturn" };
             yield return new object[] { "TestShaders.StructuredBufferTestShader.VS", null };
-            yield return new object[] { null, "TestShaders.StructuredBufferTestShader.FS"};
+            yield return new object[] { null, "TestShaders.StructuredBufferTestShader.FS" };
             yield return new object[] { null, "TestShaders.DepthTextureSamplerFragment.FS" };
             yield return new object[] { null, "TestShaders.Enums.FS" };
             yield return new object[] { "TestShaders.VertexWithStructuredBuffer.VS", null };
@@ -66,246 +80,164 @@ namespace ShaderGen.Tests
             "TestShaders.ComplexCompute.CS"
         };
 
-        [Theory]
-        [MemberData(nameof(ShaderSets))]
-        public void HlslEndToEnd(string vsName, string fsName)
+        private void TestCompile(GraphicsBackend graphicsBackend, string vsName, string fsName, string csName = null)
         {
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
-            HlslBackend backend = new HlslBackend(compilation);
-            ShaderGenerator sg = new ShaderGenerator(
-                compilation,
-                vsName,
-                fsName,
-                backend);
+            Compilation compilation = TestUtil.GetCompilation();
+            ToolChain toolChain = ToolChain.Require(ToolFeatures.ToCompiled, graphicsBackend);
 
-            ShaderGenerationResult result = sg.GenerateShaders();
-            IReadOnlyList<GeneratedShaderSet> sets = result.GetOutput(backend);
+            LanguageBackend backend = toolChain.CreateBackend(compilation);
+            ShaderGenerator sg = new ShaderGenerator(compilation, backend, vsName, fsName, csName);
+
+            ShaderGenerationResult generationResult = sg.GenerateShaders();
+
+            IReadOnlyList<GeneratedShaderSet> sets = generationResult.GetOutput(backend);
             Assert.Equal(1, sets.Count);
             GeneratedShaderSet set = sets[0];
             ShaderModel shaderModel = set.Model;
 
-            if (vsName != null)
+            List<CompileResult> results = new List<CompileResult>();
+            if (!string.IsNullOrWhiteSpace(vsName))
             {
                 ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
                 string vsCode = set.VertexShaderCode;
-                FxcTool.AssertCompilesCode(vsCode, "vs_5_0", vsFunction.Name);
+
+                results.Add(toolChain.Compile(vsCode, Stage.Vertex, vsFunction.Name));
             }
-            if (fsName != null)
+            if (!string.IsNullOrWhiteSpace(fsName))
             {
                 ShaderFunction fsFunction = shaderModel.GetFunction(fsName);
                 string fsCode = set.FragmentShaderCode;
-                FxcTool.AssertCompilesCode(fsCode, "ps_5_0", fsFunction.Name);
+                results.Add(toolChain.Compile(fsCode, Stage.Fragment, fsFunction.Name));
             }
+            if (!string.IsNullOrWhiteSpace(csName))
+            {
+                ShaderFunction csFunction = shaderModel.GetFunction(csName);
+                string csCode = set.ComputeShaderCode;
+                results.Add(toolChain.Compile(csCode, Stage.Compute, csFunction.Name));
+            }
+
+            // Collate results
+            StringBuilder builder = new StringBuilder();
+            foreach (CompileResult result in results)
+            {
+                if (result.HasError)
+                {
+                    builder.AppendLine(result.ToString());
+                }
+            }
+
+            Assert.True(builder.Length < 1, builder.ToString());
         }
 
-        [Theory]
+        [SkippableTheory(typeof(RequiredToolFeatureMissingException))]
         [MemberData(nameof(ShaderSets))]
-        public void Glsl330EndToEnd(string vsName, string fsName)
-        {
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
-            Glsl330Backend backend = new Glsl330Backend(compilation);
-            ShaderGenerator sg = new ShaderGenerator(
-                compilation,
-                vsName,
-                fsName,
-                backend);
+        public void HlslCompile(string vsName, string fsName) => TestCompile(GraphicsBackend.Direct3D11, vsName, fsName);
 
-            ShaderGenerationResult result = sg.GenerateShaders();
-            IReadOnlyList<GeneratedShaderSet> sets = result.GetOutput(backend);
-            Assert.Equal(1, sets.Count);
-            GeneratedShaderSet set = sets[0];
-            ShaderModel shaderModel = set.Model;
-
-            if (vsName != null)
-            {
-                ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
-                string vsCode = set.VertexShaderCode;
-                GlsLangValidatorTool.AssertCompilesCode(vsCode, "vert", false);
-            }
-            if (fsName != null)
-            {
-                ShaderFunction fsFunction = shaderModel.GetFunction(fsName);
-                string fsCode = set.FragmentShaderCode;
-                GlsLangValidatorTool.AssertCompilesCode(fsCode, "frag", false);
-            }
-        }
-
-        [Theory]
+        [SkippableTheory(typeof(RequiredToolFeatureMissingException))]
         [MemberData(nameof(ShaderSets))]
-        public void GlslEs300EndToEnd(string vsName, string fsName)
-        {
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
-            GlslEs300Backend backend = new GlslEs300Backend(compilation);
-            ShaderGenerator sg = new ShaderGenerator(
-                compilation,
-                vsName,
-                fsName,
-                backend);
+        public void Glsl330Compile(string vsName, string fsName) => TestCompile(GraphicsBackend.OpenGL, vsName, fsName);
 
-            ShaderGenerationResult result = sg.GenerateShaders();
-            IReadOnlyList<GeneratedShaderSet> sets = result.GetOutput(backend);
-            Assert.Equal(1, sets.Count);
-            GeneratedShaderSet set = sets[0];
-            ShaderModel shaderModel = set.Model;
-
-            if (vsName != null)
-            {
-                ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
-                string vsCode = set.VertexShaderCode;
-                GlsLangValidatorTool.AssertCompilesCode(vsCode, "vert", false);
-            }
-            if (fsName != null)
-            {
-                ShaderFunction fsFunction = shaderModel.GetFunction(fsName);
-                string fsCode = set.FragmentShaderCode;
-                GlsLangValidatorTool.AssertCompilesCode(fsCode, "frag", false);
-            }
-        }
-
-        [Theory]
+        [SkippableTheory(typeof(RequiredToolFeatureMissingException))]
         [MemberData(nameof(ShaderSets))]
-        public void Glsl450EndToEnd(string vsName, string fsName)
-        {
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
-            LanguageBackend backend = new Glsl450Backend(compilation);
-            ShaderGenerator sg = new ShaderGenerator(
-                compilation,
-                vsName,
-                fsName,
-                backend);
+        public void GlslEs300Compile(string vsName, string fsName) => TestCompile(GraphicsBackend.OpenGLES, vsName, fsName);
 
-            ShaderGenerationResult result = sg.GenerateShaders();
-            IReadOnlyList<GeneratedShaderSet> sets = result.GetOutput(backend);
-            Assert.Equal(1, sets.Count);
-            GeneratedShaderSet set = sets[0];
-            ShaderModel shaderModel = set.Model;
-
-            if (vsName != null)
-            {
-                ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
-                string vsCode = set.VertexShaderCode;
-                GlsLangValidatorTool.AssertCompilesCode(vsCode, "vert", true);
-            }
-            if (fsName != null)
-            {
-                ShaderFunction fsFunction = shaderModel.GetFunction(fsName);
-                string fsCode = set.FragmentShaderCode;
-                GlsLangValidatorTool.AssertCompilesCode(fsCode, "frag", true);
-            }
-        }
-
-        [Theory]
+        [SkippableTheory(typeof(RequiredToolFeatureMissingException))]
         [MemberData(nameof(ShaderSets))]
-        public void MetalEndToEnd(string vsName, string fsName)
+        public void Glsl450Compile(string vsName, string fsName) => TestCompile(GraphicsBackend.Vulkan, vsName, fsName);
+
+        [SkippableTheory(typeof(RequiredToolFeatureMissingException))]
+        [MemberData(nameof(ShaderSets))]
+        public void MetalCompile(string vsName, string fsName) => TestCompile(GraphicsBackend.Metal, vsName, fsName);
+
+        [SkippableFact(typeof(RequiredToolFeatureMissingException))]
+        public void AllSetsCompile()
         {
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
-            LanguageBackend backend = new MetalBackend(compilation);
-            ShaderGenerator sg = new ShaderGenerator(
-                compilation,
-                vsName,
-                fsName,
-                backend);
+            Compilation compilation = TestUtil.GetCompilation();
 
-            ShaderGenerationResult result = sg.GenerateShaders();
-            IReadOnlyList<GeneratedShaderSet> sets = result.GetOutput(backend);
-            Assert.Equal(1, sets.Count);
-            GeneratedShaderSet set = sets[0];
-            ShaderModel shaderModel = set.Model;
+            // Get all available tool chains.
+            LanguageBackend[] backends = TestUtil.GetAllBackends(compilation, ToolFeatures.ToCompiled);
 
-            if (vsName != null)
-            {
-                ShaderFunction vsFunction = shaderModel.GetFunction(vsName);
-                string vsCode = set.VertexShaderCode;
-                MetalTool.AssertCompilesCode(vsCode);
-            }
-            if (fsName != null)
-            {
-                ShaderFunction fsFunction = shaderModel.GetFunction(fsName);
-                string fsCode = set.FragmentShaderCode;
-                MetalTool.AssertCompilesCode(fsCode);
-            }
-        }
-
-        [Fact]
-        public void AllSetsAllLanguagesEndToEnd()
-        {
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
-            LanguageBackend[] backends = new LanguageBackend[]
-            {
-                new HlslBackend(compilation),
-                new GlslEs300Backend(compilation),
-                new Glsl330Backend(compilation),
-                new Glsl450Backend(compilation),
-                new MetalBackend(compilation),
-            };
             ShaderGenerator sg = new ShaderGenerator(compilation, backends);
+            ShaderGenerationResult generationResult = sg.GenerateShaders();
 
-            ShaderGenerationResult result = sg.GenerateShaders();
+            string spacer1 = new string('=', 80);
+            string spacer2 = new string('-', 80);
 
+            bool failed = false;
             foreach (LanguageBackend backend in backends)
             {
-                IReadOnlyList<GeneratedShaderSet> sets = result.GetOutput(backend);
+                ToolChain toolChain = ToolChain.Get(backend);
+                IReadOnlyList<GeneratedShaderSet> sets = generationResult.GetOutput(backend);
+                _output.WriteLine(spacer1);
+                _output.WriteLine($"Generated shader sets for {toolChain.Name} backend.");
+
                 foreach (GeneratedShaderSet set in sets)
                 {
+                    _output.WriteLine(string.Empty);
+                    _output.WriteLine(spacer2);
+                    _output.WriteLine(string.Empty);
+                    CompileResult result;
+
                     if (set.VertexShaderCode != null)
                     {
-                        if (backend is HlslBackend)
+                        result = toolChain.Compile(set.VertexShaderCode, Stage.Vertex, set.VertexFunction.Name);
+                        if (result.HasError)
                         {
-                            FxcTool.AssertCompilesCode(set.VertexShaderCode, "vs_5_0", set.VertexFunction.Name);
-                        }
-                        else if (backend is MetalBackend)
-                        {
-                            MetalTool.AssertCompilesCode(set.VertexShaderCode);
+                            _output.WriteLine($"Failed to compile Vertex Shader from set \"{set.Name}\"!");
+                            _output.WriteLine(result.ToString());
+                            failed = true;
                         }
                         else
                         {
-                            bool is450 = backend is Glsl450Backend;
-                            GlsLangValidatorTool.AssertCompilesCode(set.VertexShaderCode, "vert", is450);
+                            _output.WriteLine($"Compiled Vertex Shader from set \"{set.Name}\"!");
                         }
                     }
+
                     if (set.FragmentFunction != null)
                     {
-                        if (backend is HlslBackend)
+                        result = toolChain.Compile(set.FragmentShaderCode, Stage.Fragment, set.FragmentFunction.Name);
+                        if (result.HasError)
                         {
-                            FxcTool.AssertCompilesCode(set.FragmentShaderCode, "ps_5_0", set.FragmentFunction.Name);
-                        }
-                        else if (backend is MetalBackend)
-                        {
-                            MetalTool.AssertCompilesCode(set.FragmentShaderCode);
+                            _output.WriteLine($"Failed to compile Fragment Shader from set \"{set.Name}\"!");
+                            _output.WriteLine(result.ToString());
+                            failed = true;
                         }
                         else
                         {
-                            bool is450 = backend is Glsl450Backend;
-                            GlsLangValidatorTool.AssertCompilesCode(set.FragmentShaderCode, "frag", is450);
+                            _output.WriteLine($"Compiled Fragment Shader from set \"{set.Name}\"!");
                         }
                     }
+
                     if (set.ComputeFunction != null)
                     {
-                        if (backend is HlslBackend)
+                        // TODO The skipped shaders are not included in the auto discovered shaders, leaving this here for completeness.
+                        if (backend is GlslEs300Backend)
                         {
-                            FxcTool.AssertCompilesCode(set.ComputeShaderCode, "cs_5_0", set.ComputeFunction.Name);
+                            string fullname = set.ComputeFunction.DeclaringType + "." + set.ComputeFunction.Name + "_";
+                            if (s_glslesSkippedShaders.Contains(fullname))
+                            {
+                                continue;
+                            }
                         }
-                        else if (backend is MetalBackend)
+
+                        result = toolChain.Compile(set.ComputeShaderCode, Stage.Compute, set.ComputeFunction.Name);
+                        if (result.HasError)
                         {
-                            MetalTool.AssertCompilesCode(set.ComputeShaderCode);
+                            _output.WriteLine($"Failed to compile Compute Shader from set \"{set.Name}\"!");
+                            _output.WriteLine(result.ToString());
+                            failed = true;
                         }
                         else
                         {
-                            if (backend is GlslEs300Backend)
-                            {
-                                string fullname = set.ComputeFunction.DeclaringType + "." + set.ComputeFunction.Name;
-                                if (s_glslesSkippedShaders.Contains(fullname))
-                                {
-                                    continue;
-                                }
-                            }
-
-                            bool is450 = backend is Glsl450Backend;
-                            GlsLangValidatorTool.AssertCompilesCode(set.ComputeShaderCode, "comp", is450);
+                            _output.WriteLine($"Compiled Compute Shader from set \"{set.Name}\"!");
                         }
                     }
                 }
+
+                _output.WriteLine(string.Empty);
             }
+
+            Assert.False(failed);
         }
 
         public static IEnumerable<object[]> ErrorSets()
@@ -319,13 +251,9 @@ namespace ShaderGen.Tests
         [MemberData(nameof(ErrorSets))]
         public void ExpectedException(string vsName, string fsName)
         {
-            Compilation compilation = TestUtil.GetTestProjectCompilation();
+            Compilation compilation = TestUtil.GetCompilation();
             Glsl330Backend backend = new Glsl330Backend(compilation);
-            ShaderGenerator sg = new ShaderGenerator(
-                compilation,
-                vsName,
-                fsName,
-                backend);
+            ShaderGenerator sg = new ShaderGenerator(compilation, backend, vsName, fsName);
 
             Assert.Throws<ShaderGenerationException>(() => sg.GenerateShaders());
         }

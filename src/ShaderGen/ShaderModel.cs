@@ -58,9 +58,9 @@ namespace ShaderGen
             {
                 return ret;
             }
-            else if (tr.TypeInfo.Type.TypeKind == TypeKind.Enum)
+            else if (tr.TypeInfo.TypeKind == TypeKind.Enum)
             {
-                string enumBaseType = ((INamedTypeSymbol)tr.TypeInfo.Type).EnumUnderlyingType.GetFullMetadataName();
+                string enumBaseType = ((INamedTypeSymbol)tr.TypeInfo).EnumUnderlyingType.GetFullMetadataName();
                 if (s_knownTypeSizes.TryGetValue(enumBaseType, out int enumRet))
                 {
                     return enumRet;

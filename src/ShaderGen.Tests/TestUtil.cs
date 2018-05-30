@@ -4,10 +4,15 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using Microsoft.CodeAnalysis.Text;
 using System.Runtime.InteropServices;
+using System.Threading;
 using ShaderGen.Glsl;
 using ShaderGen.Hlsl;
+using ShaderGen.Tests.Tools;
 
 namespace ShaderGen.Tests
 {
@@ -15,15 +20,24 @@ namespace ShaderGen.Tests
     {
         private static readonly string ProjectBasePath = Path.Combine(AppContext.BaseDirectory, "TestAssets");
 
-        public static Compilation GetTestProjectCompilation()
+        public static Compilation GetCompilation()
+            => GetCompilation(GetSyntaxTrees());
+        public static Compilation GetCompilation(string code)
+            => GetCompilation(CSharpSyntaxTree.ParseText(code));
+
+        public static Compilation GetCompilation(params SyntaxTree[] syntaxTrees)
+            => GetCompilation((IEnumerable<SyntaxTree>)syntaxTrees);
+
+        public static Compilation GetCompilation(IEnumerable<SyntaxTree> syntaxTrees)
         {
             CSharpCompilation compilation = CSharpCompilation.Create(
                 "TestAssembly",
-                syntaxTrees: GetSyntaxTrees(),
-                references: GetProjectReferences(),
-                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+                syntaxTrees,
+                ProjectReferences,
+                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
             return compilation;
         }
+
 
         public static SyntaxTree GetSyntaxTree(Compilation compilation, string name)
         {
@@ -40,7 +54,7 @@ namespace ShaderGen.Tests
 
         private static IEnumerable<SyntaxTree> GetSyntaxTrees()
         {
-            foreach (string sourceItem in GetCompileItems())
+            foreach (string sourceItem in Directory.EnumerateFiles(ProjectBasePath, "*.cs", SearchOption.AllDirectories).ToArray())
             {
                 using (FileStream fs = File.OpenRead(sourceItem))
                 {
@@ -50,117 +64,191 @@ namespace ShaderGen.Tests
             }
         }
 
-        private static IEnumerable<MetadataReference> GetProjectReferences()
-        {
-            string[] referenceItems = GetReferenceItems();
-            string[] packageDirs = GetPackageDirs();
-            foreach (string refItem in referenceItems)
-            {
-                MetadataReference reference = GetFirstReference(refItem, packageDirs);
-                if (reference == null)
+        private static readonly Lazy<IReadOnlyList<string>> _projectReferencePaths
+            = new Lazy<IReadOnlyList<string>>(
+                () =>
                 {
-                    throw new InvalidOperationException("Unable to find reference: " + refItem);
-                }
+                    // Get all paths from References.txt
+                    string[] paths = File.ReadAllLines(Path.Combine(ProjectBasePath, "References.txt"))
+                        .Select(l => l.Trim())
+                        .ToArray();
 
-                yield return reference;
-            }
-        }
 
-        private static MetadataReference GetFirstReference(string path, string[] packageDirs)
-        {
-            foreach (string packageDir in packageDirs)
-            {
-                string transformed = path.Replace("{nupkgdir}", packageDir);
-                transformed = transformed.Replace("{appcontextbasedirectory}", AppContext.BaseDirectory);
-                if (File.Exists(transformed))
-                {
-                    using (FileStream fs = File.OpenRead(transformed))
+                    List<string> dirs = new List<string>
                     {
-                        var result = MetadataReference.CreateFromStream(fs, filePath: transformed);
-                        return result;
+                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget",
+                            "packages")
+                    };
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        dirs.Add(@"C:\Program Files\dotnet\sdk\NuGetFallbackFolder");
                     }
+                    else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                    {
+                        dirs.Add("/usr/local/share/dotnet/sdk/NuGetFallbackFolder");
+                    }
+                    else
+                    {
+                        dirs.Add("/usr/share/dotnet/sdk/NuGetFallbackFolder");
+                    }
+
+                    IReadOnlyCollection<string> packageDirs = dirs.Where(Directory.Exists).ToArray();
+
+                    for (int index = 0; index < paths.Length; index++)
+                    {
+                        string path = paths[index];
+                        bool found = false;
+                        foreach (string packageDir in packageDirs)
+                        {
+                            string transformed = path.Replace("{nupkgdir}", packageDir);
+                            transformed = transformed.Replace("{appcontextbasedirectory}", AppContext.BaseDirectory);
+                            if (File.Exists(transformed))
+                            {
+                                found = true;
+                                paths[index] = transformed;
+                                break;
+                            }
+                        }
+
+                        if (!found)
+                        {
+                            throw new InvalidOperationException($"Unable to find reference \"{path}\".");
+                        }
+                    }
+
+                    return paths;
+                },
+                LazyThreadSafetyMode.ExecutionAndPublication);
+
+        public static IReadOnlyList<string> ProjectReferencePaths => _projectReferencePaths.Value;
+
+        private static readonly Lazy<IReadOnlyList<MetadataReference>> _projectReferences
+            = new Lazy<IReadOnlyList<MetadataReference>>(
+                () =>
+                {
+                    IReadOnlyList<string> paths = _projectReferencePaths.Value;
+                    MetadataReference[] references = new MetadataReference[paths.Count];
+                    for (int index = 0; index < paths.Count; index++)
+                    {
+                        string path = paths[index];
+                        using (FileStream fs = File.OpenRead(path))
+                        {
+                            references[index] = MetadataReference.CreateFromStream(fs, filePath: path);
+                        }
+                    }
+
+                    return references;
+                },
+                LazyThreadSafetyMode.ExecutionAndPublication);
+
+        public static IReadOnlyList<MetadataReference> ProjectReferences => _projectReferences.Value;
+
+        public static LanguageBackend[] GetAllBackends(Compilation compilation, ToolFeatures features = ToolFeatures.Transpilation)
+            => ToolChain.Requires(features, false).Select(t => t.CreateBackend(compilation))
+                .ToArray();
+
+        public static IReadOnlyCollection<(string fieldName, object aValue, object bValue)> DeepCompareObjectFields<T>(T a, T b)
+        {
+            // Creat failures list
+            List<(string fieldName, object aValue, object bValue)> failures = new List<(string fieldName, object aValue, object bValue)>();
+
+            // Get dictionary of fields by field name and type
+            Dictionary<Type, IReadOnlyCollection<FieldInfo>> childFieldInfos =
+                new Dictionary<Type, IReadOnlyCollection<FieldInfo>>();
+
+            Type currentType = typeof(T);
+            object aValue = a;
+            object bValue = b;
+            Stack<(string fieldName, Type fieldType, object aValue, object bValue)> stack
+                = new Stack<(string fieldName, Type fieldType, object aValue, object bValue)>();
+            stack.Push((String.Empty, currentType, aValue, bValue));
+
+            while (stack.Count > 0)
+            {
+                // Pop top of stack.
+                var frame = stack.Pop();
+                currentType = frame.fieldType;
+                aValue = frame.aValue;
+                bValue = frame.bValue;
+
+                if (Equals(aValue, bValue))
+                {
+                    continue;
+                }
+
+                // Get fields (cached)
+                if (!childFieldInfos.TryGetValue(currentType, out IReadOnlyCollection<FieldInfo> childFields))
+                {
+                    childFieldInfos.Add(currentType, childFields = currentType.GetFields().Where(f => !f.IsStatic).ToArray());
+                }
+
+                if (childFields.Count < 1)
+                {
+                    // No child fields, we have an inequality
+                    string fullName = frame.fieldName;
+                    failures.Add((fullName, aValue, bValue));
+                    continue;
+                }
+
+                foreach (FieldInfo childField in childFields)
+                {
+                    object aMemberValue = childField.GetValue(aValue);
+                    object bMemberValue = childField.GetValue(bValue);
+
+                    // Short cut equality
+                    if (Equals(aMemberValue, bMemberValue))
+                    {
+                        continue;
+                    }
+
+                    string fullName = String.IsNullOrWhiteSpace(frame.fieldName)
+                        ? childField.Name
+                        : $"{frame.fieldName}.{childField.Name}";
+                    stack.Push((fullName, childField.FieldType, aMemberValue, bMemberValue));
                 }
             }
 
-            return null;
+            return failures.AsReadOnly();
         }
 
-        private static string[] GetCompileItems()
-        {
-            return Directory.EnumerateFiles(ProjectBasePath, "*.cs", SearchOption.AllDirectories).ToArray();
-        }
+        /// <summary>
+        /// The random number generators for each thread.
+        /// </summary>
+        private static readonly ThreadLocal<Random> _randomGenerators =
+            new ThreadLocal<Random>(() => new Random());
 
-        private static string[] GetReferenceItems()
+        /// <summary>
+        /// Fills a struct with Random floats.
+        /// </summary>
+        /// <typeparam name="T">The random type</typeparam>
+        /// <param name="minMantissa">The minimum mantissa.</param>
+        /// <param name="maxMantissa">The maximum mantissa.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// minMantissa
+        /// or
+        /// maxMantissa
+        /// </exception>
+        public static unsafe T FillRandomFloats<T>(int minMantissa = -126, int maxMantissa = 128) where T : struct
         {
-            string[] lines = File.ReadAllLines(Path.Combine(ProjectBasePath, "References.txt"));
-            return lines.Select(l => l.Trim()).ToArray();;
-        }
-
-        public static string[] GetPackageDirs()
-        {
-            List<string> dirs = new List<string>();
-            dirs.Add(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages"));
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (minMantissa < -126)
             {
-                dirs.Add(@"C:\Program Files\dotnet\sdk\NuGetFallbackFolder");
+                throw new ArgumentOutOfRangeException(nameof(minMantissa));
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            if (maxMantissa < minMantissa || maxMantissa > 128)
             {
-                dirs.Add("/usr/local/share/dotnet/sdk/NuGetFallbackFolder");
+                throw new ArgumentOutOfRangeException(nameof(maxMantissa));
             }
-            else
+            Random random = _randomGenerators.Value;
+            int floatCount = Unsafe.SizeOf<T>() / sizeof(float);
+            float* floats = stackalloc float[floatCount];
+            for (int i = 0; i < floatCount; i++)
             {
-                dirs.Add("/usr/share/dotnet/sdk/NuGetFallbackFolder");
+                floats[i] = (float)((random.NextDouble() * 2.0 - 1.0) * Math.Pow(2.0, random.Next(minMantissa, maxMantissa)));
+                //floats[i] = (float)(random.NextDouble() * floatRange * 2f) - floatRange;
             }
 
-            return dirs.ToArray();
-        }
-
-        public static LanguageBackend[] GetAllBackends(Compilation compilation)
-        {
-            return new LanguageBackend[]
-            {
-                new HlslBackend(compilation),
-                new Glsl330Backend(compilation),
-                new Glsl450Backend(compilation)
-            };
-        }
-    }
-
-    public class TempFile : IDisposable
-    {
-        public readonly string FilePath;
-
-        public TempFile() : this(Path.GetTempFileName()) { }
-        public TempFile(string path)
-        {
-            FilePath = path;
-        }
-
-        public static implicit operator string(TempFile tf) => tf.FilePath;
-
-        public void Dispose()
-        {
-            File.Delete(FilePath);
-        }
-    }
-
-    public class TempFile2 : IDisposable
-    {
-        public readonly string FilePath0;
-        public readonly string FilePath1;
-
-        public TempFile2() : this(Path.GetTempFileName(), Path.GetTempFileName()) { }
-        public TempFile2(string path0, string path1)
-        {
-            FilePath0 = path0;
-            FilePath1 = path1;
-        }
-
-        public void Dispose()
-        {
-            File.Delete(FilePath0);
-            File.Delete(FilePath1);
+            return Unsafe.Read<T>(floats);
         }
     }
 }

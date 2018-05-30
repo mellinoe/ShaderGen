@@ -15,8 +15,8 @@ namespace ShaderGen.Metal
             string returnType = _backend.CSharpToShaderType(_shaderFunction.ReturnType.Name);
             string fullDeclType = _backend.CSharpToShaderType(_shaderFunction.DeclaringType);
             string funcName = _shaderFunction.IsEntryPoint
-                ? _shaderFunction.Name
-                : fullDeclType + "_" + _shaderFunction.Name;
+                ? _shaderFunction.Name.Replace(".", "0_")
+                : fullDeclType + "_" + _shaderFunction.Name.Replace(".", "0_");
             string baseParameterList = GetParameterDeclList();
             string builtinParameterList = string.Join(
                 ", ",
