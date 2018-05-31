@@ -39,7 +39,7 @@ namespace ShaderGen
 
         private static readonly ConcurrentDictionary<ITypeSymbol, AlignmentInfo> s_cachedSizes = new ConcurrentDictionary<ITypeSymbol, AlignmentInfo>();
 
-        public static AlignmentInfo Get(SemanticModel model, ITypeSymbol symbol)
+        public static AlignmentInfo Get(ITypeSymbol symbol)
         {
             Debug.Assert(symbol.Kind != SymbolKind.ArrayType);
             return s_cachedSizes.TryGetValue(symbol, out AlignmentInfo alignmentInfo)

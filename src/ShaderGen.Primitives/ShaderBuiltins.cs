@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace ShaderGen
 {
@@ -100,6 +101,7 @@ namespace ShaderGen
         public static Vector4 Acos(Vector4 value) => new Vector4((float)Math.Acos(value.X), (float)Math.Acos(value.Y), (float)Math.Acos(value.Z), (float)Math.Acos(value.W));
 
         // Acosh
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Acosh(float value) => (float)Math.Log(value + Math.Sqrt(value * value - 1.0));
         public static Vector2 Acosh(Vector2 value) => new Vector2(Acosh(value.X), Acosh(value.Y));
         public static Vector3 Acosh(Vector3 value) => new Vector3(Acosh(value.X), Acosh(value.Y), Acosh(value.Z));
@@ -112,6 +114,7 @@ namespace ShaderGen
         public static Vector4 Asin(Vector4 value) => new Vector4((float)Math.Asin(value.X), (float)Math.Asin(value.Y), (float)Math.Asin(value.Z), (float)Math.Asin(value.W));
 
         // Asinh
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Asinh(float value) => (float)Math.Log(value + Math.Sqrt(value * value + 1.0));
         public static Vector2 Asinh(Vector2 value) => new Vector2(Asinh(value.X), Asinh(value.Y));
         public static Vector3 Asinh(Vector3 value) => new Vector3(Asinh(value.X), Asinh(value.Y), Asinh(value.Z));
@@ -128,6 +131,7 @@ namespace ShaderGen
         public static Vector4 Atan(Vector4 y, Vector4 x) => new Vector4((float)Math.Atan2(y.X, x.X), (float)Math.Atan2(y.Y, x.Y), (float)Math.Atan2(y.Z, x.Z), (float)Math.Atan2(y.W, x.W));
 
         // Atanh
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Atanh(float value) => (float)(Math.Log((1.0f + value) / (1.0f - value)) / 2.0f);
         public static Vector2 Atanh(Vector2 value) => new Vector2(Atanh(value.X), Atanh(value.Y));
         public static Vector3 Atanh(Vector3 value) => new Vector3(Atanh(value.X), Atanh(value.Y), Atanh(value.Z));
@@ -135,7 +139,8 @@ namespace ShaderGen
 
         // Cbrt TODO add Matrix support
         private const double _third = 1.0 / 3.0;
-        public static float Cbrt(float value) => (float)Math.Pow(value, _third);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Cbrt(float value) => (float)Math.Pow(Math.Abs(value), _third);
         public static Vector2 Cbrt(Vector2 value) => new Vector2(Cbrt(value.X), Cbrt(value.Y));
         public static Vector3 Cbrt(Vector3 value) => new Vector3(Cbrt(value.X), Cbrt(value.Y), Cbrt(value.Z));
         public static Vector4 Cbrt(Vector4 value) => new Vector4(Cbrt(value.X), Cbrt(value.Y), Cbrt(value.Z), Cbrt(value.W));
@@ -147,9 +152,8 @@ namespace ShaderGen
         public static Vector4 Ceiling(Vector4 value) => new Vector4((float)Math.Ceiling(value.X), (float)Math.Ceiling(value.Y), (float)Math.Ceiling(value.Z), (float)Math.Ceiling(value.W));
 
         // Clamp TODO add int & uint versions (see https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/clamp.xhtml)
-        public static float Clamp(float value, float min, float max) => min >= max
-            ? float.NaN
-            : Math.Min(Math.Max(value, min), max);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Clamp(float value, float min, float max) => Math.Min(Math.Max(value, min), max);
         public static Vector2 Clamp(Vector2 value, Vector2 min, Vector2 max) => new Vector2(Clamp(value.X, min.X, max.X), Clamp(value.Y, min.Y, max.Y));
         public static Vector2 Clamp(Vector2 value, float min, float max) => new Vector2(Clamp(value.X, min, max), Clamp(value.Y, min, max));
         public static Vector3 Clamp(Vector3 value, Vector3 min, Vector3 max) => new Vector3(Clamp(value.X, min.X, max.X), Clamp(value.Y, min.Y, max.Y), Clamp(value.Z, min.Z, max.Z));
@@ -181,14 +185,27 @@ namespace ShaderGen
         public static Vector3 Floor(Vector3 value) => new Vector3((float)Math.Floor(value.X), (float)Math.Floor(value.Y), (float)Math.Floor(value.Z));
         public static Vector4 Floor(Vector4 value) => new Vector4((float)Math.Floor(value.X), (float)Math.Floor(value.Y), (float)Math.Floor(value.Z), (float)Math.Floor(value.W));
 
+
+        // FMod - See https://stackoverflow.com/questions/7610631/glsl-mod-vs-hlsl-fmod
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float FMod(float a, float b) => a % b;
+        public static Vector2 FMod(Vector2 a, Vector2 b) => new Vector2(FMod(a.X, b.X), FMod(a.Y, b.Y));
+        public static Vector2 FMod(Vector2 a, float b) => new Vector2(FMod(a.X, b), FMod(a.Y, b));
+        public static Vector3 FMod(Vector3 a, Vector3 b) => new Vector3(FMod(a.X, b.X), FMod(a.Y, b.Y), FMod(a.Z, b.Z));
+        public static Vector3 FMod(Vector3 a, float b) => new Vector3(FMod(a.X, b), FMod(a.Y, b), FMod(a.Z, b));
+        public static Vector4 FMod(Vector4 a, Vector4 b) => new Vector4(FMod(a.X, b.X), FMod(a.Y, b.Y), FMod(a.Z, b.Z), FMod(a.W, b.W));
+        public static Vector4 FMod(Vector4 a, float b) => new Vector4(FMod(a.X, b), FMod(a.Y, b), FMod(a.Z, b), FMod(a.W, b));
+
         // Frac TODO Check this really is equivalent
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Frac(float value) => (float)(value - Math.Floor(value));
         public static Vector2 Frac(Vector2 value) => new Vector2(Frac(value.X), Frac(value.Y));
         public static Vector3 Frac(Vector3 value) => new Vector3(Frac(value.X), Frac(value.Y), Frac(value.Z));
         public static Vector4 Frac(Vector4 value) => new Vector4(Frac(value.X), Frac(value.Y), Frac(value.Z), Frac(value.W));
 
         // Lerp
-        public static float Lerp(float x, float y, float s) => s < 0f || s > 1f ? float.NaN : x * (1f - s) + y * s;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Lerp(float x, float y, float s) => x * (1f - s) + y * s;
         public static Vector2 Lerp(Vector2 x, Vector2 y, Vector2 s) => new Vector2(Lerp(x.X, y.X, s.X), Lerp(x.Y, y.Y, s.Y));
         public static Vector2 Lerp(Vector2 x, Vector2 y, float s) => new Vector2(Lerp(x.X, y.X, s), Lerp(x.Y, y.Y, s));
         public static Vector3 Lerp(Vector3 x, Vector3 y, Vector3 s) => new Vector3(Lerp(x.X, y.X, s.X), Lerp(x.Y, y.Y, s.Y), Lerp(x.Z, y.Z, s.Z));
@@ -198,6 +215,7 @@ namespace ShaderGen
 
         // Log
         public static float Log(float value) => (float)Math.Log(value);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Log(float a, float newBase) => (float)Math.Log(a, newBase);
         public static Vector2 Log(Vector2 value) => new Vector2((float)Math.Log(value.X), (float)Math.Log(value.Y));
         public static Vector2 Log(Vector2 a, Vector2 newBase) => new Vector2(Log(a.X, newBase.X), Log(a.Y, newBase.Y));
@@ -210,6 +228,7 @@ namespace ShaderGen
         public static Vector4 Log(Vector4 a, float newBase) => new Vector4(Log(a.X, newBase), Log(a.Y, newBase), Log(a.Z, newBase), Log(a.W, newBase));
 
         // Log2
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Log2(float value) => Log(value, 2f);
         public static Vector2 Log2(Vector2 value) => new Vector2(Log2(value.X), Log2(value.Y));
         public static Vector3 Log2(Vector3 value) => new Vector3(Log2(value.X), Log2(value.Y), Log2(value.Z));
@@ -247,8 +266,9 @@ namespace ShaderGen
             m.M14 * v.X + m.M24 * v.Y + m.M34 * v.Z + m.M44 * v.W
         );
 
-        // Mod TODO: See https://stackoverflow.com/questions/7610631/glsl-mod-vs-hlsl-fmod
-        public static float Mod(float a, float b) => a % b; // CHECK!
+        // Mod - See https://stackoverflow.com/questions/7610631/glsl-mod-vs-hlsl-fmod
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Mod(float a, float b) => a - b * (float)Math.Floor(a / b);
         public static Vector2 Mod(Vector2 a, Vector2 b) => new Vector2(Mod(a.X, b.X), Mod(a.Y, b.Y));
         public static Vector2 Mod(Vector2 a, float b) => new Vector2(Mod(a.X, b), Mod(a.Y, b));
         public static Vector3 Mod(Vector3 a, Vector3 b) => new Vector3(Mod(a.X, b.X), Mod(a.Y, b.Y), Mod(a.Z, b.Z));
@@ -257,10 +277,11 @@ namespace ShaderGen
         public static Vector4 Mod(Vector4 a, float b) => new Vector4(Mod(a.X, b), Mod(a.Y, b), Mod(a.Z, b), Mod(a.W, b));
 
         // Pow
-        public static float Pow(float x, float y) => (float)Math.Pow(x, y);
-        public static Vector2 Pow(Vector2 y, Vector2 x) => new Vector2((float)Math.Pow(y.X, x.X), (float)Math.Pow(y.Y, x.Y));
-        public static Vector3 Pow(Vector3 y, Vector3 x) => new Vector3((float)Math.Pow(y.X, x.X), (float)Math.Pow(y.Y, x.Y), (float)Math.Pow(y.Z, x.Z));
-        public static Vector4 Pow(Vector4 y, Vector4 x) => new Vector4((float)Math.Pow(y.X, x.X), (float)Math.Pow(y.Y, x.Y), (float)Math.Pow(y.Z, x.Z), (float)Math.Pow(y.W, x.W));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Pow(float x, float y) => (float)Math.Pow(Math.Abs(x), y);
+        public static Vector2 Pow(Vector2 y, Vector2 x) => new Vector2((float)Pow(y.X, x.X), Pow(y.Y, x.Y));
+        public static Vector3 Pow(Vector3 y, Vector3 x) => new Vector3(Pow(y.X, x.X), Pow(y.Y, x.Y), Pow(y.Z, x.Z));
+        public static Vector4 Pow(Vector4 y, Vector4 x) => new Vector4(Pow(y.X, x.X), Pow(y.Y, x.Y), Pow(y.Z, x.Z), Pow(y.W, x.W));
 
         // Round
         public static float Round(float value) => (float)Math.Round(value);
@@ -293,6 +314,7 @@ namespace ShaderGen
         public static Vector4 Sqrt(Vector4 value) => new Vector4((float)Math.Sqrt(value.X), (float)Math.Sqrt(value.Y), (float)Math.Sqrt(value.Z), (float)Math.Sqrt(value.W));
 
         // SmoothStep
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float SmoothStep(float min, float max, float x)
         {
             // From https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/smoothstep.xhtml
@@ -301,11 +323,6 @@ namespace ShaderGen
              * return t * t * (3.0 - 2.0 * t);
              * Results are undefined if min ≥ max.
             */
-            if (min >= max)
-            {
-                return float.NaN;
-            }
-
             float t = Saturate((x - min) / (max - min));
             return t * t * (3f - 2f * t);
         }
