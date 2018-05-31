@@ -85,7 +85,7 @@ namespace ShaderGen
                         if (typeInfo.Type.Kind == SymbolKind.ArrayType)
                         {
                             ITypeSymbol elementType = ((IArrayTypeSymbol)typeInfo.Type).ElementType;
-                            AlignmentInfo elementSizeAndAlignment = TypeSizeCache.Get(model, elementType);
+                            AlignmentInfo elementSizeAndAlignment = TypeSizeCache.Get(elementType);
                             fieldSizeAndAlignment = new AlignmentInfo(
                                 elementSizeAndAlignment.CSharpSize * arrayElementCount,
                                 elementSizeAndAlignment.ShaderSize * arrayElementCount,
@@ -94,7 +94,7 @@ namespace ShaderGen
                         }
                         else
                         {
-                            fieldSizeAndAlignment = TypeSizeCache.Get(model, typeInfo.Type);
+                            fieldSizeAndAlignment = TypeSizeCache.Get(typeInfo.Type);
                         }
 
                         structCSharpSize += structCSharpSize % fieldSizeAndAlignment.CSharpAlignment;
