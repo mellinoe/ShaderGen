@@ -1,9 +1,11 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -249,6 +251,29 @@ namespace ShaderGen.Tests
             }
 
             return Unsafe.Read<T>(floats);
+        }
+
+        /// <summary>
+        /// Gets a set of random floats.
+        /// </summary>
+        /// <param name="floatCount">The number of floats.</param>
+        /// <param name="minMantissa">The minimum mantissa.</param>
+        /// <param name="maxMantissa">The maximum mantissa.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException">minMantissa
+        /// or
+        /// maxMantissa</exception>
+        public static float[] GetRandomFloats(int floatCount, int minMantissa = -126, int maxMantissa = 128)
+        {
+            Random random = _randomGenerators.Value;
+            float[] floats = new float[floatCount];
+            for (int i = 0; i < floatCount; i++)
+            {
+                floats[i] = (float)((random.NextDouble() * 2.0 - 1.0) * Math.Pow(2.0, random.Next(minMantissa, maxMantissa)));
+                //floats[i] = (float)(random.NextDouble() * floatRange * 2f) - floatRange;
+            }
+
+            return floats;
         }
 
         #region ToMemorySize from https://github.com/webappsuk/CoreLibraries/blob/fbbebc99bc5c1f2e8b140c6c387e3ede4f89b40c/Utilities/UtilityExtensions.cs#L2951-L3116

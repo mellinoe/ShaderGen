@@ -6,6 +6,7 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Runtime.Loader;
 using System.Text;
@@ -299,12 +300,10 @@ namespace ShaderGen.Tests
 
                     foreach (MethodMap method in Methods)
                     {
-                        method.GenerateTestData(this, testData, BufferSize * t, results, resultPos);
+                        method.GenerateTestData(this, testData, BufferSize * t++, results, resultPos);
                         resultPos += BufferFields[method.Return]?.AlignmentInfo.ShaderSize ?? 0;
                     }
                 }
-
-                // Extract results f
 
                 return (testData, results);
             }
@@ -358,20 +357,43 @@ namespace ShaderGen.Tests
             /// <param name="dataOffset">The data offset.</param>
             /// <param name="results">The results.</param>
             /// <param name="resultsOffset">The results offset.</param>
-            public void GenerateTestData(Mappings mapping, byte[] testData, int dataOffset, byte[] results, int resultsOffset)
+            public unsafe void GenerateTestData(Mappings mapping, byte[] testData, int dataOffset, byte[] results, int resultsOffset)
             {
+                // TODO I suspect this can all be done a lot easier with Span<T> once upgraded to .Net Core 2.1
                 object[] parameters = new object[Parameters.Count];
+                GCHandle handle;
+                IntPtr ptr;
 
                 // Create random input values
                 foreach (KeyValuePair<ParameterInfo, string> kvp in Parameters)
                 {
                     ParameterInfo pInfo = kvp.Key;
                     PaddedStructCreator.Field field = mapping.BufferFields[kvp.Value];
-                    // TODO Generate data
-                    parameters[pInfo.Position] = null; // TODO
+                    int floatCount = (int) Math.Ceiling(
+                        (float) Math.Max(field.AlignmentInfo.ShaderSize, field.AlignmentInfo.CSharpSize) /
+                        sizeof(float));
+
+                    // Get random floats to fill parameter structure
+                    float[] floats = TestUtil.GetRandomFloats(floatCount);
+                    handle = GCHandle.Alloc(floats, GCHandleType.Pinned);
+                    try
+                    {
+                        // Create object of correct type
+                        ptr = Marshal.AllocCoTaskMem(field.AlignmentInfo.CSharpSize);
+                        Marshal.Copy(floats, 0, ptr, floats.Length);
+                        parameters[pInfo.Position] = Marshal.PtrToStructure(ptr, field.Type);
+
+                        // Fill test data
+                        ptr = Marshal.UnsafeAddrOfPinnedArrayElement(testData, dataOffset + field.Position);
+                        Marshal.Copy(floats, 0, ptr, floats.Length);
+                    }
+                    finally
+                    {
+                        handle.Free();
+                    }
                 }
 
-                object result = null; // TODO Method.Invoke(null, parameters);
+                object result = Method.Invoke(null, parameters);
 
                 if (Return == null)
                 {
@@ -379,7 +401,17 @@ namespace ShaderGen.Tests
                     return;
                 }
 
-                // TODO Update results with return value...
+                PaddedStructCreator.Field resultField = mapping.BufferFields[Return];
+                handle = GCHandle.Alloc(result, GCHandleType.Pinned);
+                try
+                {
+                    // Fill test data
+                    Marshal.Copy(handle.AddrOfPinnedObject(), results, resultsOffset, resultField.AlignmentInfo.ShaderSize);
+                }
+                finally
+                {
+                    handle.Free();
+                }
             }
         }
     }
