@@ -99,44 +99,53 @@ namespace ShaderGen.Tests
             // Note, you could use compilation.Emit(...) at this point here to compile the auto-generated code!
             // however, for now we'll invoke methods directly rather than executing the C# code that has been
             // generated, as loading emitted code into a test is currently much more difficult.
-            (byte[] testData, byte[] cpuResults) = mappings.GenerateTestData();
-            _output.WriteLine(
-                $"Generated test data ({testData.Length.ToMemorySize()}) and completed {mappings.Tests} iterations of {mappings.Methods.Count} methods (results took {cpuResults.Length.ToMemorySize()}).");
-
+            byte[] testData = null;
+            byte[] cpuResults = null;
+            using (new TestTimer(
+                _output,
+                t => $"Generated test data ({testData.Length.ToMemorySize()}) and completed {mappings.Tests} iterations of {mappings.Methods.Count} methods (results took {cpuResults.Length.ToMemorySize()}) in {t * 1000:#.##}ms."))
+            {
+                (testData, cpuResults) = mappings.GenerateTestData();
+            }
 
             /*
              * Compile backend
              */
-            LanguageBackend[] backends = toolChains.Select(t => t.CreateBackend(compilation)).ToArray();
+            LanguageBackend[] backends;
+            ShaderGenerationResult generationResult;
 
-            ShaderGenerator sg = new ShaderGenerator(
-                compilation,
-                backends,
-                null,
-                null,
-                csFunctionName);
+            using (new TestTimer(
+                _output,
+                t => $"Generated shader sets for {string.Join(", ", toolChains.Select(tc => tc.Name))} backends in {t * 1000:#.##}ms."))
+            {
+                backends = toolChains.Select(t => t.CreateBackend(compilation)).ToArray();
 
-            ShaderGenerationResult generationResult = sg.GenerateShaders();
-            _output.WriteLine(
-                $"Generated shader sets for {string.Join(", ", toolChains.Select(t => t.Name))} backends.");
+                ShaderGenerator sg = new ShaderGenerator(
+                    compilation,
+                    backends,
+                    null,
+                    null,
+                    csFunctionName);
+
+                generationResult = sg.GenerateShaders();
+            }
 
             foreach (LanguageBackend backend in backends)
             {
                 ToolChain toolChain = ToolChain.Get(backend);
+                GeneratedShaderSet set;
+                CompileResult compilationResult;
 
-                GeneratedShaderSet set = generationResult.GetOutput(backend).Single();
-
-                CompileResult compilationResult =
-                    toolChain.Compile(set.ComputeShaderCode, Stage.Compute, set.ComputeFunction.Name);
+                using (new TestTimer(_output, $"Compiling Compute Shader for {toolChain.GraphicsBackend}"))
+                {
+                    set = generationResult.GetOutput(backend).Single();
+                    compilationResult = toolChain.Compile(set.ComputeShaderCode, Stage.Compute, set.ComputeFunction.Name);
+                }
                 if (compilationResult.HasError)
                 {
                     _output.WriteLine($"Failed to compile Compute Shader from set \"{set.Name}\"!");
                     _output.WriteLine(compilationResult.ToString());
                     Assert.True(false);
-                }
-                else
-                {
-                    _output.WriteLine($"Compiled Compute Shader from set \"{set.Name}\"!");
                 }
 
                 Assert.NotNull(compilationResult.CompiledOutput);
@@ -369,8 +378,8 @@ namespace ShaderGen.Tests
                 {
                     ParameterInfo pInfo = kvp.Key;
                     PaddedStructCreator.Field field = mapping.BufferFields[kvp.Value];
-                    int floatCount = (int) Math.Ceiling(
-                        (float) Math.Max(field.AlignmentInfo.ShaderSize, field.AlignmentInfo.CSharpSize) /
+                    int floatCount = (int)Math.Ceiling(
+                        (float)Math.Max(field.AlignmentInfo.ShaderSize, field.AlignmentInfo.CSharpSize) /
                         sizeof(float));
 
                     // Get random floats to fill parameter structure
