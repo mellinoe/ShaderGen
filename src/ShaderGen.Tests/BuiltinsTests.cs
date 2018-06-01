@@ -53,6 +53,17 @@ namespace ShaderGen.Tests
             nameof(ShaderBuiltins.InterlockedAdd)
         };
 
+        /// <summary>
+        /// Gets the methods to test.
+        /// </summary>
+        /// <value>
+        /// The methods to test.
+        /// </value>
+        private IEnumerable<MethodInfo> MethodsToTest => typeof(ShaderBuiltins)
+            .GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Static | BindingFlags.Public)
+            .Where(m => !_gpuOnly.Contains(m.Name) && !m.IsSpecialName)
+            .OrderBy(m => m.Name);
+
 
         /// <summary>
         /// The maximum test duration for each backend.
@@ -85,11 +96,7 @@ namespace ShaderGen.Tests
             string csFunctionName = "ComputeShader.CS";
 
             // Get all the methods we wish to test
-            IReadOnlyCollection<MethodInfo> methods = typeof(ShaderBuiltins)
-                .GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Static | BindingFlags.Public)
-                .Where(m => !_gpuOnly.Contains(m.Name) && !m.IsSpecialName)
-                .OrderBy(m => m.Name)
-                .ToArray();
+            IReadOnlyCollection<MethodInfo> methods = MethodsToTest.ToArray();
 
             /*
              * Auto-generate C# code for testing methods.
@@ -103,20 +110,24 @@ namespace ShaderGen.Tests
             byte[] cpuResults = null;
             using (new TestTimer(
                 _output,
-                t => $"Generated test data ({testData.Length.ToMemorySize()}) and completed {mappings.Tests} iterations of {mappings.Methods.Count} methods (results took {cpuResults.Length.ToMemorySize()}) in {t * 1000:#.##}ms."))
+                t =>
+                    $"Generated test data ({testData.Length.ToMemorySize()}) and completed {TestLoops} iterations of {mappings.Methods.Count} methods (results took {cpuResults.Length.ToMemorySize()}) in {t * 1000:#.##}ms.")
+            )
             {
-                (testData, cpuResults) = mappings.GenerateTestData();
+                (testData, cpuResults) = mappings.GenerateTestData(TestLoops);
             }
 
             /*
-             * Compile backend
+             * Transpile shaders
              */
             LanguageBackend[] backends;
             ShaderGenerationResult generationResult;
 
             using (new TestTimer(
                 _output,
-                t => $"Generated shader sets for {string.Join(", ", toolChains.Select(tc => tc.Name))} backends in {t * 1000:#.##}ms."))
+                t =>
+                    $"Generated shader sets for {string.Join(", ", toolChains.Select(tc => tc.Name))} backends in {t * 1000:#.##}ms.")
+            )
             {
                 backends = toolChains.Select(t => t.CreateBackend(compilation)).ToArray();
 
@@ -130,25 +141,187 @@ namespace ShaderGen.Tests
                 generationResult = sg.GenerateShaders();
             }
 
+            /*
+             * Loop through each backend to run tests.
+             */
+
+            // Allocate enough space to store the result sets for each backend!
+            Dictionary<ToolChain, byte[]> gpuResults =
+                toolChains.ToDictionary(t => t, t => new byte[mappings.ResultSetSize * TestLoops]);
+            
             foreach (LanguageBackend backend in backends)
             {
                 ToolChain toolChain = ToolChain.Get(backend);
                 GeneratedShaderSet set;
                 CompileResult compilationResult;
-
+                /*
+                 * Compile shader for this backend.
+                 */
                 using (new TestTimer(_output, $"Compiling Compute Shader for {toolChain.GraphicsBackend}"))
                 {
                     set = generationResult.GetOutput(backend).Single();
-                    compilationResult = toolChain.Compile(set.ComputeShaderCode, Stage.Compute, set.ComputeFunction.Name);
+                    compilationResult =
+                        toolChain.Compile(set.ComputeShaderCode, Stage.Compute, set.ComputeFunction.Name);
                 }
+
                 if (compilationResult.HasError)
                 {
                     _output.WriteLine($"Failed to compile Compute Shader from set \"{set.Name}\"!");
                     _output.WriteLine(compilationResult.ToString());
-                    Assert.True(false);
+                    continue;
                 }
 
                 Assert.NotNull(compilationResult.CompiledOutput);
+
+                using (GraphicsDevice graphicsDevice = toolChain.CreateHeadless())
+                {
+                    if (!graphicsDevice.Features.ComputeShader)
+                    {
+                        _output.WriteLine(
+                            $"The {toolChain.GraphicsBackend} backend does not support compute shaders, skipping!");
+                        continue;
+                    }
+
+                    ResourceFactory factory = graphicsDevice.ResourceFactory;
+                    using (DeviceBuffer inOutBuffer = factory.CreateBuffer(
+                        new BufferDescription(
+                            (uint) mappings.BufferSize,
+                            BufferUsage.StructuredBufferReadWrite,
+                            (uint) mappings.StructSize)))
+
+                    using (Shader computeShader = factory.CreateShader(
+                        new ShaderDescription(
+                            ShaderStages.Compute,
+                            compilationResult.CompiledOutput,
+                            nameof(ShaderBuiltinsComputeTest.CS))))
+
+                    using (ResourceLayout inOutStorageLayout = factory.CreateResourceLayout(
+                        new ResourceLayoutDescription(
+                            new ResourceLayoutElementDescription("InOutBuffer", ResourceKind.StructuredBufferReadWrite,
+                                ShaderStages.Compute))))
+
+                    using (Pipeline computePipeline = factory.CreateComputePipeline(new ComputePipelineDescription(
+                        computeShader,
+                        new[] {inOutStorageLayout},
+                        1, 1, 1)))
+
+
+                    using (ResourceSet computeResourceSet = factory.CreateResourceSet(
+                        new ResourceSetDescription(inOutStorageLayout, inOutBuffer)))
+
+                    using (CommandList commandList = factory.CreateCommandList())
+                    {
+                        // Ensure the headless graphics device is the backend we expect.
+                        Assert.Equal(toolChain.GraphicsBackend, graphicsDevice.BackendType);
+
+                        _output.WriteLine($"Created compute pipeline for {toolChain.GraphicsBackend} backend.");
+
+                        using (new TestTimer(_output,
+                            $"Running {TestLoops} iterations on the {toolChain.GraphicsBackend} backend"))
+                        {
+
+                            // Get the result set for this tool chain
+                            byte[] resultSet = gpuResults[toolChain];
+                            Assert.NotNull(resultSet);
+
+                            // Loop for each test
+                            for (int test = 0; test < TestLoops; test++)
+                            {
+                                // Update parameter buffer
+                                graphicsDevice.UpdateBuffer(
+                                    inOutBuffer,
+                                    0,
+                                    // Get the portion of test data for the current test loop
+                                    Marshal.UnsafeAddrOfPinnedArrayElement(testData, mappings.BufferSize * test),
+                                    (uint) mappings.BufferSize);
+                                graphicsDevice.WaitForIdle();
+
+                                // Execute compute shaders
+                                commandList.Begin();
+                                commandList.SetPipeline(computePipeline);
+                                commandList.SetComputeResourceSet(0, computeResourceSet);
+                                commandList.Dispatch(ShaderBuiltinsComputeTest.Methods, 1, 1);
+                                commandList.End();
+
+                                graphicsDevice.SubmitCommands(commandList);
+                                graphicsDevice.WaitForIdle();
+
+                                // Read back parameters using a staging buffer
+                                using (DeviceBuffer stagingBuffer =
+                                    factory.CreateBuffer(
+                                        new BufferDescription(inOutBuffer.SizeInBytes, BufferUsage.Staging)))
+                                {
+                                    commandList.Begin();
+                                    commandList.CopyBuffer(inOutBuffer, 0, stagingBuffer, 0, stagingBuffer.SizeInBytes);
+                                    commandList.End();
+                                    graphicsDevice.SubmitCommands(commandList);
+                                    graphicsDevice.WaitForIdle();
+
+                                    // Read back test results
+                                    MappedResource map = graphicsDevice.Map(stagingBuffer, MapMode.Read);
+                                    mappings.GetResults(map.Data, resultSet, test * mappings.ResultSetSize);
+                                    graphicsDevice.Unmap(stagingBuffer);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Assert.True(gpuResults.Count > 0);
+
+            /*
+             * Finally, evaluate differences between results
+             */
+            // Get pointer array
+            int offset = 0;
+            byte[][] rArray = gpuResults.Values.ToArray();
+            foreach (MethodMap method in mappings.Methods)
+            {
+                if (method.Return == null)
+                {
+                    // This method has no results, so just skip it
+                    _output.WriteLine($"The {method.Method.Name} does not have any results to compare.");
+                    continue;
+                }
+
+                // Get the result field
+                PaddedStructCreator.Field resultField = mappings.BufferFields[method.Return];
+                int resultSize = resultField.AlignmentInfo.ShaderSize;
+
+                int failures = 0;
+                for (int test = 0; test < TestLoops; test++)
+                {
+                    // Perform simple byte scan to detect differences first.
+                    int s = test * mappings.ResultSetSize + offset;
+                    int e = s + resultSize;
+
+                    while (s < e)
+                    {
+                        byte check = cpuResults[s];
+                        for (int i = 0; i < rArray.Length; i++)
+                        {
+                            if (rArray[i][s] != check)
+                            {
+                                goto failed;
+                            }
+                        }
+
+                        s++;
+                    }
+
+                    continue;
+
+                    failed:
+                    failures++;
+                }
+
+                _output.WriteLine(
+                    failures > 0
+                        ? $"{method.Signature} had inconsistent results {failures} times out of {TestLoops} ({failures * 100.0 / TestLoops:#.##}%)."
+                        : $"{method.Signature} was always consistent.");
+
+                offset += resultSize;
             }
         }
 
@@ -245,7 +418,7 @@ namespace ShaderGen.Tests
 
             string code = codeBuilder.ToString();
             compilation = compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(code));
-            return new Mappings(bufferSize, fields.ToDictionary(f => f.Name), methodMaps, TestLoops);
+            return new Mappings(bufferSize, fields.ToDictionary(f => f.Name), methodMaps);
         }
 
         /// <summary>
@@ -256,8 +429,17 @@ namespace ShaderGen.Tests
             /// <summary>
             /// The buffer size required.
             /// </summary>
+            public readonly int StructSize;
+
+            /// <summary>
+            /// The buffer size is a <see cref="StructSize">single struct size</see> * number of <see cref="Methods">methods</see>.
+            /// As such it is the size of the buffer required to run each method exactly once.
+            /// </summary>
             public readonly int BufferSize;
 
+            /// <summary>
+            /// The result set size is the amount of space required to store the results of every method exactly once. 
+            /// </summary>
             public readonly int ResultSetSize;
 
             /// <summary>
@@ -271,50 +453,81 @@ namespace ShaderGen.Tests
             public readonly IReadOnlyCollection<MethodMap> Methods;
 
             /// <summary>
-            /// The number of tests.
-            /// </summary>
-            public readonly int Tests;
-
-            /// <summary>
             /// Initializes a new instance of the <see cref="Mappings" /> class.
             /// </summary>
-            /// <param name="bufferSize">Size of the buffer.</param>
+            /// <param name="structSize">Size of the buffer.</param>
             /// <param name="bufferFields">The buffer fields.</param>
             /// <param name="methods">The methods.</param>
-            public Mappings(int bufferSize, IReadOnlyDictionary<string, PaddedStructCreator.Field> bufferFields, IReadOnlyCollection<MethodMap> methods, int tests)
+            public Mappings(int structSize, IReadOnlyDictionary<string, PaddedStructCreator.Field> bufferFields, IReadOnlyCollection<MethodMap> methods)
             {
-                BufferSize = bufferSize;
+                StructSize = structSize;
                 BufferFields = bufferFields;
+                BufferSize = structSize * methods.Count;
                 Methods = methods;
-                Tests = tests;
 
                 // Calcualtes size required for result set
-                ResultSetSize = methods.Sum(method => bufferFields[method.Return]?.AlignmentInfo.ShaderSize ?? 0);
+                ResultSetSize = methods
+                    .Select(m => m.Return)
+                    .Where(r => r != null)
+                    .Sum(r => bufferFields[r].AlignmentInfo.ShaderSize);
             }
 
             /// <summary>
             /// Generates test data and results .
             /// </summary>
-            public (byte[] testData, byte[] results) GenerateTestData()
+            /// <remarks></remarks>
+            public (byte[] testData, byte[] results) GenerateTestData(int tests)
             {
-                byte[] testData = new byte[BufferSize * Tests * Methods.Count];
-                byte[] results = new byte[ResultSetSize * Tests];
+                byte[] testData = new byte[BufferSize * tests];
+                byte[] results = new byte[ResultSetSize * tests];
 
                 int t = 0;
                 int resultPos = 0;
-                for (int test = 0; test < Tests; test++)
+                for (int test = 0; test < tests; test++)
                 {
                     Assert.Equal(0, resultPos % ResultSetSize);
                     Assert.Equal(test, resultPos / ResultSetSize);
+                    Assert.Equal(0, t % Methods.Count);
 
                     foreach (MethodMap method in Methods)
                     {
-                        method.GenerateTestData(this, testData, BufferSize * t++, results, resultPos);
-                        resultPos += BufferFields[method.Return]?.AlignmentInfo.ShaderSize ?? 0;
+                        method.GenerateTestData(this, testData, StructSize * t++, results, resultPos);
+
+                        if (method.Return == null)
+                        {
+                            continue;
+                        }
+
+                        resultPos += BufferFields[method.Return].AlignmentInfo.ShaderSize;
                     }
                 }
 
+                Assert.Equal(results.Length, resultPos);
+
                 return (testData, results);
+            }
+
+            /// <summary>
+            /// Gets the results from the pointer into a result set.
+            /// </summary>
+            /// <param name="data">The data.</param>
+            /// <param name="resultSet">The result set.</param>
+            /// <param name="offset">The offset.</param>
+            public void GetResults(IntPtr data, byte[] resultSet, int offset)
+            {
+                foreach (MethodMap method in Methods)
+                {
+                    if (method.Return == null)
+                    {
+                        continue;
+                    }
+
+                    PaddedStructCreator.Field resultField = BufferFields[method.Return];
+                    int resultSize = resultField.AlignmentInfo.ShaderSize;
+                    Marshal.Copy(data + resultField.Position, resultSet, offset, resultSize);
+                    data += StructSize;
+                    offset += resultSize;
+                }
             }
         }
 
@@ -343,6 +556,8 @@ namespace ShaderGen.Tests
             /// </summary>
             public readonly string Return;
 
+            private string _signature;
+
             /// <summary>
             /// Initializes a new instance of the <see cref="MethodMap"/> class.
             /// </summary>
@@ -356,7 +571,17 @@ namespace ShaderGen.Tests
                 Method = method;
                 Parameters = parameters;
                 Return = @return;
+                Signature =
+                    $"{method.ReturnType.Name} {method.DeclaringType.FullName}.{method.Name}({string.Join(", ", Parameters.Select(p => $"{p.Key.ParameterType.Name} {p.Key.Name}"))})";
             }
+            
+            /// <summary>
+            /// Gets the signature.
+            /// </summary>
+            /// <value>
+            /// The signature.
+            /// </value>
+            public string Signature { get; private  set; }
 
             /// <summary>
             /// Generates test data for this method, executes it and stores the result.
