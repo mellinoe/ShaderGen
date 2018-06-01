@@ -140,6 +140,9 @@ namespace ShaderGen.Tests
 
                 generationResult = sg.GenerateShaders();
             }
+            _output.WriteLine(string.Empty);
+            _output.WriteLine(TestUtil.Spacer1);
+            _output.WriteLine(string.Empty);
 
             /*
              * Loop through each backend to run tests.
@@ -148,9 +151,20 @@ namespace ShaderGen.Tests
             // Allocate enough space to store the result sets for each backend!
             Dictionary<ToolChain, byte[]> gpuResults =
                 toolChains.ToDictionary(t => t, t => new byte[mappings.ResultSetSize * TestLoops]);
-            
+
+            bool first = true;
             foreach (LanguageBackend backend in backends)
             {
+                if (first)
+                {
+                    first = false;
+                }
+                else
+                {
+                    _output.WriteLine(string.Empty);
+                    _output.WriteLine(TestUtil.Spacer2);
+                    _output.WriteLine(string.Empty);
+                }
                 ToolChain toolChain = ToolChain.Get(backend);
                 GeneratedShaderSet set;
                 CompileResult compilationResult;
@@ -185,9 +199,9 @@ namespace ShaderGen.Tests
                     ResourceFactory factory = graphicsDevice.ResourceFactory;
                     using (DeviceBuffer inOutBuffer = factory.CreateBuffer(
                         new BufferDescription(
-                            (uint) mappings.BufferSize,
+                            (uint)mappings.BufferSize,
                             BufferUsage.StructuredBufferReadWrite,
-                            (uint) mappings.StructSize)))
+                            (uint)mappings.StructSize)))
 
                     using (Shader computeShader = factory.CreateShader(
                         new ShaderDescription(
@@ -202,7 +216,7 @@ namespace ShaderGen.Tests
 
                     using (Pipeline computePipeline = factory.CreateComputePipeline(new ComputePipelineDescription(
                         computeShader,
-                        new[] {inOutStorageLayout},
+                        new[] { inOutStorageLayout },
                         1, 1, 1)))
 
 
@@ -233,7 +247,7 @@ namespace ShaderGen.Tests
                                     0,
                                     // Get the portion of test data for the current test loop
                                     Marshal.UnsafeAddrOfPinnedArrayElement(testData, mappings.BufferSize * test),
-                                    (uint) mappings.BufferSize);
+                                    (uint)mappings.BufferSize);
                                 graphicsDevice.WaitForIdle();
 
                                 // Execute compute shaders
@@ -268,60 +282,84 @@ namespace ShaderGen.Tests
                 }
             }
 
+            _output.WriteLine(string.Empty);
+            _output.WriteLine(TestUtil.Spacer1);
+            _output.WriteLine(string.Empty);
+
             Assert.True(gpuResults.Count > 0);
 
-            /*
-             * Finally, evaluate differences between results
-             */
-            // Get pointer array
-            int offset = 0;
-            byte[][] rArray = gpuResults.Values.ToArray();
-            foreach (MethodMap method in mappings.Methods)
+            string lastMethodName = null;
+            using (new TestTimer(_output, "Analysing results"))
             {
-                if (method.Return == null)
+                /*
+                 * Finally, evaluate differences between results
+                 */
+                // Get pointer array
+                int offset = 0;
+                byte[][] rArray = gpuResults.Values.ToArray();
+                foreach (MethodMap method in mappings.Methods)
                 {
-                    // This method has no results, so just skip it
-                    _output.WriteLine($"The {method.Method.Name} does not have any results to compare.");
-                    continue;
-                }
-
-                // Get the result field
-                PaddedStructCreator.Field resultField = mappings.BufferFields[method.Return];
-                int resultSize = resultField.AlignmentInfo.ShaderSize;
-
-                int failures = 0;
-                for (int test = 0; test < TestLoops; test++)
-                {
-                    // Perform simple byte scan to detect differences first.
-                    int s = test * mappings.ResultSetSize + offset;
-                    int e = s + resultSize;
-
-                    while (s < e)
+                    if (method.Return == null)
                     {
-                        byte check = cpuResults[s];
-                        for (int i = 0; i < rArray.Length; i++)
-                        {
-                            if (rArray[i][s] != check)
-                            {
-                                goto failed;
-                            }
-                        }
-
-                        s++;
+                        // This method has no results, so just skip it
+                        _output.WriteLine($"The {method.Method.Name} does not have any results to compare.");
+                        continue;
                     }
 
-                    continue;
+                    // Get the result field
+                    PaddedStructCreator.Field resultField = mappings.BufferFields[method.Return];
+                    int resultSize = resultField.AlignmentInfo.ShaderSize;
 
-                    failed:
-                    failures++;
+                    int failures = 0;
+                    for (int test = 0; test < TestLoops; test++)
+                    {
+                        // Perform simple byte scan to detect differences first.
+                        int s = test * mappings.ResultSetSize + offset;
+                        int e = s + resultSize;
+
+                        while (s < e)
+                        {
+                            byte check = cpuResults[s];
+                            for (int i = 0; i < rArray.Length; i++)
+                            {
+                                if (rArray[i][s] != check)
+                                {
+                                    goto failed;
+                                }
+                            }
+
+                            s++;
+                        }
+
+                        continue;
+
+                        failed:
+                        failures++;
+                    }
+
+                    if (lastMethodName != method.Method.Name)
+                    {
+                        if (lastMethodName != null)
+                        {
+                            _output.WriteLine(string.Empty);
+                            _output.WriteLine(TestUtil.Spacer2);
+                            _output.WriteLine(string.Empty);
+                        }
+
+                        lastMethodName = method.Method.Name;
+                    }
+
+                    _output.WriteLine(
+                        failures > 0
+                            ? $"{TestUtil.GetUnicodePieChart((double)failures / TestLoops)} {method.Signature} failed {failures}/{TestLoops} ({failures * 100.0 / TestLoops:#.##}%)."
+                            : $"✓ {method.Signature} consistent {TestLoops} times.");
+
+                    offset += resultSize;
                 }
 
-                _output.WriteLine(
-                    failures > 0
-                        ? $"{method.Signature} had inconsistent results {failures} times out of {TestLoops} ({failures * 100.0 / TestLoops:#.##}%)."
-                        : $"{method.Signature} was always consistent.");
-
-                offset += resultSize;
+                _output.WriteLine(string.Empty);
+                _output.WriteLine(TestUtil.Spacer2);
+                _output.WriteLine(string.Empty);
             }
         }
 
@@ -424,7 +462,7 @@ namespace ShaderGen.Tests
         /// <summary>
         /// Holds information about the mappings of tested methods to the buffer.
         /// </summary>
-        internal class Mappings
+        private class Mappings
         {
             /// <summary>
             /// The buffer size required.
@@ -534,7 +572,7 @@ namespace ShaderGen.Tests
         /// <summary>
         /// Holds information about the mapping of a tested method parameters and return to a buffer.
         /// </summary>
-        internal class MethodMap
+        private class MethodMap
         {
             /// <summary>
             /// The index of the method.
@@ -574,14 +612,14 @@ namespace ShaderGen.Tests
                 Signature =
                     $"{method.ReturnType.Name} {method.DeclaringType.FullName}.{method.Name}({string.Join(", ", Parameters.Select(p => $"{p.Key.ParameterType.Name} {p.Key.Name}"))})";
             }
-            
+
             /// <summary>
             /// Gets the signature.
             /// </summary>
             /// <value>
             /// The signature.
             /// </value>
-            public string Signature { get; private  set; }
+            public string Signature { get; private set; }
 
             /// <summary>
             /// Generates test data for this method, executes it and stores the result.

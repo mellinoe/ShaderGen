@@ -349,9 +349,6 @@ namespace ShaderGen.Tests
             {
                 _output.WriteLine($"{failures.Count} methods experienced failures out of {ShaderBuiltinsComputeTest.Methods} ({100f * failures.Count / ShaderBuiltinsComputeTest.Methods:##.##}%).  Details follow...");
 
-                string spacer1 = new string('=', 80);
-                string spacer2 = new string('-', 80);
-
                 int failed = 0;
 
                 // Output failures
@@ -361,7 +358,7 @@ namespace ShaderGen.Tests
                     notIdential++;
                     int methodFailureCount = method.Value.Count;
                     _output.WriteLine(string.Empty);
-                    _output.WriteLine(spacer1);
+                    _output.WriteLine(TestUtil.Spacer1);
                     float failureRate = 100f * methodFailureCount / loops;
                     if (failureRate > MaximumFailureRate)
                     {
@@ -374,7 +371,7 @@ namespace ShaderGen.Tests
 
                     foreach (var group in method.Value.SelectMany(t => t.differences).ToLookup(f => f.fieldName).OrderByDescending(g => g.Count()))
                     {
-                        _output.WriteLine(spacer2);
+                        _output.WriteLine(TestUtil.Spacer2);
                         _output.WriteLine(string.Empty);
 
                         int fieldFailureCount = group.Count();

@@ -18,12 +18,12 @@ namespace ShaderGen.Tests
         public TestTimer(ITestOutputHelper output, string message)
         {
             _timeStamp = Stopwatch.GetTimestamp();
-            _action = t => output.WriteLine($"{message} took {t * 1000}ms");
+            _action = t => output.WriteLine($"{message} took {t * 1000:#.##}ms");
         }
         public TestTimer(ITestOutputHelper output, Func<string> getMessage)
         {
             _timeStamp = Stopwatch.GetTimestamp();
-            _action = t => output.WriteLine($"{getMessage()} took {t * 1000}ms");
+            _action = t => output.WriteLine($"{getMessage()} took {t * 1000:#.##}ms");
         }
         public TestTimer(ITestOutputHelper output, Func<double, string> getMessage)
         {
@@ -33,7 +33,7 @@ namespace ShaderGen.Tests
 
         public void Dispose()
         {
-            _action(((double) Stopwatch.GetTimestamp() - _timeStamp) / Stopwatch.Frequency);
+            _action(((double)Stopwatch.GetTimestamp() - _timeStamp) / Stopwatch.Frequency);
         }
     }
 }

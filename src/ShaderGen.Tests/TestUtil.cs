@@ -20,6 +20,16 @@ namespace ShaderGen.Tests
 {
     internal static class TestUtil
     {
+        /// <summary>
+        /// A string of '═' symbols
+        /// </summary>
+        public static readonly string Spacer1 = new string('═', 80);
+
+        /// <summary>
+        /// A string of '━' symbols
+        /// </summary>
+        public static readonly string Spacer2 = new string('━', 80);
+
         private static readonly string ProjectBasePath = Path.Combine(AppContext.BaseDirectory, "TestAssets");
 
         public static Compilation GetCompilation()
@@ -427,5 +437,42 @@ namespace ShaderGen.Tests
                     : _memoryUnitsShort[unit]);
         }
         #endregion
+
+        public static bool ApproximatelyEqual(this float a, float b, float epsilon = float.Epsilon)
+        {
+            const float floatNormal = (1 << 23) * float.Epsilon;
+            float absA = Math.Abs(a);
+            float absB = Math.Abs(b);
+            float diff = Math.Abs(a - b);
+
+            if (a == b)
+            {
+                // Shortcut, handles infinities
+                return true;
+            }
+
+            if (a == 0.0f || b == 0.0f || diff < floatNormal)
+            {
+                // a or b is zero, or both are extremely close to it.
+                // relative error is less meaningful here
+                return diff < (epsilon * floatNormal);
+            }
+
+            // use relative error
+            return diff / Math.Min((absA + absB), float.MaxValue) < epsilon;
+        }
+
+        /// <summary>
+        /// The unicode characters to represent a pie chart.
+        /// </summary>
+        private static readonly char[] UnicodePieChars = { '○', '◔', '◑', '◕', '●' };
+
+        /// <summary>
+        /// Gets the unicode symbol to represent the <paramref name="ratio"/> as a pie chart.
+        /// </summary>
+        /// <param name="ratio">The ratio.</param>
+        /// <returns></returns>
+        public static char GetUnicodePieChart(double ratio) =>
+            UnicodePieChars[(int)Math.Round(Math.Max(Math.Min(ratio, 1.0), 0.0) * (UnicodePieChars.Length - 1))];
     }
 }
