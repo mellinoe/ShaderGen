@@ -95,7 +95,12 @@ namespace ShaderGen.Tests
              */
             Mappings mappings = CreateMethodTestCompilation(methods, out Compilation compilation);
 
-            // Note, you can use compilation.Emit(...) at this point here to compile the auto-generated code!
+            // Note, you could use compilation.Emit(...) at this point here to compile the auto-generated code!
+            // however, for now we'll invoke methods directly rather than executing the C# code that has been
+            // generated, as loading emitted code into a test is currently much more difficult.
+            (byte[] testData, byte[] cpuResults) = mappings.GenerateTestData();
+            _output.WriteLine(
+                $"Generated test data ({testData.Length.ToMemorySize()}) and completed {mappings.Tests} iterations of {mappings.Methods.Count} methods (results took {cpuResults.Length.ToMemorySize()}).");
 
 
             /*
@@ -129,7 +134,9 @@ namespace ShaderGen.Tests
                     Assert.True(false);
                 }
                 else
+                {
                     _output.WriteLine($"Compiled Compute Shader from set \"{set.Name}\"!");
+                }
 
                 Assert.NotNull(compilationResult.CompiledOutput);
             }
@@ -228,7 +235,7 @@ namespace ShaderGen.Tests
 
             string code = codeBuilder.ToString();
             compilation = compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(code));
-            return new Mappings(bufferSize, fields.ToDictionary(f => f.Name), methodMaps);
+            return new Mappings(bufferSize, fields.ToDictionary(f => f.Name), methodMaps, TestLoops);
         }
 
         /// <summary>
@@ -241,6 +248,8 @@ namespace ShaderGen.Tests
             /// </summary>
             public readonly int BufferSize;
 
+            public readonly int ResultSetSize;
+
             /// <summary>
             /// The buffer fields by name.
             /// </summary>
@@ -252,16 +261,52 @@ namespace ShaderGen.Tests
             public readonly IReadOnlyCollection<MethodMap> Methods;
 
             /// <summary>
+            /// The number of tests.
+            /// </summary>
+            public readonly int Tests;
+
+            /// <summary>
             /// Initializes a new instance of the <see cref="Mappings" /> class.
             /// </summary>
             /// <param name="bufferSize">Size of the buffer.</param>
             /// <param name="bufferFields">The buffer fields.</param>
             /// <param name="methods">The methods.</param>
-            public Mappings(int bufferSize, IReadOnlyDictionary<string, PaddedStructCreator.Field> bufferFields, IReadOnlyCollection<MethodMap> methods)
+            public Mappings(int bufferSize, IReadOnlyDictionary<string, PaddedStructCreator.Field> bufferFields, IReadOnlyCollection<MethodMap> methods, int tests)
             {
                 BufferSize = bufferSize;
                 BufferFields = bufferFields;
                 Methods = methods;
+                Tests = tests;
+
+                // Calcualtes size required for result set
+                ResultSetSize = methods.Sum(method => bufferFields[method.Return]?.AlignmentInfo.ShaderSize ?? 0);
+            }
+
+            /// <summary>
+            /// Generates test data and results .
+            /// </summary>
+            public (byte[] testData, byte[] results) GenerateTestData()
+            {
+                byte[] testData = new byte[BufferSize * Tests * Methods.Count];
+                byte[] results = new byte[ResultSetSize * Tests];
+
+                int t = 0;
+                int resultPos = 0;
+                for (int test = 0; test < Tests; test++)
+                {
+                    Assert.Equal(0, resultPos % ResultSetSize);
+                    Assert.Equal(test, resultPos / ResultSetSize);
+
+                    foreach (MethodMap method in Methods)
+                    {
+                        method.GenerateTestData(this, testData, BufferSize * t, results, resultPos);
+                        resultPos += BufferFields[method.Return]?.AlignmentInfo.ShaderSize ?? 0;
+                    }
+                }
+
+                // Extract results f
+
+                return (testData, results);
             }
         }
 
@@ -303,6 +348,38 @@ namespace ShaderGen.Tests
                 Method = method;
                 Parameters = parameters;
                 Return = @return;
+            }
+
+            /// <summary>
+            /// Generates test data for this method, executes it and stores the result.
+            /// </summary>
+            /// <param name="mapping">The mapping.</param>
+            /// <param name="testData">The test data.</param>
+            /// <param name="dataOffset">The data offset.</param>
+            /// <param name="results">The results.</param>
+            /// <param name="resultsOffset">The results offset.</param>
+            public void GenerateTestData(Mappings mapping, byte[] testData, int dataOffset, byte[] results, int resultsOffset)
+            {
+                object[] parameters = new object[Parameters.Count];
+
+                // Create random input values
+                foreach (KeyValuePair<ParameterInfo, string> kvp in Parameters)
+                {
+                    ParameterInfo pInfo = kvp.Key;
+                    PaddedStructCreator.Field field = mapping.BufferFields[kvp.Value];
+                    // TODO Generate data
+                    parameters[pInfo.Position] = null; // TODO
+                }
+
+                object result = null; // TODO Method.Invoke(null, parameters);
+
+                if (Return == null)
+                {
+                    Assert.Null(result);
+                    return;
+                }
+
+                // TODO Update results with return value...
             }
         }
     }

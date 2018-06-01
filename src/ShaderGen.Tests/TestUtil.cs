@@ -16,7 +16,7 @@ using ShaderGen.Tests.Tools;
 
 namespace ShaderGen.Tests
 {
-    internal class TestUtil
+    internal static class TestUtil
     {
         private static readonly string ProjectBasePath = Path.Combine(AppContext.BaseDirectory, "TestAssets");
 
@@ -250,5 +250,157 @@ namespace ShaderGen.Tests
 
             return Unsafe.Read<T>(floats);
         }
+
+        #region ToMemorySize from https://github.com/webappsuk/CoreLibraries/blob/fbbebc99bc5c1f2e8b140c6c387e3ede4f89b40c/Utilities/UtilityExtensions.cs#L2951-L3116
+        private static readonly string[] _memoryUnitsLong =
+        {
+            " byte",
+            " kilobyte",
+            " megabyte",
+            " gigabyte",
+            " terabyte",
+            " petabyte",
+            " exabyte"
+        };
+
+        private static readonly string[] _memoryUnitsShort = { "B", "KB", "MB", "GB", "TB", "PB", "EB" };
+
+        /// <summary>
+        /// Converts a number of bytes to a friendly memory size.
+        /// </summary>
+        /// <param name="bytes">The bytes.</param>
+        /// <param name="longUnits">if set to <see langword="true" /> use long form unit names instead of symbols.</param>
+        /// <param name="decimalPlaces">The number of decimal places between 0 and 16 (ignored for bytes).</param>
+        /// <param name="breakPoint">The break point between 0 and 1024 (or 0D to base on decimal points).</param>
+        /// <returns>System.String.</returns>
+        public static string ToMemorySize(
+            this short bytes,
+            bool longUnits = false,
+            uint decimalPlaces = 1,
+            double breakPoint = 512D) => ToMemorySize((double)bytes, longUnits, decimalPlaces, breakPoint);
+
+        /// <summary>
+        /// Converts a number of bytes to a friendly memory size.
+        /// </summary>
+        /// <param name="bytes">The bytes.</param>
+        /// <param name="longUnits">if set to <see langword="true" /> use long form unit names instead of symbols.</param>
+        /// <param name="decimalPlaces">The number of decimal places between 0 and 16 (ignored for bytes).</param>
+        /// <param name="breakPoint">The break point between 0 and 1024 (or 0D to base on decimal points).</param>
+        /// <returns>System.String.</returns>
+        public static string ToMemorySize(
+            this ushort bytes,
+            bool longUnits = false,
+            uint decimalPlaces = 1,
+            double breakPoint = 512D) => ToMemorySize((double)bytes, longUnits, decimalPlaces, breakPoint);
+
+        /// <summary>
+        /// Converts a number of bytes to a friendly memory size.
+        /// </summary>
+        /// <param name="bytes">The bytes.</param>
+        /// <param name="longUnits">if set to <see langword="true" /> use long form unit names instead of symbols.</param>
+        /// <param name="decimalPlaces">The number of decimal places between 0 and 16 (ignored for bytes).</param>
+        /// <param name="breakPoint">The break point between 0 and 1024 (or 0D to base on decimal points).</param>
+        /// <returns>System.String.</returns>
+        public static string ToMemorySize(
+            this int bytes,
+            bool longUnits = false,
+            uint decimalPlaces = 1,
+            double breakPoint = 512D) => ToMemorySize((double)bytes, longUnits, decimalPlaces, breakPoint);
+
+        /// <summary>
+        /// Converts a number of bytes to a friendly memory size.
+        /// </summary>
+        /// <param name="bytes">The bytes.</param>
+        /// <param name="longUnits">if set to <see langword="true" /> use long form unit names instead of symbols.</param>
+        /// <param name="decimalPlaces">The number of decimal places between 0 and 16 (ignored for bytes).</param>
+        /// <param name="breakPoint">The break point between 0 and 1024 (or 0D to base on decimal points).</param>
+        /// <returns>System.String.</returns>
+        public static string ToMemorySize(
+            this uint bytes,
+            bool longUnits = false,
+            uint decimalPlaces = 1,
+            double breakPoint = 512D) => ToMemorySize((double)bytes, longUnits, decimalPlaces, breakPoint);
+
+        /// <summary>
+        /// Converts a number of bytes to a friendly memory size.
+        /// </summary>
+        /// <param name="bytes">The bytes.</param>
+        /// <param name="longUnits">if set to <see langword="true" /> use long form unit names instead of symbols.</param>
+        /// <param name="decimalPlaces">The number of decimal places between 0 and 16 (ignored for bytes).</param>
+        /// <param name="breakPoint">The break point between 0 and 1024 (or 0D to base on decimal points).</param>
+        /// <returns>System.String.</returns>
+        public static string ToMemorySize(
+            this long bytes,
+            bool longUnits = false,
+            uint decimalPlaces = 1,
+            double breakPoint = 512D) => ToMemorySize((double)bytes, longUnits, decimalPlaces, breakPoint);
+
+        /// <summary>
+        /// Converts a number of bytes to a friendly memory size.
+        /// </summary>
+        /// <param name="bytes">The bytes.</param>
+        /// <param name="longUnits">if set to <see langword="true" /> use long form unit names instead of symbols.</param>
+        /// <param name="decimalPlaces">The number of decimal places between 0 and 16 (ignored for bytes).</param>
+        /// <param name="breakPoint">The break point between 0 and 1024 (or 0D to base on decimal points).</param>
+        /// <returns>System.String.</returns>
+        public static string ToMemorySize(
+            this ulong bytes,
+            bool longUnits = false,
+            uint decimalPlaces = 1,
+            double breakPoint = 512D) => ToMemorySize((double)bytes, longUnits, decimalPlaces, breakPoint);
+
+        /// <summary>
+        /// Converts a number of bytes to a friendly memory size.
+        /// </summary>
+        /// <param name="bytes">The bytes.</param>
+        /// <param name="longUnits">if set to <see langword="true" /> use long form unit names instead of symbols.</param>
+        /// <param name="decimalPlaces">The number of decimal places between 0 and 16 (ignored for bytes).</param>
+        /// <param name="breakPoint">The break point between 0 and 1024 (or 0D to base on decimal points).</param>
+        /// <returns>System.String.</returns>
+        public static string ToMemorySize(
+            this double bytes,
+            bool longUnits = false,
+            uint decimalPlaces = 1,
+            double breakPoint = 512D)
+        {
+            if (decimalPlaces < 1)
+            {
+                decimalPlaces = 0;
+            }
+            else if (decimalPlaces > 16)
+            {
+                decimalPlaces = 16;
+            }
+
+            // 921.6 is 0.9*1024, this means that be default the breakpoint will round up the last decimal place.
+            if (breakPoint < 1)
+            {
+                breakPoint = 921.6D * Math.Pow(10, -decimalPlaces);
+            }
+            else if (breakPoint > 1023)
+            {
+                breakPoint = 1023;
+            }
+
+            uint maxDecimalPlaces = 0;
+            uint unit = 0;
+            double amount = bytes;
+            while ((Math.Abs(amount) >= breakPoint) &&
+                   (unit < 6))
+            {
+                amount /= 1024;
+                unit++;
+                maxDecimalPlaces = Math.Min(decimalPlaces, maxDecimalPlaces + 3);
+            }
+
+            string format = "{0:N" + maxDecimalPlaces + "}{1}";
+            return string.Format(
+                format,
+                amount,
+                longUnits
+                    ? _memoryUnitsLong[unit]
+                    : _memoryUnitsShort[unit]);
+        }
+        #endregion
     }
 }
