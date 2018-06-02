@@ -154,7 +154,7 @@ namespace ShaderGen.Tests
             => ToolChain.Requires(features, false).Select(t => t.CreateBackend(compilation))
                 .ToArray();
 
-        public static IReadOnlyCollection<(string fieldName, object aValue, object bValue)> DeepCompareObjectFields<T>(T a, T b)
+        public static IReadOnlyList<(string fieldName, object aValue, object bValue)> DeepCompareObjectFields<T>(T a, T b)
         {
             // Creat failures list
             List<(string fieldName, object aValue, object bValue)> failures = new List<(string fieldName, object aValue, object bValue)>();

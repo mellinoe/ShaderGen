@@ -211,7 +211,7 @@ namespace ShaderGen.Tests.Tools
         /// <param name="graphicsBackends">The graphicsBackends required (leave empty to get all).</param>
         /// <returns></returns>
         /// <exception cref="ShaderGen.Tests.Tools.RequiredToolFeatureMissingException"></exception>
-        public static IReadOnlyCollection<ToolChain> Requires(params GraphicsBackend[] graphicsBackends)
+        public static IReadOnlyList<ToolChain> Requires(params GraphicsBackend[] graphicsBackends)
             => Requires(ToolFeatures.All, true, (IEnumerable<GraphicsBackend>)graphicsBackends);
 
         /// <summary>
@@ -220,7 +220,7 @@ namespace ShaderGen.Tests.Tools
         /// <param name="graphicsBackends">The graphicsBackends required (leave empty to get all).</param>
         /// <returns></returns>
         /// <exception cref="ShaderGen.Tests.Tools.RequiredToolFeatureMissingException"></exception>
-        public static IReadOnlyCollection<ToolChain> Requires(IEnumerable<GraphicsBackend> graphicsBackends)
+        public static IReadOnlyList<ToolChain> Requires(IEnumerable<GraphicsBackend> graphicsBackends)
             => Requires(ToolFeatures.All, true, graphicsBackends);
 
         /// <summary>
@@ -230,7 +230,7 @@ namespace ShaderGen.Tests.Tools
         /// <param name="graphicsBackends">The graphicsBackends required (leave empty to get all).</param>
         /// <returns></returns>
         /// <exception cref="ShaderGen.Tests.Tools.RequiredToolFeatureMissingException"></exception>
-        public static IReadOnlyCollection<ToolChain> Requires(ToolFeatures requiredFeatures,
+        public static IReadOnlyList<ToolChain> Requires(ToolFeatures requiredFeatures,
             params GraphicsBackend[] graphicsBackends)
             => Requires(requiredFeatures, true, (IEnumerable<GraphicsBackend>)graphicsBackends);
 
@@ -241,7 +241,7 @@ namespace ShaderGen.Tests.Tools
         /// <param name="graphicsBackends">The graphicsBackends required (leave empty to get all).</param>
         /// <returns></returns>
         /// <exception cref="ShaderGen.Tests.Tools.RequiredToolFeatureMissingException"></exception>
-        public static IReadOnlyCollection<ToolChain> Requires(ToolFeatures requiredFeatures, IEnumerable<GraphicsBackend> graphicsBackends)
+        public static IReadOnlyList<ToolChain> Requires(ToolFeatures requiredFeatures, IEnumerable<GraphicsBackend> graphicsBackends)
             => Requires(requiredFeatures, true, graphicsBackends);
 
         /// <summary>
@@ -253,7 +253,7 @@ namespace ShaderGen.Tests.Tools
         /// <param name="graphicsBackends">The graphicsBackends required (leave empty to get all).</param>
         /// <returns></returns>
         /// <exception cref="ShaderGen.Tests.Tools.RequiredToolFeatureMissingException"></exception>
-        public static IReadOnlyCollection<ToolChain> Requires(ToolFeatures requiredFeatures, bool throwOnFail,
+        public static IReadOnlyList<ToolChain> Requires(ToolFeatures requiredFeatures, bool throwOnFail,
             params GraphicsBackend[] graphicsBackends)
             => Requires(requiredFeatures, throwOnFail, (IEnumerable<GraphicsBackend>)graphicsBackends);
 
@@ -274,7 +274,7 @@ namespace ShaderGen.Tests.Tools
         /// <param name="graphicsBackends">The graphics graphicsBackends.</param>
         /// <returns></returns>
         /// <exception cref="ShaderGen.Tests.Tools.RequiredToolFeatureMissingException"></exception>
-        public static IReadOnlyCollection<ToolChain> Requires(
+        public static IReadOnlyList<ToolChain> Requires(
             ToolFeatures requiredFeatures,
             bool throwOnFail,
             IEnumerable<GraphicsBackend> graphicsBackends)
@@ -672,7 +672,7 @@ namespace ShaderGen.Tests.Tools
         private static readonly Lazy<string> _glslvPath = new Lazy<string>(
             () =>
             {
-                // First, try to launch from the current environment.
+                // Execute, try to launch from the current environment.
                 try
                 {
                     ProcessStartInfo psi = new ProcessStartInfo()

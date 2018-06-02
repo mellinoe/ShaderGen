@@ -168,7 +168,7 @@ namespace ShaderGen.Tests
             int loops = 0;
             long durationTicks;
 
-            // Set start.
+            // TestSet start.
             long startTicks = Stopwatch.GetTimestamp();
 
             ShaderBuiltinsComputeTest cpuTest = new ShaderBuiltinsComputeTest();
