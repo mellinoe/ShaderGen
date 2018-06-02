@@ -154,16 +154,21 @@ namespace ShaderGen.Tests
             => ToolChain.Requires(features, false).Select(t => t.CreateBackend(compilation))
                 .ToArray();
 
-        public static IReadOnlyList<(string fieldName, object aValue, object bValue)> DeepCompareObjectFields<T>(T a, T b)
+        public static IReadOnlyList<(string fieldName, object aValue, object bValue)> DeepCompareObjectFields(object a, object b)
         {
             // Creat failures list
             List<(string fieldName, object aValue, object bValue)> failures = new List<(string fieldName, object aValue, object bValue)>();
+
+            if (a == b)
+            {
+                return failures;
+            }
 
             // Get dictionary of fields by field name and type
             Dictionary<Type, IReadOnlyCollection<FieldInfo>> childFieldInfos =
                 new Dictionary<Type, IReadOnlyCollection<FieldInfo>>();
 
-            Type currentType = typeof(T);
+            Type currentType = a?.GetType() ?? b.GetType();
             object aValue = a;
             object bValue = b;
             Stack<(string fieldName, Type fieldType, object aValue, object bValue)> stack
@@ -436,9 +441,6 @@ namespace ShaderGen.Tests
         public static bool ApproximatelyEqual(this float a, float b, float epsilon = float.Epsilon)
         {
             const float floatNormal = (1 << 23) * float.Epsilon;
-            float absA = Math.Abs(a);
-            float absB = Math.Abs(b);
-            float diff = Math.Abs(a - b);
 
             if (a == b)
             {
@@ -446,6 +448,7 @@ namespace ShaderGen.Tests
                 return true;
             }
 
+            float diff = Math.Abs(a - b);
             if (a == 0.0f || b == 0.0f || diff < floatNormal)
             {
                 // a or b is zero, or both are extremely close to it.
@@ -453,6 +456,8 @@ namespace ShaderGen.Tests
                 return diff < (epsilon * floatNormal);
             }
 
+            float absA = Math.Abs(a);
+            float absB = Math.Abs(b);
             // use relative error
             return diff / Math.Min((absA + absB), float.MaxValue) < epsilon;
         }
