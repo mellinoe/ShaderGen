@@ -1,19 +1,14 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
-using System.Collections.Concurrent;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.CodeAnalysis.Text;
 using System.Runtime.InteropServices;
 using System.Threading;
-using ShaderGen.Glsl;
-using ShaderGen.Hlsl;
 using ShaderGen.Tests.Tools;
 
 namespace ShaderGen.Tests
