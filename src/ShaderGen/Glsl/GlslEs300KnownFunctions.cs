@@ -606,14 +606,14 @@ namespace ShaderGen.Glsl
         private static string CubeRoot(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
             return AddCheck(parameters[0].FullTypeName,
-                $"pow(abs({parameters[0].Identifier}`), 0.333333333333333)");
+                $"pow(abs(float({parameters[0].Identifier}`)), 0.333333333333333)");
         }
 
         private static string Pow(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
             // OpenGL returns NaN for -ve P0's, whereas Vulkan ignores sign.
             return AddCheck(parameters[0].FullTypeName,
-                $"pow(abs(float({parameters[0].Identifier})`),float({parameters[1].Identifier}`))");
+                $"pow(abs(float({parameters[0].Identifier}`)),float({parameters[1].Identifier}`))");
         }
 
         private static string Clamp(string typeName, string methodName, InvocationParameterInfo[] parameters)
@@ -624,7 +624,7 @@ namespace ShaderGen.Glsl
             string p1 = $"{parameters[1].Identifier}{(isFloat ? string.Empty : "`")}";
             string p2 = $"{parameters[2].Identifier}{(isFloat ? string.Empty : "`")}";
             return AddCheck(parameters[0].FullTypeName,
-                $"((float({p1})<float({p2}))?(clamp({parameters[0].Identifier}`,float({p1}),float({p2}))):float({p2}))");
+                $"((float({p1})<float({p2}))?(clamp(float({parameters[0].Identifier}`),float({p1}),float({p2}))):float({p2}))");
         }
 
         private static string FMod(string typeName, string methodName, InvocationParameterInfo[] parameters)
