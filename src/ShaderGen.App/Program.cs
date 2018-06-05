@@ -327,7 +327,7 @@ namespace ShaderGen.App
                 p.Start();
                 var stdOut = p.StandardOutput.ReadToEndAsync();
                 var stdErr = p.StandardError.ReadToEndAsync();
-                bool exited = p.WaitForExit(2000);
+                bool exited = p.WaitForExit(60000);
 
                 if (exited && p.ExitCode == 0)
                 {
