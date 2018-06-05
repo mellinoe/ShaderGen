@@ -672,7 +672,7 @@ namespace ShaderGen.Tests.Tools
         private static readonly Lazy<string> _glslvPath = new Lazy<string>(
             () =>
             {
-                // Execute, try to launch from the current environment.
+                // First, try to launch from the current environment.
                 try
                 {
                     ProcessStartInfo psi = new ProcessStartInfo()

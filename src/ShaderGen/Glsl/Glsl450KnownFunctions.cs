@@ -628,6 +628,19 @@ namespace ShaderGen.Glsl
         }
 
         private static readonly string[] _vectorAccessors = { "x", "y", "z", "w" };
+
+        private static readonly HashSet<string> _oneDimensionalTypes =
+            new HashSet<string>(new[]
+                {
+                    "System.Single",
+                    "float",
+                    "System.Int32",
+                    "int",
+                    "System.UInt32",
+                    "uint"
+                },
+                StringComparer.InvariantCultureIgnoreCase);
+
         /// <summary>
         /// Implements a check for each element of a vector.
         /// </summary>
@@ -636,7 +649,7 @@ namespace ShaderGen.Glsl
         /// <returns></returns>
         private static string AddCheck(string typeName, string check)
         {
-            if (typeName == "System.Single" || typeName == "float") // TODO Why are we getting float?
+            if (_oneDimensionalTypes.Contains(typeName))
             {
                 // The check can stay as it is, strip the '`' characters.
                 return check.Replace("`", string.Empty);

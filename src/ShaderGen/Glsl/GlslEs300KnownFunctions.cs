@@ -613,7 +613,7 @@ namespace ShaderGen.Glsl
         {
             // OpenGL returns NaN for -ve P0's, whereas Vulkan ignores sign.
             return AddCheck(parameters[0].FullTypeName,
-                $"pow(abs({parameters[0].Identifier}`),{parameters[1].Identifier}`)");
+                $"pow(abs(float({parameters[0].Identifier})`),float({parameters[1].Identifier}`))");
         }
 
         private static string Clamp(string typeName, string methodName, InvocationParameterInfo[] parameters)
@@ -624,7 +624,7 @@ namespace ShaderGen.Glsl
             string p1 = $"{parameters[1].Identifier}{(isFloat ? string.Empty : "`")}";
             string p2 = $"{parameters[2].Identifier}{(isFloat ? string.Empty : "`")}";
             return AddCheck(parameters[0].FullTypeName,
-                $"(({p1}<{p2})?(clamp({parameters[0].Identifier}`,{p1},{p2})):({p2}))");
+                $"((float({p1})<float({p2}))?(clamp({parameters[0].Identifier}`,float({p1}),float({p2}))):float({p2}))");
         }
 
         private static string FMod(string typeName, string methodName, InvocationParameterInfo[] parameters)
@@ -639,6 +639,19 @@ namespace ShaderGen.Glsl
         }
 
         private static readonly string[] _vectorAccessors = { "x", "y", "z", "w" };
+
+        private static readonly HashSet<string> _oneDimensionalTypes =
+            new HashSet<string>(new[]
+                {
+                    "System.Single",
+                    "float",
+                    "System.Int32",
+                    "int",
+                    "System.UInt32",
+                    "uint"
+                },
+                StringComparer.InvariantCultureIgnoreCase);
+
         /// <summary>
         /// Implements a check for each element of a vector.
         /// </summary>
@@ -647,7 +660,7 @@ namespace ShaderGen.Glsl
         /// <returns></returns>
         private static string AddCheck(string typeName, string check)
         {
-            if (typeName == "System.Single" || typeName == "float") // TODO Why are we getting float?
+            if (_oneDimensionalTypes.Contains(typeName))
             {
                 // The check can stay as it is, strip the '`' characters.
                 return check.Replace("`", string.Empty);

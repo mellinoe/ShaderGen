@@ -280,7 +280,6 @@ namespace ShaderGen.Tests
             for (int i = 0; i < floatCount; i++)
             {
                 floats[i] = (float)((random.NextDouble() * 2.0 - 1.0) * Math.Pow(2.0, random.Next(minMantissa, maxMantissa)));
-                //floats[i] = (float)(random.NextDouble() * floatRange * 2f) - floatRange;
             }
 
             return floats;
@@ -309,34 +308,6 @@ namespace ShaderGen.Tests
         /// <param name="breakPoint">The break point between 0 and 1024 (or 0D to base on decimal points).</param>
         /// <returns>System.String.</returns>
         public static string ToMemorySize(
-            this short bytes,
-            bool longUnits = false,
-            uint decimalPlaces = 1,
-            double breakPoint = 512D) => ToMemorySize((double)bytes, longUnits, decimalPlaces, breakPoint);
-
-        /// <summary>
-        /// Converts a number of bytes to a friendly memory size.
-        /// </summary>
-        /// <param name="bytes">The bytes.</param>
-        /// <param name="longUnits">if set to <see langword="true" /> use long form unit names instead of symbols.</param>
-        /// <param name="decimalPlaces">The number of decimal places between 0 and 16 (ignored for bytes).</param>
-        /// <param name="breakPoint">The break point between 0 and 1024 (or 0D to base on decimal points).</param>
-        /// <returns>System.String.</returns>
-        public static string ToMemorySize(
-            this ushort bytes,
-            bool longUnits = false,
-            uint decimalPlaces = 1,
-            double breakPoint = 512D) => ToMemorySize((double)bytes, longUnits, decimalPlaces, breakPoint);
-
-        /// <summary>
-        /// Converts a number of bytes to a friendly memory size.
-        /// </summary>
-        /// <param name="bytes">The bytes.</param>
-        /// <param name="longUnits">if set to <see langword="true" /> use long form unit names instead of symbols.</param>
-        /// <param name="decimalPlaces">The number of decimal places between 0 and 16 (ignored for bytes).</param>
-        /// <param name="breakPoint">The break point between 0 and 1024 (or 0D to base on decimal points).</param>
-        /// <returns>System.String.</returns>
-        public static string ToMemorySize(
             this int bytes,
             bool longUnits = false,
             uint decimalPlaces = 1,
@@ -351,35 +322,7 @@ namespace ShaderGen.Tests
         /// <param name="breakPoint">The break point between 0 and 1024 (or 0D to base on decimal points).</param>
         /// <returns>System.String.</returns>
         public static string ToMemorySize(
-            this uint bytes,
-            bool longUnits = false,
-            uint decimalPlaces = 1,
-            double breakPoint = 512D) => ToMemorySize((double)bytes, longUnits, decimalPlaces, breakPoint);
-
-        /// <summary>
-        /// Converts a number of bytes to a friendly memory size.
-        /// </summary>
-        /// <param name="bytes">The bytes.</param>
-        /// <param name="longUnits">if set to <see langword="true" /> use long form unit names instead of symbols.</param>
-        /// <param name="decimalPlaces">The number of decimal places between 0 and 16 (ignored for bytes).</param>
-        /// <param name="breakPoint">The break point between 0 and 1024 (or 0D to base on decimal points).</param>
-        /// <returns>System.String.</returns>
-        public static string ToMemorySize(
             this long bytes,
-            bool longUnits = false,
-            uint decimalPlaces = 1,
-            double breakPoint = 512D) => ToMemorySize((double)bytes, longUnits, decimalPlaces, breakPoint);
-
-        /// <summary>
-        /// Converts a number of bytes to a friendly memory size.
-        /// </summary>
-        /// <param name="bytes">The bytes.</param>
-        /// <param name="longUnits">if set to <see langword="true" /> use long form unit names instead of symbols.</param>
-        /// <param name="decimalPlaces">The number of decimal places between 0 and 16 (ignored for bytes).</param>
-        /// <param name="breakPoint">The break point between 0 and 1024 (or 0D to base on decimal points).</param>
-        /// <returns>System.String.</returns>
-        public static string ToMemorySize(
-            this ulong bytes,
             bool longUnits = false,
             uint decimalPlaces = 1,
             double breakPoint = 512D) => ToMemorySize((double)bytes, longUnits, decimalPlaces, breakPoint);
