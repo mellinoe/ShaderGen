@@ -597,7 +597,7 @@ namespace ShaderGen.Hlsl
             string target = firstParameter.Identifier;
             // Note this is pretty inaccurate on the GPU!
             return
-                $"log(({Cvc(firstParameter.FullTypeName, 1f)}+{target})/({Cvc(firstParameter.FullTypeName, 1f)}-{target})/{Cvc(firstParameter.FullTypeName, 2f)})";
+                $"log(({Cvc(firstParameter.FullTypeName, 1f)}+{target})/({Cvc(firstParameter.FullTypeName, 1f)}-{target}))/{Cvc(firstParameter.FullTypeName, 2f)}";
         }
 
         private static string CubeRoot(string typeName, string methodName, InvocationParameterInfo[] parameters)
