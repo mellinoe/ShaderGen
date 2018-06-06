@@ -509,6 +509,8 @@ namespace ShaderGen.Tests.Tools
             string outputPath = null,
             Encoding encoding = default(Encoding))
         {
+            using (AutoResetEvent outputWaitHandle = new AutoResetEvent(false))
+            using (AutoResetEvent errorWaitHandle = new AutoResetEvent(false))
             using (Process process = new Process())
             {
                 process.StartInfo = new ProcessStartInfo
@@ -523,89 +525,84 @@ namespace ShaderGen.Tests.Tools
 
                 StringBuilder output = new StringBuilder();
                 StringBuilder error = new StringBuilder();
-
-                using (AutoResetEvent outputWaitHandle = new AutoResetEvent(false))
-                using (AutoResetEvent errorWaitHandle = new AutoResetEvent(false))
+                // Add handlers to handle data
+                // ReSharper disable AccessToDisposedClosure
+                process.OutputDataReceived += (sender, e) =>
                 {
-                    // Add handlers to handle data
-                    // ReSharper disable AccessToDisposedClosure
-                    process.OutputDataReceived += (sender, e) =>
+                    if (e.Data == null)
                     {
-                        if (e.Data == null)
-                        {
-                            outputWaitHandle.Set();
-                        }
-                        else
-                        {
-                            output.AppendLine(e.Data);
-                        }
-                    };
-                    process.ErrorDataReceived += (sender, e) =>
-                    {
-                        if (e.Data == null)
-                        {
-                            errorWaitHandle.Set();
-                        }
-                        else
-                        {
-                            error.AppendLine(e.Data);
-                        }
-                    };
-                    // ReSharper restore AccessToDisposedClosure
-
-                    process.Start();
-
-                    process.BeginOutputReadLine();
-                    process.BeginErrorReadLine();
-
-                    int exitCode;
-                    if (!process.WaitForExit(DefaultTimeout) || !outputWaitHandle.WaitOne(DefaultTimeout) ||
-                        !errorWaitHandle.WaitOne(DefaultTimeout))
-                    {
-                        if (output.Length > 0)
-                        {
-                            output.AppendLine("TIMED OUT!").AppendLine();
-                        }
-
-                        error.AppendLine($"Timed out calling: \"{toolPath}\" {process.StartInfo.Arguments}");
-                        exitCode = int.MinValue;
+                        outputWaitHandle.Set();
                     }
                     else
                     {
-                        exitCode = process.ExitCode;
+                        output.AppendLine(e.Data);
                     }
-
-                    // Get compiled output (if any).
-                    byte[] outputBytes;
-                    if (string.IsNullOrWhiteSpace(outputPath))
+                };
+                process.ErrorDataReceived += (sender, e) =>
+                {
+                    if (e.Data == null)
                     {
-                        // No output expected, just encode the existing code into bytes.
-                        outputBytes = (encoding ?? Encoding.Default).GetBytes(code);
+                        errorWaitHandle.Set();
                     }
                     else
                     {
-                        if (File.Exists(outputPath))
+                        error.AppendLine(e.Data);
+                    }
+                };
+                // ReSharper restore AccessToDisposedClosure
+
+                process.Start();
+
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+
+                int exitCode;
+                if (!process.WaitForExit(DefaultTimeout) || !outputWaitHandle.WaitOne(DefaultTimeout) ||
+                    !errorWaitHandle.WaitOne(DefaultTimeout))
+                {
+                    if (output.Length > 0)
+                    {
+                        output.AppendLine("TIMED OUT!").AppendLine();
+                    }
+
+                    error.AppendLine($"Timed out calling: \"{toolPath}\" {process.StartInfo.Arguments}");
+                    exitCode = int.MinValue;
+                }
+                else
+                {
+                    exitCode = process.ExitCode;
+                }
+
+                // Get compiled output (if any).
+                byte[] outputBytes;
+                if (string.IsNullOrWhiteSpace(outputPath))
+                {
+                    // No output expected, just encode the existing code into bytes.
+                    outputBytes = (encoding ?? Encoding.Default).GetBytes(code);
+                }
+                else
+                {
+                    if (File.Exists(outputPath))
+                    {
+                        try
                         {
-                            try
-                            {
-                                // Attemp to read output file
-                                outputBytes = File.ReadAllBytes(outputPath);
-                            }
-                            catch (Exception e)
-                            {
-                                outputBytes = Array.Empty<byte>();
-                                error.AppendLine($"Failed to read the output file, \"{outputPath}\": {e.Message}");
-                            }
+                            // Attemp to read output file
+                            outputBytes = File.ReadAllBytes(outputPath);
                         }
-                        else
+                        catch (Exception e)
                         {
                             outputBytes = Array.Empty<byte>();
-                            error.AppendLine($"The output file \"{outputPath}\" was not found!");
+                            error.AppendLine($"Failed to read the output file, \"{outputPath}\": {e.Message}");
                         }
                     }
-
-                    return new CompileResult(code, exitCode, output.ToString(), error.ToString(), outputBytes);
+                    else
+                    {
+                        outputBytes = Array.Empty<byte>();
+                        error.AppendLine($"The output file \"{outputPath}\" was not found!");
+                    }
                 }
+
+                return new CompileResult(code, exitCode, output.ToString(), error.ToString(), outputBytes);
             }
         }
 
