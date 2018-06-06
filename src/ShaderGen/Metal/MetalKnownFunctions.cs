@@ -699,8 +699,6 @@ namespace ShaderGen.Metal
                 $"({p0}-{p1}*trunc({p0}/{p1}))");
         }
 
-        private static readonly string[] _vectorAccessors = { "x", "y", "z", "w" };
-
         private static readonly HashSet<string> _oneDimensionalTypes =
             new HashSet<string>(new[]
                 {
@@ -729,7 +727,7 @@ namespace ShaderGen.Metal
 
             GetVectorTypeInfo(typeName, out string shaderType, out int elementCount);
             return
-                $"{shaderType}({string.Join(",", _vectorAccessors.Take(elementCount).Select(a => check.Replace("`", "." + a)))})";
+                $"{shaderType}({string.Join(",", Enumerable.Range(0, elementCount).Select(a => check.Replace("`", $"[{a}]")))})";
         }
     }
 }
