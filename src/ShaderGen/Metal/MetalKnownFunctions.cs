@@ -701,7 +701,13 @@ namespace ShaderGen.Metal
 
         private static string Mod(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
-            return $"{parameters[0].Identifier}%{parameters[1].Identifier}";
+            // D3D & Vulkan return Max when max < min, but OpenGL returns Min, so we need
+            // to correct by returning Max when max < min.
+            bool isFloat = parameters[1].FullTypeName == "System.Single" || parameters[1].FullTypeName == "float";
+            string p0 = $"{parameters[0].Identifier}`";
+            string p1 = $"{parameters[1].Identifier}{(isFloat ? string.Empty : "`")}";
+            return AddCheck(parameters[0].FullTypeName,
+                $"({p0}-{p1}*floor({p0}/{p1}))");
         }
 
         private static readonly HashSet<string> _oneDimensionalTypes =
