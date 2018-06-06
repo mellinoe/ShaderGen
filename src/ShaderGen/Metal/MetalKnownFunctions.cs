@@ -52,7 +52,7 @@ namespace ShaderGen.Metal
                 {nameof(ShaderBuiltins.Log10), Log10},
                 {nameof(ShaderBuiltins.Max), SimpleNameTranslator()},
                 {nameof(ShaderBuiltins.Min), SimpleNameTranslator()},
-                {nameof(ShaderBuiltins.Mod), SimpleNameTranslator("fmod")},
+                {nameof(ShaderBuiltins.Mod), Mod},
                 {nameof(ShaderBuiltins.Mul), MatrixMul},
                 {nameof(ShaderBuiltins.Pow), Pow},
                 {nameof(ShaderBuiltins.Round), Round},
@@ -697,6 +697,11 @@ namespace ShaderGen.Metal
             string p1 = $"{parameters[1].Identifier}{(isFloat ? string.Empty : "`")}";
             return AddCheck(parameters[0].FullTypeName,
                 $"({p0}-{p1}*trunc({p0}/{p1}))");
+        }
+
+        private static string Mod(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return $"{parameters[0].Identifier}%{parameters[1].Identifier}";
         }
 
         private static readonly HashSet<string> _oneDimensionalTypes =

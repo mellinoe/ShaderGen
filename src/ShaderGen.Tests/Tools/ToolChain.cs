@@ -531,7 +531,11 @@ namespace ShaderGen.Tests.Tools
                 {
                     if (e.Data == null)
                     {
-                        outputWaitHandle.Set();
+                        try
+                        {
+                            outputWaitHandle.Set();
+                        }
+                        catch { }
                     }
                     else
                     {
@@ -542,7 +546,11 @@ namespace ShaderGen.Tests.Tools
                 {
                     if (e.Data == null)
                     {
-                        errorWaitHandle.Set();
+                        try
+                        {
+                            errorWaitHandle.Set();
+                        }
+                        catch { }
                     }
                     else
                     {
