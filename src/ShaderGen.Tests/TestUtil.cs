@@ -4,20 +4,27 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.CodeAnalysis.Text;
 using System.Runtime.InteropServices;
 using System.Threading;
-using ShaderGen.Glsl;
-using ShaderGen.Hlsl;
 using ShaderGen.Tests.Tools;
 
 namespace ShaderGen.Tests
 {
-    internal class TestUtil
+    internal static class TestUtil
     {
+        /// <summary>
+        /// A string of '═' symbols
+        /// </summary>
+        public static readonly string Spacer1 = new string('═', 80);
+
+        /// <summary>
+        /// A string of '━' symbols
+        /// </summary>
+        public static readonly string Spacer2 = new string('━', 80);
+
         private static readonly string ProjectBasePath = Path.Combine(AppContext.BaseDirectory, "TestAssets");
 
         public static Compilation GetCompilation()
@@ -147,16 +154,21 @@ namespace ShaderGen.Tests
             => ToolChain.Requires(features, false).Select(t => t.CreateBackend(compilation))
                 .ToArray();
 
-        public static IReadOnlyCollection<(string fieldName, object aValue, object bValue)> DeepCompareObjectFields<T>(T a, T b)
+        public static IReadOnlyList<(string fieldName, object aValue, object bValue)> DeepCompareObjectFields(object a, object b)
         {
             // Creat failures list
             List<(string fieldName, object aValue, object bValue)> failures = new List<(string fieldName, object aValue, object bValue)>();
+
+            if (a == b)
+            {
+                return failures;
+            }
 
             // Get dictionary of fields by field name and type
             Dictionary<Type, IReadOnlyCollection<FieldInfo>> childFieldInfos =
                 new Dictionary<Type, IReadOnlyCollection<FieldInfo>>();
 
-            Type currentType = typeof(T);
+            Type currentType = a?.GetType() ?? b.GetType();
             object aValue = a;
             object bValue = b;
             Stack<(string fieldName, Type fieldType, object aValue, object bValue)> stack
@@ -250,5 +262,160 @@ namespace ShaderGen.Tests
 
             return Unsafe.Read<T>(floats);
         }
+
+        /// <summary>
+        /// Gets a set of random floats.
+        /// </summary>
+        /// <param name="floatCount">The number of floats.</param>
+        /// <param name="minMantissa">The minimum mantissa.</param>
+        /// <param name="maxMantissa">The maximum mantissa.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException">minMantissa
+        /// or
+        /// maxMantissa</exception>
+        public static float[] GetRandomFloats(int floatCount, int minMantissa = -126, int maxMantissa = 128)
+        {
+            Random random = _randomGenerators.Value;
+            float[] floats = new float[floatCount];
+            for (int i = 0; i < floatCount; i++)
+            {
+                floats[i] = (float)((random.NextDouble() * 2.0 - 1.0) * Math.Pow(2.0, random.Next(minMantissa, maxMantissa)));
+            }
+
+            return floats;
+        }
+
+        #region ToMemorySize from https://github.com/webappsuk/CoreLibraries/blob/fbbebc99bc5c1f2e8b140c6c387e3ede4f89b40c/Utilities/UtilityExtensions.cs#L2951-L3116
+        private static readonly string[] _memoryUnitsLong =
+        {
+            " byte",
+            " kilobyte",
+            " megabyte",
+            " gigabyte",
+            " terabyte",
+            " petabyte",
+            " exabyte"
+        };
+
+        private static readonly string[] _memoryUnitsShort = { "B", "KB", "MB", "GB", "TB", "PB", "EB" };
+
+        /// <summary>
+        /// Converts a number of bytes to a friendly memory size.
+        /// </summary>
+        /// <param name="bytes">The bytes.</param>
+        /// <param name="longUnits">if set to <see langword="true" /> use long form unit names instead of symbols.</param>
+        /// <param name="decimalPlaces">The number of decimal places between 0 and 16 (ignored for bytes).</param>
+        /// <param name="breakPoint">The break point between 0 and 1024 (or 0D to base on decimal points).</param>
+        /// <returns>System.String.</returns>
+        public static string ToMemorySize(
+            this int bytes,
+            bool longUnits = false,
+            uint decimalPlaces = 1,
+            double breakPoint = 512D) => ToMemorySize((double)bytes, longUnits, decimalPlaces, breakPoint);
+
+        /// <summary>
+        /// Converts a number of bytes to a friendly memory size.
+        /// </summary>
+        /// <param name="bytes">The bytes.</param>
+        /// <param name="longUnits">if set to <see langword="true" /> use long form unit names instead of symbols.</param>
+        /// <param name="decimalPlaces">The number of decimal places between 0 and 16 (ignored for bytes).</param>
+        /// <param name="breakPoint">The break point between 0 and 1024 (or 0D to base on decimal points).</param>
+        /// <returns>System.String.</returns>
+        public static string ToMemorySize(
+            this long bytes,
+            bool longUnits = false,
+            uint decimalPlaces = 1,
+            double breakPoint = 512D) => ToMemorySize((double)bytes, longUnits, decimalPlaces, breakPoint);
+
+        /// <summary>
+        /// Converts a number of bytes to a friendly memory size.
+        /// </summary>
+        /// <param name="bytes">The bytes.</param>
+        /// <param name="longUnits">if set to <see langword="true" /> use long form unit names instead of symbols.</param>
+        /// <param name="decimalPlaces">The number of decimal places between 0 and 16 (ignored for bytes).</param>
+        /// <param name="breakPoint">The break point between 0 and 1024 (or 0D to base on decimal points).</param>
+        /// <returns>System.String.</returns>
+        public static string ToMemorySize(
+            this double bytes,
+            bool longUnits = false,
+            uint decimalPlaces = 1,
+            double breakPoint = 512D)
+        {
+            if (decimalPlaces < 1)
+            {
+                decimalPlaces = 0;
+            }
+            else if (decimalPlaces > 16)
+            {
+                decimalPlaces = 16;
+            }
+
+            // 921.6 is 0.9*1024, this means that be default the breakpoint will round up the last decimal place.
+            if (breakPoint < 1)
+            {
+                breakPoint = 921.6D * Math.Pow(10, -decimalPlaces);
+            }
+            else if (breakPoint > 1023)
+            {
+                breakPoint = 1023;
+            }
+
+            uint maxDecimalPlaces = 0;
+            uint unit = 0;
+            double amount = bytes;
+            while ((Math.Abs(amount) >= breakPoint) &&
+                   (unit < 6))
+            {
+                amount /= 1024;
+                unit++;
+                maxDecimalPlaces = Math.Min(decimalPlaces, maxDecimalPlaces + 3);
+            }
+
+            string format = "{0:N" + maxDecimalPlaces + "}{1}";
+            return string.Format(
+                format,
+                amount,
+                longUnits
+                    ? _memoryUnitsLong[unit]
+                    : _memoryUnitsShort[unit]);
+        }
+        #endregion
+
+        public static bool ApproximatelyEqual(this float a, float b, float epsilon = float.Epsilon)
+        {
+            const float floatNormal = (1 << 23) * float.Epsilon;
+
+            if (a == b)
+            {
+                // Shortcut, handles infinities
+                return true;
+            }
+
+            float diff = Math.Abs(a - b);
+            if (a == 0.0f || b == 0.0f || diff < floatNormal)
+            {
+                // a or b is zero, or both are extremely close to it.
+                // relative error is less meaningful here
+                return diff < (epsilon * floatNormal);
+            }
+
+            float absA = Math.Abs(a);
+            float absB = Math.Abs(b);
+            // use relative error
+            return diff / Math.Min((absA + absB), float.MaxValue) < epsilon;
+        }
+
+        /// <summary>
+        /// The unicode characters to represent a pie chart.
+        /// </summary>
+        private static readonly char[] UnicodePieChars = { '○', '◔', '◑', '◕', '●' };
+
+        /// <summary>
+        /// Gets the unicode symbol to represent the <paramref name="ratio"/> as a pie chart.
+        /// </summary>
+        /// <param name="ratio">The ratio.</param>
+        /// <returns></returns>
+        public static char GetUnicodePieChart(double ratio) =>
+            UnicodePieChars[(int)Math.Round(Math.Max(Math.Min(ratio, 1.0), 0.0) * (UnicodePieChars.Length - 1))];
     }
 }

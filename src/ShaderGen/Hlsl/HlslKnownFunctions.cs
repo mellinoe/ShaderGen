@@ -23,9 +23,9 @@ namespace ShaderGen.Hlsl
                 { nameof(ShaderBuiltins.Acosh), Acosh },
                 { nameof(ShaderBuiltins.Asin), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Asinh), Asinh },
-                { nameof(ShaderBuiltins.Atan), Atan },// Note atan supports both (x) and (y,x)
+                { nameof(ShaderBuiltins.Atan), Atan },
                 { nameof(ShaderBuiltins.Atanh), Atanh },
-                { nameof(ShaderBuiltins.Cbrt), CubeRoot }, // We can calculate the 1/3rd power, which might not give exactly the same result?
+                { nameof(ShaderBuiltins.Cbrt), CubeRoot },
                 { nameof(ShaderBuiltins.Ceiling), SimpleNameTranslator("ceil") },
                 { nameof(ShaderBuiltins.Clamp), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.ClipToTextureCoordinates), ClipToTextureCoordinates },
@@ -39,6 +39,7 @@ namespace ShaderGen.Hlsl
                 { nameof(ShaderBuiltins.DispatchThreadID), DispatchThreadID },
                 { nameof(ShaderBuiltins.Exp), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Floor), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.FMod), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Frac), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.GroupThreadID), GroupThreadID },
                 { nameof(ShaderBuiltins.InstanceID), InstanceID },
@@ -51,10 +52,9 @@ namespace ShaderGen.Hlsl
                 { nameof(ShaderBuiltins.Log10), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Max), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Min), SimpleNameTranslator() },
-                // Potential BUG: https://stackoverflow.com/questions/7610631/glsl-mod-vs-hlsl-fmod
-                { nameof(ShaderBuiltins.Mod), SimpleNameTranslator("fmod") },
+                { nameof(ShaderBuiltins.Mod), Mod },
                 { nameof(ShaderBuiltins.Mul), SimpleNameTranslator() },
-                { nameof(ShaderBuiltins.Pow), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Pow), Pow },
                 { nameof(ShaderBuiltins.Round), Round },
                 { nameof(ShaderBuiltins.Sample), Sample },
                 { nameof(ShaderBuiltins.SampleComparisonLevelZero), SampleComparisonLevelZero },
@@ -205,7 +205,7 @@ namespace ShaderGen.Hlsl
                 { "Log10", SimpleNameTranslator() },
                 { "Max", SimpleNameTranslator() },
                 { "Min", SimpleNameTranslator() },
-                { "Pow", SimpleNameTranslator() },
+                { "Pow", Pow },
                 { "Round", Round },
                 { "Sin", SimpleNameTranslator() },
                 { "Sinh", SimpleNameTranslator() },
@@ -531,12 +531,6 @@ namespace ShaderGen.Hlsl
             return $"{shaderType}({string.Join(",", Enumerable.Range(0, elementCount).Select(i => v))})";
         }
 
-        private static string CubeRoot(string typeName, string methodName, InvocationParameterInfo[] parameters)
-        {
-            InvocationParameterInfo firstParameter = parameters[0];
-            return $"pow({firstParameter.Identifier}, {Cvc(firstParameter.FullTypeName, 0.333333333333333f)})";
-        }
-
         private static string Log(string typeName, string methodName, InvocationParameterInfo[] parameters)
         {
             if (parameters.Length < 2)
@@ -603,7 +597,64 @@ namespace ShaderGen.Hlsl
             string target = firstParameter.Identifier;
             // Note this is pretty inaccurate on the GPU!
             return
-                $"log(({Cvc(firstParameter.FullTypeName, 1f)}+{target})/({Cvc(firstParameter.FullTypeName, 1f)}-{target})/{Cvc(firstParameter.FullTypeName, 2f)})";
+                $"log(({Cvc(firstParameter.FullTypeName, 1f)}+{target})/({Cvc(firstParameter.FullTypeName, 1f)}-{target}))/{Cvc(firstParameter.FullTypeName, 2f)}";
+        }
+
+        private static string CubeRoot(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            return AddCheck(parameters[0].FullTypeName,
+                $"pow(abs({parameters[0].Identifier}`), 0.333333333333333)");
+        }
+
+        private static string Pow(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            // Direct 3D returns NaN for -ve P0's, whereas Vulkan ignores sign.
+            return AddCheck(parameters[0].FullTypeName,
+                $"pow(abs({parameters[0].Identifier}`),{parameters[1].Identifier}`)");
+        }
+
+        private static string Mod(string typeName, string methodName, InvocationParameterInfo[] parameters)
+        {
+            // D3D & Vulkan return Max when max < min, but OpenGL returns Min, so we need
+            // to correct by returning Max when max < min.
+            bool isFloat = parameters[1].FullTypeName == "System.Single" || parameters[1].FullTypeName == "float";
+            string p0 = $"{parameters[0].Identifier}`";
+            string p1 = $"{parameters[1].Identifier}{(isFloat ? string.Empty : "`")}";
+            return AddCheck(parameters[0].FullTypeName,
+                $"({p0}-{p1}*floor({p0}/{p1}))");
+        }
+
+        private static readonly string[] _vectorAccessors = { "x", "y", "z", "w" };
+
+        private static readonly HashSet<string> _oneDimensionalTypes =
+            new HashSet<string>(new[]
+                {
+                    "System.Single",
+                    "float",
+                    "System.Int32",
+                    "int",
+                    "System.UInt32",
+                    "uint"
+                },
+                StringComparer.InvariantCultureIgnoreCase);
+
+        /// <summary>
+        /// Implements a check for each element of a vector.
+        /// </summary>
+        /// <param name="typeName">Name of the type.</param>
+        /// <param name="check">The check.</param>
+        /// <returns></returns>
+        private static string AddCheck(string typeName, string check)
+        {
+            if (_oneDimensionalTypes.Contains(typeName))
+            {
+                // The check can stay as it is, strip the '`' characters.
+                return check.Replace("`", string.Empty);
+            }
+
+            GetVectorTypeInfo(typeName, out string shaderType, out int elementCount);
+            return
+                $"{shaderType}({string.Join(",", _vectorAccessors.Take(elementCount).Select(a => check.Replace("`", "." + a)))})";
         }
     }
 

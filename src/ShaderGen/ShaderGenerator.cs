@@ -8,8 +8,8 @@ namespace ShaderGen
     public partial class ShaderGenerator
     {
         private readonly Compilation _compilation;
-        private readonly IReadOnlyCollection<ShaderSetInfo> _shaderSets = new List<ShaderSetInfo>();
-        private readonly IReadOnlyCollection<LanguageBackend> _languages;
+        private readonly IReadOnlyList<ShaderSetInfo> _shaderSets = new List<ShaderSetInfo>();
+        private readonly IReadOnlyList<LanguageBackend> _languages;
         private readonly IShaderSetProcessor[] _processors;
 
         public ShaderGenerator(
