@@ -187,6 +187,12 @@ namespace ShaderGen
         public static Vector3 Exp(Vector3 value) => new Vector3((float)Math.Exp(value.X), (float)Math.Exp(value.Y), (float)Math.Exp(value.Z));
         public static Vector4 Exp(Vector4 value) => new Vector4((float)Math.Exp(value.X), (float)Math.Exp(value.Y), (float)Math.Exp(value.Z), (float)Math.Exp(value.W));
 
+        // Exp2
+        public static float Exp2(float value) => (float) Math.Pow(2.0, value);
+        public static Vector2 Exp2(Vector2 value) => new Vector2((float) Math.Pow(2.0, value.X), (float) Math.Pow(2.0, value.Y));
+        public static Vector3 Exp2(Vector3 value) => new Vector3((float) Math.Pow(2.0, value.X), (float) Math.Pow(2.0, value.Y), (float) Math.Pow(2.0, value.Z));
+        public static Vector4 Exp2(Vector4 value) => new Vector4((float) Math.Pow(2.0, value.X), (float) Math.Pow(2.0, value.Y), (float) Math.Pow(2.0, value.Z), (float) Math.Pow(2.0, value.W));
+
         // Floor
         public static float Floor(float value) => (float)Math.Floor(value);
         public static Vector2 Floor(Vector2 value) => new Vector2((float)Math.Floor(value.X), (float)Math.Floor(value.Y));

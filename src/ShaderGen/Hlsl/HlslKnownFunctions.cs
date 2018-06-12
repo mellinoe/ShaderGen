@@ -39,6 +39,7 @@ namespace ShaderGen.Hlsl
                 { nameof(ShaderBuiltins.Discard), Discard },
                 { nameof(ShaderBuiltins.DispatchThreadID), DispatchThreadID },
                 { nameof(ShaderBuiltins.Exp), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Exp2), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Floor), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.FMod), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Frac), SimpleNameTranslator() },
