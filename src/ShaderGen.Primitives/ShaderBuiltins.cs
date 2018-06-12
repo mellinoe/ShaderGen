@@ -321,6 +321,13 @@ namespace ShaderGen
         public static Vector3 Saturate(Vector3 value) => new Vector3(Clamp(value.X, 0f, 1f), Clamp(value.Y, 0f, 1f), Clamp(value.Z, 0f, 1f));
         public static Vector4 Saturate(Vector4 value) => new Vector4(Clamp(value.X, 0f, 1f), Clamp(value.Y, 0f, 1f), Clamp(value.Z, 0f, 1f), Clamp(value.W, 0f, 1f));
 
+        // Sign
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Sign(float value) => value > 0f ? 1f : (value < 0f ? -1f : 0f);
+        public static Vector2 Sign(Vector2 value) => new Vector2(Sign(value.X), Sign(value.Y));
+        public static Vector3 Sign(Vector3 value) => new Vector3(Sign(value.X), Sign(value.Y), Sign(value.Z));
+        public static Vector4 Sign(Vector4 value) => new Vector4(Sign(value.X), Sign(value.Y), Sign(value.Z), Sign(value.W));
+
         // Sin
         public static float Sin(float value) => (float)Math.Sin(value);
         public static Vector2 Sin(Vector2 value) => new Vector2((float)Math.Sin(value.X), (float)Math.Sin(value.Y));

@@ -64,6 +64,7 @@ namespace ShaderGen.Glsl
                 { nameof(ShaderBuiltins.SampleComparisonLevelZero), SampleComparisonLevelZero },
                 { nameof(ShaderBuiltins.SampleGrad), SampleGrad },
                 { nameof(ShaderBuiltins.Saturate), Saturate },
+                { nameof(ShaderBuiltins.Sign), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Sin), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Sinh), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.SmoothStep), SimpleNameTranslator() },
