@@ -59,6 +59,7 @@ namespace ShaderGen.Hlsl
                 { nameof(ShaderBuiltins.Pow), Pow },
                 { nameof(ShaderBuiltins.Radians), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Round), Round },
+                { nameof(ShaderBuiltins.Rsqrt), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Sample), Sample },
                 { nameof(ShaderBuiltins.SampleComparisonLevelZero), SampleComparisonLevelZero },
                 { nameof(ShaderBuiltins.SampleGrad), SampleGrad },

@@ -309,6 +309,12 @@ namespace ShaderGen
         public static Vector3 Round(Vector3 value) => new Vector3((float)Math.Round(value.X), (float)Math.Round(value.Y), (float)Math.Round(value.Z));
         public static Vector4 Round(Vector4 value) => new Vector4((float)Math.Round(value.X), (float)Math.Round(value.Y), (float)Math.Round(value.Z), (float)Math.Round(value.W));
 
+        // Rsqrt
+        public static float Rsqrt(float value) => (float)(1.0/Math.Sqrt(value));
+        public static Vector2 Rsqrt(Vector2 value) => new Vector2((float)(1.0/Math.Sqrt(value.X)), (float)(1.0/Math.Sqrt(value.Y)));
+        public static Vector3 Rsqrt(Vector3 value) => new Vector3((float)(1.0/Math.Sqrt(value.X)), (float)(1.0/Math.Sqrt(value.Y)), (float)(1.0/Math.Sqrt(value.Z)));
+        public static Vector4 Rsqrt(Vector4 value) => new Vector4((float)(1.0/Math.Sqrt(value.X)), (float)(1.0/Math.Sqrt(value.Y)), (float)(1.0/Math.Sqrt(value.Z)), (float)(1.0/Math.Sqrt(value.W)));
+
         // Saturate
         public static float Saturate(float value) => Clamp(value, 0f, 1f);
         public static Vector2 Saturate(Vector2 value) => new Vector2(Clamp(value.X, 0f, 1f), Clamp(value.Y, 0f, 1f));

@@ -59,6 +59,7 @@ namespace ShaderGen.Glsl
                 { nameof(ShaderBuiltins.Pow), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Radians), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Round), Round },
+                { nameof(ShaderBuiltins.Rsqrt), SimpleNameTranslator("inversesqrt") },
                 { nameof(ShaderBuiltins.Sample), Sample },
                 { nameof(ShaderBuiltins.SampleComparisonLevelZero), SampleComparisonLevelZero },
                 { nameof(ShaderBuiltins.SampleGrad), SampleGrad },
