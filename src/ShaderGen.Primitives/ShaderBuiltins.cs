@@ -13,6 +13,8 @@ namespace ShaderGen
 
         public const float E = (float)Math.E;
 
+        public const float DegreesPerRadian = 57.2957795130823f;
+
         /*
          * Misc
          */
@@ -173,6 +175,12 @@ namespace ShaderGen
         public static Vector3 Cosh(Vector3 value) => new Vector3((float)Math.Cosh(value.X), (float)Math.Cosh(value.Y), (float)Math.Cosh(value.Z));
         public static Vector4 Cosh(Vector4 value) => new Vector4((float)Math.Cosh(value.X), (float)Math.Cosh(value.Y), (float)Math.Cosh(value.Z), (float)Math.Cosh(value.W));
 
+        // Degrees
+        public static float Degrees(float value) => value * DegreesPerRadian;
+        public static Vector2 Degrees(Vector2 value) => new Vector2(value.X * DegreesPerRadian, value.Y * DegreesPerRadian);
+        public static Vector3 Degrees(Vector3 value) => new Vector3(value.X * DegreesPerRadian, value.Y * DegreesPerRadian, value.Z * DegreesPerRadian);
+        public static Vector4 Degrees(Vector4 value) => new Vector4(value.X * DegreesPerRadian, value.Y * DegreesPerRadian, value.Z * DegreesPerRadian, value.W * DegreesPerRadian);
+
         // Exp
         public static float Exp(float value) => (float)Math.Exp(value);
         public static Vector2 Exp(Vector2 value) => new Vector2((float)Math.Exp(value.X), (float)Math.Exp(value.Y));
@@ -279,9 +287,15 @@ namespace ShaderGen
         // Pow
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Pow(float x, float y) => (float)Math.Pow(Math.Abs(x), y);
-        public static Vector2 Pow(Vector2 y, Vector2 x) => new Vector2((float)Pow(y.X, x.X), Pow(y.Y, x.Y));
+        public static Vector2 Pow(Vector2 y, Vector2 x) => new Vector2(Pow(y.X, x.X), Pow(y.Y, x.Y));
         public static Vector3 Pow(Vector3 y, Vector3 x) => new Vector3(Pow(y.X, x.X), Pow(y.Y, x.Y), Pow(y.Z, x.Z));
         public static Vector4 Pow(Vector4 y, Vector4 x) => new Vector4(Pow(y.X, x.X), Pow(y.Y, x.Y), Pow(y.Z, x.Z), Pow(y.W, x.W));
+
+        // Radians
+        public static float Radians(float value) => value / DegreesPerRadian;
+        public static Vector2 Radians(Vector2 value) => new Vector2(value.X / DegreesPerRadian, value.Y / DegreesPerRadian);
+        public static Vector3 Radians(Vector3 value) => new Vector3(value.X / DegreesPerRadian, value.Y / DegreesPerRadian, value.Z / DegreesPerRadian);
+        public static Vector4 Radians(Vector4 value) => new Vector4(value.X / DegreesPerRadian, value.Y / DegreesPerRadian, value.Z / DegreesPerRadian, value.W / DegreesPerRadian);
 
         // Round
         public static float Round(float value) => (float)Math.Round(value);

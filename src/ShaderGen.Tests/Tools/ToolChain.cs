@@ -26,7 +26,7 @@ namespace ShaderGen.Tests.Tools
         /// <summary>
         /// The default timeout in ms to allow for a tool to run.
         /// </summary>
-        public const int DefaultTimeout = 15000;
+        public const int DefaultTimeout = 30000;
 
         /// <summary>
         /// Compiles and validates code in one step.

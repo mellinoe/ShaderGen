@@ -14,7 +14,8 @@ namespace ShaderGen.Glsl
             Dictionary<string, string> builtinMappings = new Dictionary<string, string>()
             {
                 { nameof(ShaderBuiltins.E), "2.71828182845905" },
-                { nameof(ShaderBuiltins.PI), "3.14159265358979" }
+                { nameof(ShaderBuiltins.PI), "3.14159265358979" },
+                { nameof(ShaderBuiltins.DegreesPerRadian), "57.2957795130823" }
             };
             ret.Add("ShaderGen.ShaderBuiltins", builtinMappings);
 
