@@ -68,6 +68,7 @@ namespace ShaderGen.Glsl
                 { nameof(ShaderBuiltins.Sinh), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.SmoothStep), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Sqrt), SimpleNameTranslator() },
+                { nameof(ShaderBuiltins.Step), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Store), Store },
                 { nameof(ShaderBuiltins.Tan), SimpleNameTranslator() },
                 { nameof(ShaderBuiltins.Tanh), SimpleNameTranslator() },

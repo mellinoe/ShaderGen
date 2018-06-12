@@ -359,6 +359,13 @@ namespace ShaderGen
         public static Vector4 SmoothStep(Vector4 min, Vector4 max, Vector4 x) => new Vector4(SmoothStep(min.X, max.X, x.X), SmoothStep(min.Y, max.Y, x.Y), SmoothStep(min.Z, max.Z, x.Z), SmoothStep(min.W, max.W, x.W));
         public static Vector4 SmoothStep(float min, float max, Vector4 x) => new Vector4(SmoothStep(min, max, x.X), SmoothStep(min, max, x.Y), SmoothStep(min, max, x.Z), SmoothStep(min, max, x.W));
 
+        // Step
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Step(float x, float y) => y < x ? 0f : 1f;
+        public static Vector2 Step(Vector2 y, Vector2 x) => new Vector2(Step(y.X, x.X), Step(y.Y, x.Y));
+        public static Vector3 Step(Vector3 y, Vector3 x) => new Vector3(Step(y.X, x.X), Step(y.Y, x.Y), Step(y.Z, x.Z));
+        public static Vector4 Step(Vector4 y, Vector4 x) => new Vector4(Step(y.X, x.X), Step(y.Y, x.Y), Step(y.Z, x.Z), Step(y.W, x.W));
+
         // Tan
         public static float Tan(float value) => (float)Math.Tan(value);
         public static Vector2 Tan(Vector2 value) => new Vector2((float)Math.Tan(value.X), (float)Math.Tan(value.Y));
