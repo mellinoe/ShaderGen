@@ -13,6 +13,8 @@ namespace ShaderGen
 
         public const float E = (float)Math.E;
 
+        public const float DegreesPerRadian = 57.2957795130823f;
+
         /*
          * Misc
          */
@@ -173,11 +175,23 @@ namespace ShaderGen
         public static Vector3 Cosh(Vector3 value) => new Vector3((float)Math.Cosh(value.X), (float)Math.Cosh(value.Y), (float)Math.Cosh(value.Z));
         public static Vector4 Cosh(Vector4 value) => new Vector4((float)Math.Cosh(value.X), (float)Math.Cosh(value.Y), (float)Math.Cosh(value.Z), (float)Math.Cosh(value.W));
 
+        // Degrees
+        public static float Degrees(float value) => value * DegreesPerRadian;
+        public static Vector2 Degrees(Vector2 value) => new Vector2(value.X * DegreesPerRadian, value.Y * DegreesPerRadian);
+        public static Vector3 Degrees(Vector3 value) => new Vector3(value.X * DegreesPerRadian, value.Y * DegreesPerRadian, value.Z * DegreesPerRadian);
+        public static Vector4 Degrees(Vector4 value) => new Vector4(value.X * DegreesPerRadian, value.Y * DegreesPerRadian, value.Z * DegreesPerRadian, value.W * DegreesPerRadian);
+
         // Exp
         public static float Exp(float value) => (float)Math.Exp(value);
         public static Vector2 Exp(Vector2 value) => new Vector2((float)Math.Exp(value.X), (float)Math.Exp(value.Y));
         public static Vector3 Exp(Vector3 value) => new Vector3((float)Math.Exp(value.X), (float)Math.Exp(value.Y), (float)Math.Exp(value.Z));
         public static Vector4 Exp(Vector4 value) => new Vector4((float)Math.Exp(value.X), (float)Math.Exp(value.Y), (float)Math.Exp(value.Z), (float)Math.Exp(value.W));
+
+        // Exp2
+        public static float Exp2(float value) => (float) Math.Pow(2.0, value);
+        public static Vector2 Exp2(Vector2 value) => new Vector2((float) Math.Pow(2.0, value.X), (float) Math.Pow(2.0, value.Y));
+        public static Vector3 Exp2(Vector3 value) => new Vector3((float) Math.Pow(2.0, value.X), (float) Math.Pow(2.0, value.Y), (float) Math.Pow(2.0, value.Z));
+        public static Vector4 Exp2(Vector4 value) => new Vector4((float) Math.Pow(2.0, value.X), (float) Math.Pow(2.0, value.Y), (float) Math.Pow(2.0, value.Z), (float) Math.Pow(2.0, value.W));
 
         // Floor
         public static float Floor(float value) => (float)Math.Floor(value);
@@ -279,9 +293,15 @@ namespace ShaderGen
         // Pow
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Pow(float x, float y) => (float)Math.Pow(Math.Abs(x), y);
-        public static Vector2 Pow(Vector2 y, Vector2 x) => new Vector2((float)Pow(y.X, x.X), Pow(y.Y, x.Y));
+        public static Vector2 Pow(Vector2 y, Vector2 x) => new Vector2(Pow(y.X, x.X), Pow(y.Y, x.Y));
         public static Vector3 Pow(Vector3 y, Vector3 x) => new Vector3(Pow(y.X, x.X), Pow(y.Y, x.Y), Pow(y.Z, x.Z));
         public static Vector4 Pow(Vector4 y, Vector4 x) => new Vector4(Pow(y.X, x.X), Pow(y.Y, x.Y), Pow(y.Z, x.Z), Pow(y.W, x.W));
+
+        // Radians
+        public static float Radians(float value) => value / DegreesPerRadian;
+        public static Vector2 Radians(Vector2 value) => new Vector2(value.X / DegreesPerRadian, value.Y / DegreesPerRadian);
+        public static Vector3 Radians(Vector3 value) => new Vector3(value.X / DegreesPerRadian, value.Y / DegreesPerRadian, value.Z / DegreesPerRadian);
+        public static Vector4 Radians(Vector4 value) => new Vector4(value.X / DegreesPerRadian, value.Y / DegreesPerRadian, value.Z / DegreesPerRadian, value.W / DegreesPerRadian);
 
         // Round
         public static float Round(float value) => (float)Math.Round(value);
@@ -289,11 +309,24 @@ namespace ShaderGen
         public static Vector3 Round(Vector3 value) => new Vector3((float)Math.Round(value.X), (float)Math.Round(value.Y), (float)Math.Round(value.Z));
         public static Vector4 Round(Vector4 value) => new Vector4((float)Math.Round(value.X), (float)Math.Round(value.Y), (float)Math.Round(value.Z), (float)Math.Round(value.W));
 
+        // Rsqrt
+        public static float Rsqrt(float value) => (float)(1.0/Math.Sqrt(value));
+        public static Vector2 Rsqrt(Vector2 value) => new Vector2((float)(1.0/Math.Sqrt(value.X)), (float)(1.0/Math.Sqrt(value.Y)));
+        public static Vector3 Rsqrt(Vector3 value) => new Vector3((float)(1.0/Math.Sqrt(value.X)), (float)(1.0/Math.Sqrt(value.Y)), (float)(1.0/Math.Sqrt(value.Z)));
+        public static Vector4 Rsqrt(Vector4 value) => new Vector4((float)(1.0/Math.Sqrt(value.X)), (float)(1.0/Math.Sqrt(value.Y)), (float)(1.0/Math.Sqrt(value.Z)), (float)(1.0/Math.Sqrt(value.W)));
+
         // Saturate
         public static float Saturate(float value) => Clamp(value, 0f, 1f);
         public static Vector2 Saturate(Vector2 value) => new Vector2(Clamp(value.X, 0f, 1f), Clamp(value.Y, 0f, 1f));
         public static Vector3 Saturate(Vector3 value) => new Vector3(Clamp(value.X, 0f, 1f), Clamp(value.Y, 0f, 1f), Clamp(value.Z, 0f, 1f));
         public static Vector4 Saturate(Vector4 value) => new Vector4(Clamp(value.X, 0f, 1f), Clamp(value.Y, 0f, 1f), Clamp(value.Z, 0f, 1f), Clamp(value.W, 0f, 1f));
+
+        // Sign
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Sign(float value) => value > 0f ? 1f : (value < 0f ? -1f : 0f);
+        public static Vector2 Sign(Vector2 value) => new Vector2(Sign(value.X), Sign(value.Y));
+        public static Vector3 Sign(Vector3 value) => new Vector3(Sign(value.X), Sign(value.Y), Sign(value.Z));
+        public static Vector4 Sign(Vector4 value) => new Vector4(Sign(value.X), Sign(value.Y), Sign(value.Z), Sign(value.W));
 
         // Sin
         public static float Sin(float value) => (float)Math.Sin(value);
@@ -332,6 +365,13 @@ namespace ShaderGen
         public static Vector3 SmoothStep(float min, float max, Vector3 x) => new Vector3(SmoothStep(min, max, x.X), SmoothStep(min, max, x.Y), SmoothStep(min, max, x.Z));
         public static Vector4 SmoothStep(Vector4 min, Vector4 max, Vector4 x) => new Vector4(SmoothStep(min.X, max.X, x.X), SmoothStep(min.Y, max.Y, x.Y), SmoothStep(min.Z, max.Z, x.Z), SmoothStep(min.W, max.W, x.W));
         public static Vector4 SmoothStep(float min, float max, Vector4 x) => new Vector4(SmoothStep(min, max, x.X), SmoothStep(min, max, x.Y), SmoothStep(min, max, x.Z), SmoothStep(min, max, x.W));
+
+        // Step
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Step(float x, float y) => y < x ? 0f : 1f;
+        public static Vector2 Step(Vector2 y, Vector2 x) => new Vector2(Step(y.X, x.X), Step(y.Y, x.Y));
+        public static Vector3 Step(Vector3 y, Vector3 x) => new Vector3(Step(y.X, x.X), Step(y.Y, x.Y), Step(y.Z, x.Z));
+        public static Vector4 Step(Vector4 y, Vector4 x) => new Vector4(Step(y.X, x.X), Step(y.Y, x.Y), Step(y.Z, x.Z), Step(y.W, x.W));
 
         // Tan
         public static float Tan(float value) => (float)Math.Tan(value);

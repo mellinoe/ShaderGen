@@ -35,11 +35,13 @@ namespace ShaderGen.Metal
                 {nameof(ShaderBuiltins.DdxFine), SimpleNameTranslator("dfdx")},
                 {nameof(ShaderBuiltins.Ddy), SimpleNameTranslator("dfdy")},
                 {nameof(ShaderBuiltins.DdyFine), SimpleNameTranslator("dfdy")},
+                {nameof(ShaderBuiltins.Degrees), Degrees},
                 {nameof(ShaderBuiltins.Discard), Discard},
                 {nameof(ShaderBuiltins.DispatchThreadID), DispatchThreadID},
                 {nameof(ShaderBuiltins.Exp), SimpleNameTranslator()},
+                {nameof(ShaderBuiltins.Exp2), SimpleNameTranslator()},
                 {nameof(ShaderBuiltins.Floor), SimpleNameTranslator()},
-                {nameof(ShaderBuiltins.FMod), FMod },
+                {nameof(ShaderBuiltins.FMod), FMod},
                 {nameof(ShaderBuiltins.Frac), SimpleNameTranslator("fract")},
                 {nameof(ShaderBuiltins.GroupThreadID), GroupThreadID},
                 {nameof(ShaderBuiltins.InstanceID), InstanceID},
@@ -55,15 +57,19 @@ namespace ShaderGen.Metal
                 {nameof(ShaderBuiltins.Mod), Mod},
                 {nameof(ShaderBuiltins.Mul), MatrixMul},
                 {nameof(ShaderBuiltins.Pow), Pow},
+                {nameof(ShaderBuiltins.Radians), Radians},
                 {nameof(ShaderBuiltins.Round), Round},
+                {nameof(ShaderBuiltins.Rsqrt), SimpleNameTranslator()},
                 {nameof(ShaderBuiltins.Sample), Sample},
                 {nameof(ShaderBuiltins.SampleComparisonLevelZero), SampleComparisonLevelZero},
                 {nameof(ShaderBuiltins.SampleGrad), SampleGrad},
                 {nameof(ShaderBuiltins.Saturate), SimpleNameTranslator()},
+                {nameof(ShaderBuiltins.Sign), SimpleNameTranslator()},
                 {nameof(ShaderBuiltins.Sin), SimpleNameTranslator()},
                 {nameof(ShaderBuiltins.Sinh), SimpleNameTranslator()},
                 {nameof(ShaderBuiltins.SmoothStep), SimpleNameTranslator()},
                 {nameof(ShaderBuiltins.Sqrt), SimpleNameTranslator()},
+                {nameof(ShaderBuiltins.Step), SimpleNameTranslator()},
                 {nameof(ShaderBuiltins.Store), Store},
                 {nameof(ShaderBuiltins.Tan), SimpleNameTranslator()},
                 {nameof(ShaderBuiltins.Tanh), SimpleNameTranslator()},
@@ -739,6 +745,16 @@ namespace ShaderGen.Metal
             GetVectorTypeInfo(typeName, out string shaderType, out int elementCount);
             return
                 $"{shaderType}({string.Join(",", Enumerable.Range(0, elementCount).Select(a => check.Replace("`", $"[{a}]")))})";
+        }
+
+        private static string Degrees(string typename, string methodname, InvocationParameterInfo[] parameters)
+        {
+            return $"({parameters[0].Identifier}*57.2957795130823)";
+        }
+
+        private static string Radians(string typename, string methodname, InvocationParameterInfo[] parameters)
+        {
+            return $"({parameters[0].Identifier}/57.2957795130823)";
         }
     }
 }
