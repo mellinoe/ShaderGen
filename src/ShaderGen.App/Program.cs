@@ -22,14 +22,15 @@ namespace ShaderGen.App
         private static string s_fxcPath;
         private static bool? s_fxcAvailable;
         private static bool? s_glslangValidatorAvailable;
+        private static string s_xcodePath;
 
         private static bool? s_metalMacOSToolsAvailable;
-        const string metalMacOSPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metal";
-        const string metallibMacOSPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metallib";
+        const string metalMacOSPath = @"/Platforms/MacOSX.platform/usr/bin/metal";
+        const string metallibMacOSPath = @"/Platforms/MacOSX.platform/usr/bin/metallib";
 
         private static bool? s_metaliOSToolsAvailable;
-        const string metaliOSPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/usr/bin/metal";
-        const string metallibiOSPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/usr/bin/metallib";
+        const string metaliOSPath = @"/Platforms/iPhoneOS.platform/usr/bin/metal";
+        const string metallibiOSPath = @"/Platforms/iPhoneOS.platform/usr/bin/metallib";
 
         public static int Main(string[] args)
         {
@@ -58,6 +59,8 @@ namespace ShaderGen.App
                 syntax.DefineOption("processorargs", ref processorArgs, false, "Custom information passed to IShaderSetProcessor.");
                 syntax.DefineOption("debug", ref debug, false, "Compiles the shader with debug information when supported.");
             });
+
+            GetXcodePath();
 
             referenceItemsResponsePath = NormalizePath(referenceItemsResponsePath);
             compileItemsResponsePath = NormalizePath(compileItemsResponsePath);
@@ -386,8 +389,8 @@ namespace ShaderGen.App
 
         private static bool CompileMetal(string shaderPath, bool mac, out string path)
         {
-            string metalPath = mac ? metalMacOSPath : "xcrun";
-            string metallibPath = mac ? metallibMacOSPath : "xcrun";
+            string metalPath = mac ? $"{s_xcodePath}{metalMacOSPath}" : "xcrun";
+            string metallibPath = mac ? $"{s_xcodePath}{metallibMacOSPath}" : "xcrun";
 
             string shaderPathWithoutExtension = Path.ChangeExtension(shaderPath, null);
             string extension = mac ? ".metallib" : ".ios.metallib";
@@ -463,7 +466,7 @@ namespace ShaderGen.App
         {
             if (!s_metalMacOSToolsAvailable.HasValue)
             {
-                s_metalMacOSToolsAvailable = File.Exists(metalMacOSPath) && File.Exists(metallibMacOSPath);
+                s_metalMacOSToolsAvailable = File.Exists($"{s_xcodePath}{metalMacOSPath}") && File.Exists($"{s_xcodePath}{metallibMacOSPath}");
             }
 
             return s_metalMacOSToolsAvailable.Value;
@@ -473,7 +476,7 @@ namespace ShaderGen.App
         {
             if (!s_metaliOSToolsAvailable.HasValue)
             {
-                s_metaliOSToolsAvailable = File.Exists(metaliOSPath) && File.Exists(metallibiOSPath);
+                s_metaliOSToolsAvailable = File.Exists($"{s_xcodePath}{metaliOSPath}") && File.Exists($"{s_xcodePath}{metallibiOSPath}");
             }
 
             return s_metaliOSToolsAvailable.Value;
@@ -519,6 +522,26 @@ namespace ShaderGen.App
             }
 
             return null;
+        }
+
+        private static void GetXcodePath()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                ProcessStartInfo startInfo = new ProcessStartInfo
+                {
+                    FileName = "xcode-select", // Specify exe name.
+                    Arguments = "--print-path",
+                    RedirectStandardOutput = true
+                };
+                using (Process process = Process.Start(startInfo))
+                {
+                    using (StreamReader reader = process.StandardOutput)
+                    {
+                        s_xcodePath = reader.ReadLine();
+                    }
+                }
+            }
         }
     }
 }
