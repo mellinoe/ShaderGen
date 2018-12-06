@@ -39,8 +39,7 @@ namespace ShaderGen.Tests.Tools
 
         private const string WindowsKitsFolder = @"C:\Program Files (x86)\Windows Kits";
         private const string VulkanSdkEnvVar = "VULKAN_SDK";
-        private const string DefaultMetalPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metal";
-        private const string DefaultMetallibPath = @"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/bin/metallib";
+        private const string XcrunPath = "/usr/bin/xcrun";
 
         /// <summary>
         /// All the currently available tools by <see cref="LanguageBackend">Backend</see> <see cref="Type"/>.
@@ -131,7 +130,7 @@ namespace ShaderGen.Tests.Tools
                 GraphicsBackend.Metal,
                 typeof(MetalBackend),
                 c => new MetalBackend(c),
-                _metalPath.Value != null ? MetalCompile : (CompileDelegate)null,
+                File.Exists(XcrunPath) ? MetalCompile : (CompileDelegate)null,
                 CreateHeadlessMetal,
                 null);
         }
@@ -801,20 +800,6 @@ namespace ShaderGen.Tests.Tools
                     true,
                     ResourceBindingModel.Improved));
 
-        /*
-         * Metal tool
-         */
-        private static readonly Lazy<string> _metalPath = new Lazy<string>(
-            () => File.Exists(DefaultMetalPath) ? DefaultMetalPath : null,
-            LazyThreadSafetyMode.ExecutionAndPublication);
-
-        /*
-         * Metallib tool
-         */
-        private static readonly Lazy<string> _metallibPath = new Lazy<string>(
-            () => File.Exists(DefaultMetallibPath) ? DefaultMetallibPath : null,
-            LazyThreadSafetyMode.ExecutionAndPublication);
-
         private static CompileResult MetalCompile(string code, Stage stage, string entryPoint)
         {
             using (TempFile inputFile = new TempFile())
@@ -823,15 +808,15 @@ namespace ShaderGen.Tests.Tools
             {
                 File.WriteAllText(inputFile, code, Encoding.UTF8);
 
-                string metalArgs = $"-x metal -mmacosx-version-min=10.12 -o \"{metalOutputFile.FilePath}\" \"{inputFile.FilePath}\"";
-                CompileResult bitcodeResult = Execute(_metalPath.Value, metalArgs, code, metalOutputFile, Encoding.UTF8);
+                string metalArgs = $"metal -c -x metal -mmacosx-version-min=10.12 -o \"{metalOutputFile.FilePath}\" \"{inputFile.FilePath}\"";
+                CompileResult bitcodeResult = Execute(XcrunPath, metalArgs, code, metalOutputFile, Encoding.UTF8);
                 if (bitcodeResult.HasError)
                 {
                     return bitcodeResult;
                 }
 
-                string metallibArgs = $"{metalOutputFile.FilePath} -o {outputFile.FilePath}";
-                return Execute(_metallibPath.Value, metallibArgs, code, outputFile.FilePath);
+                string metallibArgs = $"metallib {metalOutputFile.FilePath} -o {outputFile.FilePath}";
+                return Execute(XcrunPath, metallibArgs, code, outputFile.FilePath);
             }
         }
 

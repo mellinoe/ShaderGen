@@ -23,20 +23,16 @@ namespace ShaderGen.App
         private static bool? s_fxcAvailable;
         private static bool? s_glslangValidatorAvailable;
 
-        private static string s_xcodeMacOSPlatformPath;
-        private static string s_xcodeiOSPlatformPath;
-
         private static bool? s_metalMacOSToolsAvailable;
-        private static bool? s_metaliOSToolsAvailable;
+        private static string s_metalMacPath;
+        private static string s_metallibMacPath;
+
+        private static bool? s_metaliOSAvailable;
+        private static string s_metaliOSPath;
+        private static string s_metallibiOSPath;
 
         const string metalBinPath = @"/usr/bin/metal";
         const string metallibBinPath = @"/usr/bin/metallib";
-
-        private enum XcodeSDK
-        {
-            MacOSX,
-            iPhoneOS
-        }
 
         public static int Main(string[] args)
         {
@@ -65,9 +61,6 @@ namespace ShaderGen.App
                 syntax.DefineOption("processorargs", ref processorArgs, false, "Custom information passed to IShaderSetProcessor.");
                 syntax.DefineOption("debug", ref debug, false, "Compiles the shader with debug information when supported.");
             });
-
-            s_xcodeMacOSPlatformPath = GetXcodePlatformPath(XcodeSDK.MacOSX);
-            s_xcodeiOSPlatformPath = GetXcodePlatformPath(XcodeSDK.iPhoneOS);
 
             referenceItemsResponsePath = NormalizePath(referenceItemsResponsePath);
             compileItemsResponsePath = NormalizePath(compileItemsResponsePath);
@@ -298,7 +291,7 @@ namespace ShaderGen.App
                 paths = new[] { path };
                 return result;
             }
-            else if (langType == typeof(MetalBackend) && AreMetalMacOSToolsAvailable())
+            else if (langType == typeof(MetalBackend) && AreMetalMacOSToolsAvailable() && AreMetaliOSToolsAvailable())
             {
                 bool macOSresult = CompileMetal(shaderPath, true, out string pathMacOS);
                 bool iosResult = CompileMetal(shaderPath, false, out string pathiOS);
@@ -396,15 +389,14 @@ namespace ShaderGen.App
 
         private static bool CompileMetal(string shaderPath, bool mac, out string path)
         {
-            string metalPath = mac ? $"{s_xcodeMacOSPlatformPath}{metalBinPath}" : "xcrun";
-            string metallibPath = mac ? $"{s_xcodeMacOSPlatformPath}{metallibBinPath}" : "xcrun";
+            string metalPath = mac ? s_metalMacPath : s_metaliOSPath;
+            string metallibPath = mac ? s_metallibMacPath : s_metallibiOSPath;
 
             string shaderPathWithoutExtension = Path.ChangeExtension(shaderPath, null);
             string extension = mac ? ".metallib" : ".ios.metallib";
             string outputPath = shaderPathWithoutExtension + extension;
             string bitcodePath = Path.GetTempFileName();
-            string prefix = mac ? string.Empty : "--sdk iphoneos metal";
-            string metalArgs = $"{prefix} -x metal -o {bitcodePath} {shaderPath}";
+            string metalArgs = $"-c -o {bitcodePath} {shaderPath}";
             try
             {
                 ProcessStartInfo metalPSI = new ProcessStartInfo(metalPath, metalArgs);
@@ -418,8 +410,7 @@ namespace ShaderGen.App
                     throw new ShaderGenerationException(metalProcess.StandardError.ReadToEnd());
                 }
 
-                prefix = mac ? string.Empty : "--sdk iphoneos metallib";
-                string metallibArgs = $"{prefix} -o {outputPath} {bitcodePath}";
+                string metallibArgs = $"-o {outputPath} {bitcodePath}";
                 ProcessStartInfo metallibPSI = new ProcessStartInfo(metallibPath, metallibArgs);
                 metallibPSI.RedirectStandardError = true;
                 metallibPSI.RedirectStandardOutput = true;
@@ -473,7 +464,10 @@ namespace ShaderGen.App
         {
             if (!s_metalMacOSToolsAvailable.HasValue)
             {
-                s_metalMacOSToolsAvailable = File.Exists($"{s_xcodeMacOSPlatformPath}{metalBinPath}") && File.Exists($"{s_xcodeMacOSPlatformPath}{metallibBinPath}");
+                s_metalMacPath = FindXcodeTool("macosx", "metal");
+                s_metallibMacPath = FindXcodeTool("macosx", "metallib");
+
+                s_metalMacOSToolsAvailable = s_metalMacPath != null && s_metallibMacPath != null;
             }
 
             return s_metalMacOSToolsAvailable.Value;
@@ -481,12 +475,39 @@ namespace ShaderGen.App
 
         public static bool AreMetaliOSToolsAvailable()
         {
-            if (!s_metaliOSToolsAvailable.HasValue)
+            if (!s_metaliOSAvailable.HasValue)
             {
-                s_metaliOSToolsAvailable = File.Exists($"{s_xcodeiOSPlatformPath}{metalBinPath}") && File.Exists($"{s_xcodeiOSPlatformPath}{metallibBinPath}");
+                s_metaliOSPath = FindXcodeTool("iphoneos", "metal");
+                s_metallibiOSPath = FindXcodeTool("iphoneos", "metallib");
+
+                s_metaliOSAvailable = s_metalMacPath != null && s_metallibMacPath != null;
             }
 
-            return s_metaliOSToolsAvailable.Value;
+            return s_metaliOSAvailable.Value;
+        }
+
+        private static string FindXcodeTool(string sdk, string tool)
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "xcrun",
+                Arguments = $"-sdk {sdk} --find {tool}",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            };
+            try
+            {
+                using (Process process = Process.Start(startInfo))
+                using (StreamReader reader = process.StandardOutput)
+                {
+                    return reader.ReadLine();
+                }
+            }
+            catch
+            {
+            }
+
+            return null;
         }
 
         private static string BackendExtension(LanguageBackend lang)
@@ -531,15 +552,14 @@ namespace ShaderGen.App
             return null;
         }
 
-        private static string GetXcodePlatformPath(XcodeSDK sdk)
+        private static string GetXcodePlatformPath(string sdk)
         {
-            var result = $"/Applications/Xcode.app/Contents/Developer/Platforms/${sdk}.platform";
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 var startInfo = new ProcessStartInfo
                 {
                     FileName = "xcrun",
-                    Arguments = "-sdk iphoneos --show-sdk-platform-path",
+                    Arguments = $"-sdk {sdk} --show-sdk-platform-path",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true
                 };
@@ -548,15 +568,14 @@ namespace ShaderGen.App
                     using (Process process = Process.Start(startInfo))
                     using (StreamReader reader = process.StandardOutput)
                     {
-                        result = reader.ReadLine();
+                        return reader.ReadLine();
                     }
                 }
                 catch
                 {
-                    return result;
                 }
             }
-            return result;
+            return null;
         }
     }
 }
