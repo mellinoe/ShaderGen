@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ShaderGen\ShaderGen.csproj" />
+    <PackageReference Include="SharpDX.D3DCompiler" Version="4.2.0" />
     <PackageReference Include="System.CommandLine" Version="0.1.0-e170407-3" />
   </ItemGroup>
 
