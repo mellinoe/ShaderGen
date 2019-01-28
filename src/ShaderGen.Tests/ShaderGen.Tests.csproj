@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
@@ -15,18 +15,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0-preview-20170628-02" />
-    <PackageReference Include="Veldrid" Version="4.3.0-ge20c8fe3de" />
-    <PackageReference Include="Veldrid.MetalBindings" Version="4.3.0-ge20c8fe3de" />
-    <PackageReference Include="Veldrid.OpenGLBindings" Version="4.3.0-ge20c8fe3de" />
-    <PackageReference Include="Veldrid.SDL2" Version="4.3.0-ge20c8fe3de" />
-    <PackageReference Include="Veldrid.StartupUtilities" Version="4.3.0-ge20c8fe3de" />
-    <PackageReference Include="Veldrid.Utilities" Version="4.3.0-ge20c8fe3de" />
-    <PackageReference Include="xunit" Version="2.3.1" />
-    <PackageReference Include="xunit.console" Version="2.3.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="2.3.2" />
-    <PackageReference Include="Xunit.SkippableFact" Version="1.3.3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+    <PackageReference Include="Veldrid" Version="4.5.0" />
+    <PackageReference Include="Veldrid.MetalBindings" Version="4.5.0" />
+    <PackageReference Include="Veldrid.OpenGLBindings" Version="4.5.0" />
+    <PackageReference Include="Veldrid.SDL2" Version="4.5.0" />
+    <PackageReference Include="Veldrid.StartupUtilities" Version="4.5.0" />
+    <PackageReference Include="Veldrid.Utilities" Version="4.5.0" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.console" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="2.10.0" />
+    <PackageReference Include="Xunit.SkippableFact" Version="1.3.12" />
     <ProjectReference Include="..\ShaderGen\ShaderGen.csproj" />
   </ItemGroup>
 
