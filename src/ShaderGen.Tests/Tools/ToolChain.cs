@@ -103,7 +103,8 @@ namespace ShaderGen.Tests.Tools
                 GraphicsBackend.Direct3D11,
                 typeof(HlslBackend),
                 c => new HlslBackend(c),
-                _fxcPath.Value != null ? FxcCompile : (CompileDelegate)null,
+                //_fxcPath.Value != null ? FxcCompile : (CompileDelegate)null,
+                SharpDXCompile,
                 CreateHeadlessD3D, null);
             GlslEs300 = new ToolChain(
                 GraphicsBackend.OpenGLES,
@@ -620,6 +621,7 @@ namespace ShaderGen.Tests.Tools
         /// <summary>
         /// The FXC path.
         /// </summary>
+        [Obsolete]
         private static readonly Lazy<string> _fxcPath = new Lazy<string>(
             () => !Directory.Exists(WindowsKitsFolder)
                 ? null
@@ -632,6 +634,7 @@ namespace ShaderGen.Tests.Tools
                     .FirstOrDefault(),
             LazyThreadSafetyMode.ExecutionAndPublication);
 
+        [Obsolete]
         private static CompileResult FxcCompile(string code, Stage stage, string entryPoint)
         {
             using (TempFile inputFile = new TempFile())
@@ -659,6 +662,54 @@ namespace ShaderGen.Tests.Tools
                 args.Append($" /E \"{entryPoint}\" /Fo \"{outputFile.FilePath}\" \"{inputFile.FilePath}\"");
 
                 return Execute(_fxcPath.Value, args.ToString(), code, outputFile);
+            }
+        }
+        private static CompileResult SharpDXCompile(string code, Stage stage, string entryPoint)
+        {
+            using (TempFile inputFile = new TempFile())
+            using (TempFile outputFile = new TempFile())
+            {
+                File.WriteAllText(inputFile, code);
+
+                StringBuilder args = new StringBuilder();
+                //args.Append("/T ");
+                switch (stage)
+                {
+                    case Stage.Vertex:
+                        args.Append("vs_5_0");
+                        break;
+                    case Stage.Fragment:
+                        args.Append("ps_5_0");
+                        break;
+                    case Stage.Compute:
+                        args.Append("cs_5_0");
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(stage), stage, null);
+                }
+
+                //args.Append($" /E \"{entryPoint}\" /Fo \"{outputFile.FilePath}\" \"{inputFile.FilePath}\"");
+                var shaderPath = inputFile.FilePath;
+                var outputPath = outputFile.FilePath;
+                var profile = args.ToString();
+
+                //return Execute(_fxcPath.Value, args.ToString(), code, outputFile);
+
+                // Compile the shader.
+                SharpDX.D3DCompiler.ShaderFlags shaderFlags =
+                    SharpDX.D3DCompiler.ShaderFlags.OptimizationLevel3
+                    ;
+                SharpDX.D3DCompiler.CompilationResult compilationResult =
+                    SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile(
+                        shaderPath, entryPoint, profile, shaderFlags,
+                SharpDX.D3DCompiler.EffectFlags.None);
+
+                var exitCode = compilationResult.ResultCode.Code;
+                //var stdOut = "";
+
+                var r = new CompileResult(code, exitCode, "", compilationResult.Message, compilationResult.Bytecode.Data);
+
+                return r;
             }
         }
 
