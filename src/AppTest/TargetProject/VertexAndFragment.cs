@@ -31,7 +31,7 @@ namespace TargetProject
 
         public struct FragmentInput
         {
-            [VertexSemantic(SemanticType.Position)]
+            [SystemPositionSemanticAttribute]
             public Vector4 Position;
         }
     }
