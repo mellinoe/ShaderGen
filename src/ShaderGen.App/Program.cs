@@ -279,7 +279,7 @@ namespace ShaderGen.App
         private static bool CompileCode(LanguageBackend lang, string shaderPath, string entryPoint, ShaderFunctionType type, out string[] paths, bool debug)
         {
             Type langType = lang.GetType();
-            if (langType == typeof(HlslBackend) && IsFxcAvailable())
+            if (langType == typeof(HlslBackend))
             {
                 bool result = CompileHlsl(shaderPath, entryPoint, type, out string path, debug);
                 paths = new[] { path };
@@ -304,8 +304,13 @@ namespace ShaderGen.App
                 return false;
             }
         }
-
         private static bool CompileHlsl(string shaderPath, string entryPoint, ShaderFunctionType type, out string path, bool debug)
+        {
+            //return CompileHlslByFXC(shaderPath, entryPoint, type, out path, debug);
+            return CompileHlslBySharpDX(shaderPath, entryPoint, type, out path, debug);
+        }
+        [Obsolete]
+        private static bool CompileHlslByFXC(string shaderPath, string entryPoint, ShaderFunctionType type, out string path, bool debug)
         {
             try
             {
@@ -341,6 +346,51 @@ namespace ShaderGen.App
                 {
                     string message = $"StdOut: {stdOut.Result}, StdErr: {stdErr.Result}";
                     Console.WriteLine($"Failed to compile HLSL: {message}.");
+                }
+            }
+            catch (Win32Exception)
+            {
+                Console.WriteLine("Unable to launch fxc tool.");
+            }
+
+            path = null;
+            return false;
+        }
+        private static bool CompileHlslBySharpDX(string shaderPath, string entryPoint, ShaderFunctionType type, out string path, bool debug)
+        {
+            try
+            {
+                string profile = type == ShaderFunctionType.VertexEntryPoint ? "vs_5_0"
+                    : type == ShaderFunctionType.FragmentEntryPoint ? "ps_5_0"
+                    : "cs_5_0";
+                string outputPath = shaderPath + ".bytes";
+
+                // Compile the shader.
+                SharpDX.D3DCompiler.ShaderFlags shaderFlags =
+                    debug
+                    ?
+                    SharpDX.D3DCompiler.ShaderFlags.SkipOptimization
+                    |
+                    SharpDX.D3DCompiler.ShaderFlags.Debug
+                    //|
+                    //SharpDX.D3DCompiler.ShaderFlags.ForcePixelShaderSoftwareNoOptimization
+                    //|
+                    //SharpDX.D3DCompiler.ShaderFlags.ForceVertexShaderSoftwareNoOptimization
+                    :
+                    SharpDX.D3DCompiler.ShaderFlags.OptimizationLevel3
+                    ;
+                SharpDX.D3DCompiler.CompilationResult compilationResult =
+                    SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile(
+                        shaderPath, entryPoint, profile, shaderFlags,
+                SharpDX.D3DCompiler.EffectFlags.None);
+
+                if (null == compilationResult.Bytecode)
+                {
+                    Console.WriteLine($"Failed to compile HLSL: {compilationResult.Message}.");
+                }
+                else
+                {
+                    compilationResult.Bytecode.Save(File.OpenWrite(outputPath));
                 }
             }
             catch (Win32Exception)
@@ -431,6 +481,7 @@ namespace ShaderGen.App
             }
         }
 
+        [Obsolete]
         public static bool IsFxcAvailable()
         {
             if (!s_fxcAvailable.HasValue)
@@ -536,6 +587,7 @@ namespace ShaderGen.App
             throw new InvalidOperationException("Invalid backend type: " + lang.GetType().Name);
         }
 
+        [Obsolete]
         private static string FindFxcExe()
         {
             const string WindowsKitsFolder = @"C:\Program Files (x86)\Windows Kits";
