@@ -14,6 +14,7 @@ using System.Reflection;
 using ShaderGen.Glsl;
 using ShaderGen.Hlsl;
 using ShaderGen.Metal;
+using SharpDX.D3DCompiler;
 
 namespace ShaderGen.App
 {
@@ -304,11 +305,12 @@ namespace ShaderGen.App
                 return false;
             }
         }
+
         private static bool CompileHlsl(string shaderPath, string entryPoint, ShaderFunctionType type, out string path, bool debug)
         {
-            //return CompileHlslByFXC(shaderPath, entryPoint, type, out path, debug);
             return CompileHlslBySharpDX(shaderPath, entryPoint, type, out path, debug);
         }
+
         [Obsolete]
         private static bool CompileHlslByFXC(string shaderPath, string entryPoint, ShaderFunctionType type, out string path, bool debug)
         {
@@ -356,6 +358,7 @@ namespace ShaderGen.App
             path = null;
             return false;
         }
+
         private static bool CompileHlslBySharpDX(string shaderPath, string entryPoint, ShaderFunctionType type, out string path, bool debug)
         {
             try
@@ -365,24 +368,15 @@ namespace ShaderGen.App
                     : "cs_5_0";
                 string outputPath = shaderPath + ".bytes";
 
-                // Compile the shader.
-                SharpDX.D3DCompiler.ShaderFlags shaderFlags =
-                    debug
-                    ?
-                    SharpDX.D3DCompiler.ShaderFlags.SkipOptimization
-                    |
-                    SharpDX.D3DCompiler.ShaderFlags.Debug
-                    //|
-                    //SharpDX.D3DCompiler.ShaderFlags.ForcePixelShaderSoftwareNoOptimization
-                    //|
-                    //SharpDX.D3DCompiler.ShaderFlags.ForceVertexShaderSoftwareNoOptimization
-                    :
-                    SharpDX.D3DCompiler.ShaderFlags.OptimizationLevel3
-                    ;
-                SharpDX.D3DCompiler.CompilationResult compilationResult =
-                    SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile(
-                        shaderPath, entryPoint, profile, shaderFlags,
-                SharpDX.D3DCompiler.EffectFlags.None);
+                ShaderFlags shaderFlags = debug
+                    ? ShaderFlags.SkipOptimization | ShaderFlags.Debug
+                    : ShaderFlags.OptimizationLevel3;
+                CompilationResult compilationResult = ShaderBytecode.CompileFromFile(
+                    shaderPath,
+                    entryPoint,
+                    profile,
+                    shaderFlags,
+                    EffectFlags.None);
 
                 if (null == compilationResult.Bytecode)
                 {
@@ -395,7 +389,7 @@ namespace ShaderGen.App
             }
             catch (Win32Exception)
             {
-                Console.WriteLine("Unable to launch fxc tool.");
+                Console.WriteLine("Unable to invoke HLSL compiler library.");
             }
 
             path = null;

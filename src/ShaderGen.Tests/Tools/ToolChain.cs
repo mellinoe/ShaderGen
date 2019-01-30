@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -8,10 +7,10 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ShaderGen.Glsl;
 using ShaderGen.Hlsl;
 using ShaderGen.Metal;
+using SharpDX.D3DCompiler;
 using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
@@ -667,49 +666,37 @@ namespace ShaderGen.Tests.Tools
         private static CompileResult SharpDXCompile(string code, Stage stage, string entryPoint)
         {
             using (TempFile inputFile = new TempFile())
-            using (TempFile outputFile = new TempFile())
             {
                 File.WriteAllText(inputFile, code);
 
-                StringBuilder args = new StringBuilder();
-                //args.Append("/T ");
+                string profile;
                 switch (stage)
                 {
                     case Stage.Vertex:
-                        args.Append("vs_5_0");
+                        profile = "vs_5_0";
                         break;
                     case Stage.Fragment:
-                        args.Append("ps_5_0");
+                        profile = "ps_5_0";
                         break;
                     case Stage.Compute:
-                        args.Append("cs_5_0");
+                        profile = "cs_5_0";
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(stage), stage, null);
                 }
 
-                //args.Append($" /E \"{entryPoint}\" /Fo \"{outputFile.FilePath}\" \"{inputFile.FilePath}\"");
-                var shaderPath = inputFile.FilePath;
-                var outputPath = outputFile.FilePath;
-                var profile = args.ToString();
-
-                //return Execute(_fxcPath.Value, args.ToString(), code, outputFile);
-
                 // Compile the shader.
-                SharpDX.D3DCompiler.ShaderFlags shaderFlags =
-                    SharpDX.D3DCompiler.ShaderFlags.OptimizationLevel3
-                    ;
-                SharpDX.D3DCompiler.CompilationResult compilationResult =
-                    SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile(
-                        shaderPath, entryPoint, profile, shaderFlags,
-                SharpDX.D3DCompiler.EffectFlags.None);
+                ShaderFlags shaderFlags = ShaderFlags.OptimizationLevel3;
+                CompilationResult compilationResult = ShaderBytecode.Compile(
+                    code,
+                    entryPoint,
+                    profile,
+                    shaderFlags,
+                    EffectFlags.None);
 
                 var exitCode = compilationResult.ResultCode.Code;
-                //var stdOut = "";
 
-                var r = new CompileResult(code, exitCode, "", compilationResult.Message, compilationResult.Bytecode.Data);
-
-                return r;
+                return new CompileResult(code, exitCode, "", compilationResult.Message, compilationResult.Bytecode.Data);
             }
         }
 
