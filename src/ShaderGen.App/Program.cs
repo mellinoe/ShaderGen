@@ -8,9 +8,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Reflection;
+using System.Threading.Tasks;
 using ShaderGen.Glsl;
 using ShaderGen.Hlsl;
 using ShaderGen.Metal;
@@ -20,20 +20,7 @@ namespace ShaderGen.App
 {
     internal static class Program
     {
-        private static string s_fxcPath;
-        private static bool? s_fxcAvailable;
-        private static bool? s_glslangValidatorAvailable;
-
-        private static bool? s_metalMacOSToolsAvailable;
-        private static string s_metalMacPath;
-        private static string s_metallibMacPath;
-
-        private static bool? s_metaliOSAvailable;
-        private static string s_metaliOSPath;
-        private static string s_metallibiOSPath;
-
-        const string metalBinPath = @"/usr/bin/metal";
-        const string metallibBinPath = @"/usr/bin/metallib";
+        private const string s_windowsKitsFolder = @"C:\Program Files (x86)\Windows Kits";
 
         public static int Main(string[] args)
         {
@@ -267,14 +254,8 @@ namespace ShaderGen.App
 
         private static string NormalizePath(string path)
         {
-            if (path == null)
-            {
-                return null;
-            }
-            else
-            {
-                return path.Trim();
-            }
+            // TODO Should this use Path.GetFullPath()?
+            return path?.Trim();
         }
 
         private static bool CompileCode(LanguageBackend lang, string shaderPath, string entryPoint, ShaderFunctionType type, out string[] paths, bool debug)
@@ -286,73 +267,60 @@ namespace ShaderGen.App
                 paths = new[] { path };
                 return result;
             }
-            else if (langType == typeof(Glsl450Backend) && IsGlslangValidatorAvailable())
+
+            if (langType == typeof(Glsl450Backend))
             {
                 bool result = CompileSpirv(shaderPath, entryPoint, type, out string path);
                 paths = new[] { path };
                 return result;
             }
-            else if (langType == typeof(MetalBackend) && AreMetalMacOSToolsAvailable() && AreMetaliOSToolsAvailable())
+
+            if (langType == typeof(MetalBackend))
             {
                 bool macOSresult = CompileMetal(shaderPath, true, out string pathMacOS);
                 bool iosResult = CompileMetal(shaderPath, false, out string pathiOS);
                 paths = new[] { pathMacOS, pathiOS };
                 return macOSresult && iosResult;
             }
-            else
-            {
-                paths = Array.Empty<string>();
-                return false;
-            }
+
+            // No compilation required
+            paths = new[] {shaderPath};
+            return true;
         }
 
         private static bool CompileHlsl(string shaderPath, string entryPoint, ShaderFunctionType type, out string path, bool debug)
         {
-            return CompileHlslBySharpDX(shaderPath, entryPoint, type, out path, debug);
+            // Try SharpDX, and fall back to FXC if available.
+            return CompileHlslBySharpDX(shaderPath, entryPoint, type, out path, debug) ||
+                   CompileHlslByFXC(shaderPath, entryPoint, type, out path, debug);
         }
 
-        [Obsolete]
         private static bool CompileHlslByFXC(string shaderPath, string entryPoint, ShaderFunctionType type, out string path, bool debug)
         {
-            try
+            string profile = type == ShaderFunctionType.VertexEntryPoint ? "vs_5_0"
+                : type == ShaderFunctionType.FragmentEntryPoint ? "ps_5_0"
+                : "cs_5_0";
+            string outputPath = shaderPath + ".bytes";
+            string args = $"/T \"{profile}\" /E \"{entryPoint}\" \"{shaderPath}\" /Fo \"{outputPath}\"";
+            if (debug)
             {
-                string profile = type == ShaderFunctionType.VertexEntryPoint ? "vs_5_0"
-                    : type == ShaderFunctionType.FragmentEntryPoint ? "ps_5_0"
-                    : "cs_5_0";
-                string outputPath = shaderPath + ".bytes";
-                string args = $"/T \"{profile}\" /E \"{entryPoint}\" \"{shaderPath}\" /Fo \"{outputPath}\"";
-                if (debug)
-                {
-                    args += " /Od /Zi";
-                }
-                else
-                {
-                    args += " /O3";
-                }
-                string fxcPath = FindFxcExe();
-                ProcessStartInfo psi = new ProcessStartInfo(fxcPath, args);
-                psi.RedirectStandardOutput = true;
-                psi.RedirectStandardError = true;
-                Process p = new Process() { StartInfo = psi };
-                p.Start();
-                var stdOut = p.StandardOutput.ReadToEndAsync();
-                var stdErr = p.StandardError.ReadToEndAsync();
-                bool exited = p.WaitForExit(60000);
+                args += " /Od /Zi";
+            }
+            else
+            {
+                args += " /O3";
+            }
 
-                if (exited && p.ExitCode == 0)
+            string fxcPath = FindFxcExe();
+            if (fxcPath != null)
+            {
+                string result = RunProcess(fxcPath, args);
+                if (result == null)
                 {
                     path = outputPath;
                     return true;
                 }
-                else
-                {
-                    string message = $"StdOut: {stdOut.Result}, StdErr: {stdErr.Result}";
-                    Console.WriteLine($"Failed to compile HLSL: {message}.");
-                }
-            }
-            catch (Win32Exception)
-            {
-                Console.WriteLine("Unable to launch fxc tool.");
+                Console.Error.WriteLine($"Failed to compile HLSL shader using \"{fxcPath}\" {args}: {result}");
             }
 
             path = null;
@@ -378,18 +346,23 @@ namespace ShaderGen.App
                     shaderFlags,
                     EffectFlags.None);
 
-                if (null == compilationResult.Bytecode)
+                if (compilationResult.Bytecode != null &&
+                    !compilationResult.HasErrors &&
+                    compilationResult.ResultCode == 0)
                 {
-                    Console.WriteLine($"Failed to compile HLSL: {compilationResult.Message}.");
+                    using (FileStream fileStream = File.OpenWrite(outputPath))
+                    {
+                        compilationResult.Bytecode.Save(fileStream);
+                        path = outputPath;
+                        return true;
+                    }
                 }
-                else
-                {
-                    compilationResult.Bytecode.Save(File.OpenWrite(outputPath));
-                }
+
+                Console.Error.WriteLine($"Failed to compile HLSL shader using SharpDX: {compilationResult.Message}.");
             }
-            catch (Win32Exception)
+            catch (Exception e)
             {
-                Console.WriteLine("Unable to invoke HLSL compiler library.");
+                Console.Error.WriteLine($"Error when compiling HLSL using SharpDX: {e.Message}");
             }
 
             path = null;
@@ -403,156 +376,149 @@ namespace ShaderGen.App
                 : "comp";
             string outputPath = shaderPath + ".spv";
             string args = $"-V -S {stage} {shaderPath} -o {outputPath}";
-            try
+            string result = RunProcess("glslangValidator", args);
+            if (result == null)
             {
-
-                ProcessStartInfo psi = new ProcessStartInfo("glslangValidator", args);
-                psi.RedirectStandardError = true;
-                psi.RedirectStandardOutput = true;
-                Process p = Process.Start(psi);
-                p.WaitForExit();
-
-                if (p.ExitCode == 0)
-                {
-                    path = outputPath;
-                    return true;
-                }
-                else
-                {
-                    throw new ShaderGenerationException(p.StandardOutput.ReadToEnd());
-                }
-            }
-            catch (Win32Exception)
-            {
-                Console.WriteLine("Unable to launch glslangValidator tool.");
+                path = outputPath;
+                return true;
             }
 
+            Console.Error.WriteLine($"Failed to compile OpenGL shader using glslangValidator {args}: {result}");
             path = null;
             return false;
         }
 
         private static bool CompileMetal(string shaderPath, bool mac, out string path)
         {
-            string metalPath = mac ? s_metalMacPath : s_metaliOSPath;
-            string metallibPath = mac ? s_metallibMacPath : s_metallibiOSPath;
+            string metalPath = FindXcodeTool(mac, "metal");
+            string metallibPath = FindXcodeTool(mac, "metal");
+            if (metalPath == null || metallibPath == null)
+            {
+                path = null;
+                return false;
+            }
 
             string shaderPathWithoutExtension = Path.ChangeExtension(shaderPath, null);
             string extension = mac ? ".metallib" : ".ios.metallib";
             string outputPath = shaderPathWithoutExtension + extension;
             string bitcodePath = Path.GetTempFileName();
             string metalArgs = $"-c -o {bitcodePath} {shaderPath}";
-            try
+            
+            string result = RunProcess(metalPath, metalArgs);
+            if (result == null)
             {
-                ProcessStartInfo metalPSI = new ProcessStartInfo(metalPath, metalArgs);
-                metalPSI.RedirectStandardError = true;
-                metalPSI.RedirectStandardOutput = true;
-                Process metalProcess = Process.Start(metalPSI);
-                metalProcess.WaitForExit();
-
-                if (metalProcess.ExitCode != 0)
-                {
-                    throw new ShaderGenerationException(metalProcess.StandardError.ReadToEnd());
-                }
-
                 string metallibArgs = $"-o {outputPath} {bitcodePath}";
-                ProcessStartInfo metallibPSI = new ProcessStartInfo(metallibPath, metallibArgs);
-                metallibPSI.RedirectStandardError = true;
-                metallibPSI.RedirectStandardOutput = true;
-                Process metallibProcess = Process.Start(metallibPSI);
-                metallibProcess.WaitForExit();
+                result = RunProcess(metallibPath, metallibArgs);
 
-                if (metallibProcess.ExitCode != 0)
+                try
                 {
-                    throw new ShaderGenerationException(metallibProcess.StandardError.ReadToEnd());
+                    File.Delete(bitcodePath);
+                }
+                catch (Exception exception)
+                {
+                    Console.Error.WriteLine($"Failed to delete Metal bitcode at \"{bitcodePath}\": {exception.Message}");
                 }
 
-                path = outputPath;
-                return true;
+                if (result == null)
+                {
+                    path = outputPath;
+                    return true;
+                }
+
+                Console.Error.WriteLine($"Failed to compile Metal bitcode using \"{metallibPath}\" {metallibArgs}: {result}");
             }
-            finally
+            else
             {
-                File.Delete(bitcodePath);
+                Console.Error.WriteLine($"Failed to compile Metal shader using \"{metalPath}\" {metalArgs}: {result}");
             }
+
+            path = null;
+            return false;
+        }
+
+        private static string FindXcodeTool(bool mac, string tool)
+        {
+            string sdk = mac ? "macosx" : "iphoneos";
+            if (!RunProcess("xcrun", $"-sdk {sdk} --find {tool}", out string stdOut, out string stdErr, out int exitCode))
+            {
+                Console.WriteLine($"The {sdk} {tool} tool was not found! Exit code: {exitCode}, StdOut: {stdOut}, StdErr: {stdErr}");
+                return null;
+            }
+            // Return first line (if any)
+            return new StringReader(stdOut).ReadLine();
+        }
+
+        private static string FindFxcExe()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Directory.Exists(s_windowsKitsFolder))
+            {
+                IEnumerable<string> paths = Directory.EnumerateFiles(
+                    s_windowsKitsFolder,
+                    "fxc.exe",
+                    SearchOption.AllDirectories);
+                string path = paths.FirstOrDefault(s => !s.Contains("arm"));
+                return path;
+            }
+
+            Console.WriteLine($"The FXC.Exe tool was not found below {s_windowsKitsFolder}!");
+            return null;
         }
 
         [Obsolete]
-        public static bool IsFxcAvailable()
+        private static string GetXcodePlatformPath(bool mac)
         {
-            if (!s_fxcAvailable.HasValue)
+            string sdk = mac ? "macosx" : "iphoneos";
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                s_fxcPath = FindFxcExe();
-                s_fxcAvailable = s_fxcPath != null;
-            }
-
-            return s_fxcAvailable.Value;
-        }
-
-        public static bool IsGlslangValidatorAvailable()
-        {
-            if (!s_glslangValidatorAvailable.HasValue)
-            {
-                try
+                if (!RunProcess("xcrun", $"-sdk {sdk} --show-sdk-platform-path", out string stdOut, out string stdErr, out int exitCode))
                 {
-                    ProcessStartInfo psi = new ProcessStartInfo("glslangValidator");
-                    psi.RedirectStandardOutput = true;
-                    psi.RedirectStandardError = true;
-                    Process.Start(psi);
-                    s_glslangValidatorAvailable = true;
+                    Console.WriteLine($"The {sdk} platform path was not found! Exit code: {exitCode}, StdOut: {stdOut}, StdErr: {stdErr}");
+                    return null;
                 }
-                catch { s_glslangValidatorAvailable = false; }
+                // Return first line (if any)
+                return new StringReader(stdOut).ReadLine();
             }
-
-            return s_glslangValidatorAvailable.Value;
+            return null;
         }
 
-        public static bool AreMetalMacOSToolsAvailable()
+        private static string RunProcess(string filename, string arguments, int timeout = 60000)
         {
-            if (!s_metalMacOSToolsAvailable.HasValue)
-            {
-                s_metalMacPath = FindXcodeTool("macosx", "metal");
-                s_metallibMacPath = FindXcodeTool("macosx", "metallib");
-
-                s_metalMacOSToolsAvailable = s_metalMacPath != null && s_metallibMacPath != null;
-            }
-
-            return s_metalMacOSToolsAvailable.Value;
+            return RunProcess(filename, arguments, out string stdOut, out string stdErr, out int exitCode, timeout)
+                ? null
+                : $"Exit code: {exitCode}, StdOut: {stdOut}, StdErr: {stdErr}";
         }
 
-        public static bool AreMetaliOSToolsAvailable()
+        private static bool RunProcess(string filename, string arguments, out string stdOut, out string stdErr, out int exitCode, int timeout = 60000)
         {
-            if (!s_metaliOSAvailable.HasValue)
-            {
-                s_metaliOSPath = FindXcodeTool("iphoneos", "metal");
-                s_metallibiOSPath = FindXcodeTool("iphoneos", "metallib");
-
-                s_metaliOSAvailable = s_metalMacPath != null && s_metallibMacPath != null;
-            }
-
-            return s_metaliOSAvailable.Value;
-        }
-
-        private static string FindXcodeTool(string sdk, string tool)
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = "xcrun",
-                Arguments = $"-sdk {sdk} --find {tool}",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true
-            };
             try
             {
-                using (Process process = Process.Start(startInfo))
-                using (StreamReader reader = process.StandardOutput)
+                ProcessStartInfo psi = new ProcessStartInfo(filename, arguments)
                 {
-                    return reader.ReadLine();
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                };
+                Process p = new Process { StartInfo = psi };
+                p.Start();
+                Task<string> stdOutTask = p.StandardOutput.ReadToEndAsync();
+                Task<string> stdErrTask = p.StandardError.ReadToEndAsync();
+                bool exited = p.WaitForExit(timeout);
+
+                stdOut = stdOutTask.IsCompleted ? stdOutTask.Result : "[Timed out]";
+                stdErr = stdErrTask.IsCompleted ? stdErrTask.Result : "[Timed out]";
+                exitCode = exited ? p.ExitCode : -1;
+                if (exitCode == 0)
+                {
+                    return true;
                 }
             }
-            catch
+            catch (Exception exception)
             {
+                stdOut = "[Exception thrown]";
+                stdErr = exception.Message;
+                exitCode = -1;
             }
 
-            return null;
+            return false;
         }
 
         private static string BackendExtension(LanguageBackend lang)
@@ -561,67 +527,24 @@ namespace ShaderGen.App
             {
                 return "hlsl";
             }
-            else if (lang.GetType() == typeof(Glsl330Backend))
+            if (lang.GetType() == typeof(Glsl330Backend))
             {
                 return "330.glsl";
             }
-            else if (lang.GetType() == typeof(GlslEs300Backend))
+            if (lang.GetType() == typeof(GlslEs300Backend))
             {
                 return "300.glsles";
             }
-            else if (lang.GetType() == typeof(Glsl450Backend))
+            if (lang.GetType() == typeof(Glsl450Backend))
             {
                 return "450.glsl";
             }
-            else if (lang.GetType() == typeof(MetalBackend))
+            if (lang.GetType() == typeof(MetalBackend))
             {
                 return "metal";
             }
 
             throw new InvalidOperationException("Invalid backend type: " + lang.GetType().Name);
-        }
-
-        [Obsolete]
-        private static string FindFxcExe()
-        {
-            const string WindowsKitsFolder = @"C:\Program Files (x86)\Windows Kits";
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Directory.Exists(WindowsKitsFolder))
-            {
-                IEnumerable<string> paths = Directory.EnumerateFiles(
-                    WindowsKitsFolder,
-                    "fxc.exe",
-                    SearchOption.AllDirectories);
-                string path = paths.FirstOrDefault(s => !s.Contains("arm"));
-                return path;
-            }
-
-            return null;
-        }
-
-        private static string GetXcodePlatformPath(string sdk)
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = "xcrun",
-                    Arguments = $"-sdk {sdk} --show-sdk-platform-path",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                };
-                try
-                {
-                    using (Process process = Process.Start(startInfo))
-                    using (StreamReader reader = process.StandardOutput)
-                    {
-                        return reader.ReadLine();
-                    }
-                }
-                catch
-                {
-                }
-            }
-            return null;
         }
     }
 }
