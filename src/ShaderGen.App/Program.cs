@@ -14,7 +14,6 @@ using System.Reflection;
 using ShaderGen.Glsl;
 using ShaderGen.Hlsl;
 using ShaderGen.Metal;
-using SharpDX.D3DCompiler;
 
 namespace ShaderGen.App
 {
@@ -308,7 +307,7 @@ namespace ShaderGen.App
 
         private static bool CompileHlsl(string shaderPath, string entryPoint, ShaderFunctionType type, out string path, bool debug)
         {
-            return CompileHlslBySharpDX(shaderPath, entryPoint, type, out path, debug);
+            return CompileHlslByDXC(shaderPath, entryPoint, type, out path, debug);
         }
 
         [Obsolete]
@@ -359,42 +358,51 @@ namespace ShaderGen.App
             return false;
         }
 
-        private static bool CompileHlslBySharpDX(string shaderPath, string entryPoint, ShaderFunctionType type, out string path, bool debug)
+        private static bool CompileHlslByDXC(string shaderPath, string entryPoint, ShaderFunctionType type, out string path, bool debug)
         {
+            // https://github.com/microsoft/DirectXShaderCompiler
+            // https://translate.google.co.jp/translate?hl=ja&sl=ja&tl=en&u=https%3A%2F%2Fmonobook.org%2Fwiki%2FDirectX_Shader_Compiler
+            var cmd = "dxc";
+
+            var optimize = debug ? "-Od -Zi" : "-O3";
+
+            var profile = type switch
+            {
+                ShaderFunctionType.VertexEntryPoint   => "vs_6_0",
+                ShaderFunctionType.FragmentEntryPoint => "ps_6_0",
+                _ => "cs_6_0",
+            };
+
+            var outputPath = shaderPath + ".dxil";
+
+            var args = $"{optimize} -T {profile} -E {entryPoint} {shaderPath} -Fo {outputPath} ";
+
             try
             {
-                string profile = type == ShaderFunctionType.VertexEntryPoint ? "vs_5_0"
-                    : type == ShaderFunctionType.FragmentEntryPoint ? "ps_5_0"
-                    : "cs_5_0";
-                string outputPath = shaderPath + ".bytes";
+                var psi = new ProcessStartInfo(cmd, args);
+                psi.RedirectStandardError  = true;
+                psi.RedirectStandardOutput = true;
+                var p = Process.Start(psi);
+                p.WaitForExit();
 
-                ShaderFlags shaderFlags = debug
-                    ? ShaderFlags.SkipOptimization | ShaderFlags.Debug
-                    : ShaderFlags.OptimizationLevel3;
-                CompilationResult compilationResult = ShaderBytecode.CompileFromFile(
-                    shaderPath,
-                    entryPoint,
-                    profile,
-                    shaderFlags,
-                    EffectFlags.None);
-
-                if (null == compilationResult.Bytecode)
+                if (p.ExitCode == 0)
                 {
-                    Console.WriteLine($"Failed to compile HLSL: {compilationResult.Message}.");
+                    path = outputPath;
+                    return true;
                 }
                 else
                 {
-                    compilationResult.Bytecode.Save(File.OpenWrite(outputPath));
+                    throw new ShaderGenerationException(p.StandardOutput.ReadToEnd());
                 }
             }
             catch (Win32Exception)
             {
-                Console.WriteLine("Unable to invoke HLSL compiler library.");
+                Console.WriteLine($"Unable to launch {cmd} tool.");
             }
 
             path = null;
             return false;
-        }
+       }
 
         private static bool CompileSpirv(string shaderPath, string entryPoint, ShaderFunctionType type, out string path)
         {
