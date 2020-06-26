@@ -366,12 +366,20 @@ namespace ShaderGen.App
 
             var optimize = debug ? "-Od -Zi" : "-O3";
 
-            var profile = type switch
+            //var profile = type switch
+            //{
+            //    ShaderFunctionType.VertexEntryPoint   => "vs_6_0",
+            //    ShaderFunctionType.FragmentEntryPoint => "ps_6_0",
+            //    _ => "cs_6_0",
+            //};
+            var profile = "";
+            switch (type)
             {
-                ShaderFunctionType.VertexEntryPoint   => "vs_6_0",
-                ShaderFunctionType.FragmentEntryPoint => "ps_6_0",
-                _ => "cs_6_0",
-            };
+                case ShaderFunctionType.VertexEntryPoint  : profile = "vs_6_0";break;
+                case ShaderFunctionType.FragmentEntryPoint: profile = "ps_6_0";break;
+                case ShaderFunctionType.ComputeEntryPoint : profile = "cs_6_0";break;
+                default: throw new NotSupportedException();
+            }
 
             var outputPath = shaderPath + ".dxil";
 
