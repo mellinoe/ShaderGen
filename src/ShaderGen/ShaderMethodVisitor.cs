@@ -17,12 +17,6 @@ namespace ShaderGen
         protected readonly LanguageBackend _backend;
         protected readonly ShaderFunction _shaderFunction;
         private string _containingTypeName;
-        private MethodDeclarationSyntax _declaration;
-        private ClassDeclarationSyntax _classDeclaration;
-        private SyntaxTree _functionTree;
-        private SemanticModel _functionTreeModel;
-        private IMethodSymbol _methodSymbol;
-        private INamedTypeSymbol _classSymbol;
         private HashSet<ResourceDefinition> _resourcesUsed = new HashSet<ResourceDefinition>();
 
         public ShaderMethodVisitor(
@@ -35,23 +29,12 @@ namespace ShaderGen
             _setName = setName;
             _shaderFunction = shaderFunction;
             _backend = backend;
-            _classDeclaration = null;
         }
 
         private SemanticModel GetModel(SyntaxNode node) => _compilation.GetSemanticModel(node.SyntaxTree);
 
-
         public MethodProcessResult VisitFunction(BaseMethodDeclarationSyntax node)
         {
-            if (node is MethodDeclarationSyntax methodDec)
-            {
-                _declaration = methodDec;
-                _functionTree = _declaration.SyntaxTree;
-                _functionTreeModel  = _compilation.GetSemanticModel(_functionTree);
-                _classDeclaration = methodDec.Parent as ClassDeclarationSyntax;
-                _methodSymbol = _functionTreeModel.GetDeclaredSymbol(_declaration);
-                _classSymbol = _functionTreeModel.GetDeclaredSymbol(_classDeclaration);
-            }
             _containingTypeName = Utilities.GetFullNestedTypePrefix((SyntaxNode)node.Body ?? node.ExpressionBody, out bool _);
             StringBuilder sb = new StringBuilder();
             string blockResult;
@@ -491,23 +474,6 @@ namespace ShaderGen
                 return GetDiscardedVariableName(symbol);
             }
             string containingTypeName = Utilities.GetFullName(symbol.ContainingType);
-
-            //
-            //Check to see if this containing type is the same as the function
-            //Why, I'm not totally sure, but the existing check was missing base types
-            //Which limited inheritance
-            //
-            var containedByFunctionClass = false;
-            var classSymbol = _classSymbol;
-            while (classSymbol != null)
-            {
-                if (containingTypeName == classSymbol.Name)
-                {
-                    containedByFunctionClass = true;
-                }
-                classSymbol = classSymbol.BaseType;
-            }
-            
             if (containingTypeName == "ShaderGen.ShaderBuiltins")
             {
                 TryRecognizeBuiltInVariable(symbolInfo);
@@ -517,7 +483,7 @@ namespace ShaderGen
                 // TODO: Share code to format constant values.
                 return string.Format(CultureInfo.InvariantCulture, "{0}", fs.ConstantValue);
             }
-            else if (symbol.Kind == SymbolKind.Field && containedByFunctionClass )
+            else if (symbol.Kind == SymbolKind.Field && containingTypeName == _containingTypeName)
             {
                 string symbolName = symbol.Name;
                 ResourceDefinition referencedResource = _backend.GetContext(_setName).Resources.SingleOrDefault(rd => rd.Name == symbolName);
