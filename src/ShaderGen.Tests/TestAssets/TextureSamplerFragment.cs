@@ -31,7 +31,7 @@ namespace TestShaders
             return Sample(Tex2D, Sampler, input.TextureCoordinate);
         }
 
-        private Vector4 SampleTexture(Texture2DResource myTexture, SamplerResource mySampler)
+        public Vector4 SampleTexture(Texture2DResource myTexture, SamplerResource mySampler)
         {
             return Sample(myTexture, mySampler, Vector2.Zero);
         }
