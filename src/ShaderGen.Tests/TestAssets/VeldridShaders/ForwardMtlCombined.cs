@@ -200,7 +200,7 @@ namespace TestShaders.VeldridShaders
                 + (diffuseFactor * surfaceColor) + pointDiffuse + pointSpec, surfaceColor.X);
         }
 
-        Vector4 WithAlpha(Vector4 baseColor, float alpha)
+        public Vector4 WithAlpha(Vector4 baseColor, float alpha)
         {
             return new Vector4(baseColor.XYZ(), alpha);
         }
