@@ -18,7 +18,7 @@ namespace TestShaders
         public Matrix4x4 FS_M2_Indirect;
 
         [VertexShader]
-        SystemPosition4 VS(Position4 input)
+        public SystemPosition4 VS(Position4 input)
         {
             Vector2 v2 = new Vector2(VS_M0.M11, VS_M1.M22);
             Vector4 v4 = Sample(VS_T0, VS_S0, v2);
@@ -29,14 +29,14 @@ namespace TestShaders
         }
 
         [FragmentShader]
-        Vector4 FS(SystemPosition4 input)
+        public Vector4 FS(SystemPosition4 input)
         {
             Vector2 v2 = new Vector2(FS_M0.M11, FS_M1.M22);
             v2.X += GetIndirectOffset();
             return Sample(FS_T0, FS_S0, v2);
         }
 
-        private float GetIndirectOffset()
+        public  float GetIndirectOffset()
         {
             return FS_M2_Indirect.M11;
         }
