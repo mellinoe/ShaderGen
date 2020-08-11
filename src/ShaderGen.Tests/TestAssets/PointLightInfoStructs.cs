@@ -10,7 +10,7 @@ namespace TestShaders
         public const int MyOtherConst = 20;
 
         [VertexShader]
-        SystemPosition4 VS(Position4 input)
+        public SystemPosition4 VS(Position4 input)
         {
             const int MyConst = 10;
 

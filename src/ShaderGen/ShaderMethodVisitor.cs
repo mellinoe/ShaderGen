@@ -482,6 +482,7 @@ namespace ShaderGen
             return _backend.CorrectIdentifier($"_shadergen_discard_{mappedType}");
         }
 
+       
         public override string VisitIdentifierName(IdentifierNameSyntax node)
         {
             SymbolInfo symbolInfo = GetModel(node).GetSymbolInfo(node);
@@ -498,18 +499,24 @@ namespace ShaderGen
             //Which limited inheritance
             //
             var containedByFunctionClass = false;
-            var classSymbol = _classSymbol;
-            while (classSymbol != null)
+
+            var testType = symbol.ContainingType;
+            while (testType != null)
             {
-                var prefix = "";
-                if (classSymbol.ContainingNamespace != null) prefix = classSymbol.ContainingNamespace.Name + ".";
-                if (containingTypeName ==  prefix + classSymbol.Name)
+                var classSymbol = _classSymbol;
+                while (classSymbol != null)
                 {
-                    containedByFunctionClass = true;
-                    break;
+                    if (Utilities.GetFullName(testType) ==  Utilities.GetFullName(classSymbol))
+                    {
+                        containedByFunctionClass = true;
+                        break;
+                    }
+                    classSymbol = classSymbol.BaseType;
                 }
-                classSymbol = classSymbol.BaseType;
+
+                testType = testType.ContainingType;
             }
+
             
             if (containingTypeName == "ShaderGen.ShaderBuiltins")
             {
@@ -546,7 +553,11 @@ namespace ShaderGen
                 // TODO: Share code to format constant values.
                 return string.Format(CultureInfo.InvariantCulture, "{0}", ls.ConstantValue);
             }
-
+            else if (symbol.Kind == SymbolKind.Field && !containedByFunctionClass && !containingTypeName.Contains("Input") && !symbol.Name.Contains("Position") && !containingTypeName.Contains("System"))
+            {
+                //Filter for edge cases
+                //throw new ShaderGenerationException("Symbol " + symbol.Name + " is not contained in " + _classSymbol.Name);
+            }
             string mapped = _backend.CSharpToShaderIdentifierName(symbolInfo);
             return _backend.CorrectIdentifier(mapped);
         }
