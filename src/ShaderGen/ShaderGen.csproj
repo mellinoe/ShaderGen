@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
     <!-- Package stuff -->
     <PackageId>ShaderGen</PackageId>
     <Description>Translates C# code to HLSL and GLSL shader code.</Description>
     <PackageTags>Shader GLSL HLSL SPIR-V Graphics OpenGL Vulkan Direct3D Game</PackageTags>
+    <TargetFrameworks>netstandard2.0;netcoreapp3.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="2.10.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.7.0" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
