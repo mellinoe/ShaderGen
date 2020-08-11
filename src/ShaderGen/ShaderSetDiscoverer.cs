@@ -65,18 +65,33 @@ namespace ShaderGen
                 var methodDeclaration = ((MethodDeclarationSyntax) node.Ancestors().First(x => x is MethodDeclarationSyntax));
                 var classDeclaration = ((ClassDeclarationSyntax) node.Ancestors().First(x => x is ClassDeclarationSyntax));
                 DanglingVS = classDeclaration?.Identifier.ValueText + "." + methodDeclaration?.Identifier.ValueText;
+                if (classDeclaration?.Parent is NamespaceDeclarationSyntax namespaceDeclaration)
+                {
+                    //Likely a better way of doing this
+                    DanglingVS = namespaceDeclaration.Name + "." + DanglingVS;
+                }
             }
             else if (node.Name.ToFullString().Contains("FragmentShader"))
             {
                 var methodDeclaration = ((MethodDeclarationSyntax) node.Ancestors().First(x => x is MethodDeclarationSyntax));
                 var classDeclaration = ((ClassDeclarationSyntax) node.Ancestors().First(x => x is ClassDeclarationSyntax));
                 DanglingFS = classDeclaration?.Identifier.ValueText + "." + methodDeclaration?.Identifier.ValueText;
+                if (classDeclaration?.Parent is NamespaceDeclarationSyntax namespaceDeclaration)
+                {
+                    //Likely a better way of doing this
+                    DanglingFS = namespaceDeclaration.Name + "." + DanglingFS;
+                }
             }
             else if (node.Name.ToFullString().Contains("ComputeShader"))
             {
                 var methodDeclaration = ((MethodDeclarationSyntax) node.Ancestors().First(x => x is MethodDeclarationSyntax));
                 var classDeclaration = ((ClassDeclarationSyntax) node.Ancestors().First(x => x is ClassDeclarationSyntax));
                 DanglingCS = classDeclaration?.Identifier.ValueText + "." + methodDeclaration?.Identifier.ValueText;
+                if (classDeclaration?.Parent is NamespaceDeclarationSyntax namespaceDeclaration)
+                {
+                    //Likely a better way of doing this
+                    DanglingCS = namespaceDeclaration.Name + "." + DanglingCS;
+                }
             }
         }
 
