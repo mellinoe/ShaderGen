@@ -15,7 +15,7 @@ namespace TestShaders.VeldridShaders
         public Matrix4x4 LightView;
         public LightInfoBuffer LightInfo;
         public CameraInfoBuffer CameraInfo;
-        public PointLightsBuffer PointLights;
+        public PointLightsBuffer LightBuffer;
         public MaterialPropertiesBuffer MaterialProperties;
         public Texture2DResource SurfaceTexture;
         public SamplerResource RegularSampler;
@@ -53,7 +53,7 @@ namespace TestShaders.VeldridShaders
             public float _padding0;
             public float _padding1;
             public float _padding2;
-            [ArraySize(4)] public PointLightInfo[] PointLights;
+            [ArraySize(4)] public PointLightInfo[] ActivePointLights;
         }
 
         public struct MaterialPropertiesBuffer
@@ -118,9 +118,9 @@ namespace TestShaders.VeldridShaders
 
             Vector4 pointDiffuse = new Vector4(0, 0, 0, 1);
             Vector4 pointSpec = new Vector4(0, 0, 0, 1);
-            for (int i = 0; i < PointLights.NumActiveLights; i++)
+            for (int i = 0; i < LightBuffer.NumActiveLights; i++)
             {
-                PointLightInfo pli = PointLights.PointLights[i];
+                PointLightInfo pli = LightBuffer.ActivePointLights[i];
                 Vector3 lightDir = Vector3.Normalize(pli.Position - input.Position_WorldSpace);
                 float intensity = Saturate(Vector3.Dot(input.Normal, lightDir));
                 float lightDistance = Vector3.Distance(pli.Position, input.Position_WorldSpace);
