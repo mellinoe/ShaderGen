@@ -4,7 +4,7 @@ using static ShaderGen.ShaderBuiltins;
 
 namespace TestShaders
 {
-    internal class MultipleResourceSets
+    public class MultipleResourceSets
     {
 #pragma warning disable 0649
         public Matrix4x4 NoAttributeMatrix;                     // 0
