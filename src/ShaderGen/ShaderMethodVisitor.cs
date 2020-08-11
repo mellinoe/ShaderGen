@@ -501,9 +501,12 @@ namespace ShaderGen
             var classSymbol = _classSymbol;
             while (classSymbol != null)
             {
-                if (containingTypeName == classSymbol.Name)
+                var prefix = "";
+                if (classSymbol.ContainingNamespace != null) prefix = classSymbol.ContainingNamespace.Name + ".";
+                if (containingTypeName ==  prefix + classSymbol.Name)
                 {
                     containedByFunctionClass = true;
+                    break;
                 }
                 classSymbol = classSymbol.BaseType;
             }
