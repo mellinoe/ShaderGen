@@ -23,11 +23,11 @@ namespace ShaderGen.Tests
             ShaderGenerator sg = new ShaderGenerator(compilation, backend);
             ShaderGenerationResult generationResult = sg.GenerateShaders();
             IReadOnlyList<GeneratedShaderSet> hlslSets = generationResult.GetOutput(backend);
-            //Assert.Equal(4, hlslSets.Count); // I'm not sure this count is accurate
+            //Assert.Equal(hlslSets.Count, 4 ); // I'm not sure this count is accurate
             GeneratedShaderSet set = hlslSets[0];
             
             //Updated to new naming convention
-            Assert.Equal(set.VertexFunction.Name + "+" + set.FragmentFunction.Name, set.Name);
+            Assert.Equal(set.Name, set.VertexFunction.Name + "+" + set.FragmentFunction.Name );
 
             CompileResult result = toolChain.Compile(set.VertexShaderCode, Stage.Vertex, "VS");
             Assert.False(result.HasError, result.ToString());
