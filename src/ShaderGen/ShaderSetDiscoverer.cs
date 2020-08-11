@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ShaderGen
 {
@@ -8,6 +9,9 @@ namespace ShaderGen
     {
         private readonly HashSet<string> _discoveredNames = new HashSet<string>();
         private readonly List<ShaderSetInfo> _shaderSets = new List<ShaderSetInfo>();
+        public string DanglingVS { get; set;  }
+        public string DanglingFS { get; set;  }
+        public string DanglingCS { get; set;  }
         public override void VisitAttribute(AttributeSyntax node)
         {
             // TODO: Only look at assembly-level attributes.
@@ -55,6 +59,24 @@ namespace ShaderGen
                     name,
                     vsName,
                     fsName));
+            }
+            else if (node.Name.ToFullString().Contains("VertexShader"))
+            {
+                var methodDeclaration = ((MethodDeclarationSyntax) node.Ancestors().First(x => x is MethodDeclarationSyntax));
+                var classDeclaration = ((ClassDeclarationSyntax) node.Ancestors().First(x => x is ClassDeclarationSyntax));
+                DanglingVS = classDeclaration?.Identifier.ValueText + "." + methodDeclaration?.Identifier.ValueText;
+            }
+            else if (node.Name.ToFullString().Contains("FragmentShader"))
+            {
+                var methodDeclaration = ((MethodDeclarationSyntax) node.Ancestors().First(x => x is MethodDeclarationSyntax));
+                var classDeclaration = ((ClassDeclarationSyntax) node.Ancestors().First(x => x is ClassDeclarationSyntax));
+                DanglingFS = classDeclaration?.Identifier.ValueText + "." + methodDeclaration?.Identifier.ValueText;
+            }
+            else if (node.Name.ToFullString().Contains("ComputeShader"))
+            {
+                var methodDeclaration = ((MethodDeclarationSyntax) node.Ancestors().First(x => x is MethodDeclarationSyntax));
+                var classDeclaration = ((ClassDeclarationSyntax) node.Ancestors().First(x => x is ClassDeclarationSyntax));
+                DanglingCS = classDeclaration?.Identifier.ValueText + "." + methodDeclaration?.Identifier.ValueText;
             }
         }
 

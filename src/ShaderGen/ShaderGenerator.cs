@@ -67,8 +67,21 @@ namespace ShaderGen
                     ssd.Visit(tree.GetRoot());
                 }
 
-                _shaderSets = ssd.GetShaderSets();
-                return;
+                if (_shaderSets.Count > 0)
+                {
+                    _shaderSets = ssd.GetShaderSets();
+                    return;
+                }
+                
+                if (string.IsNullOrEmpty(ssd.DanglingVS) && string.IsNullOrEmpty(ssd.DanglingFS) && string.IsNullOrEmpty(ssd.DanglingCS))
+                {
+                    throw new ShaderGenerationException("No shader sets discovered and no entry points specified");
+                }
+
+                vertexFunctionName = ssd.DanglingVS;
+                fragmentFunctionName = ssd.DanglingFS;
+                computeFunctionName = ssd.DanglingCS;
+
             }
 
             // We've explicitly specified shaders so find them directly.
